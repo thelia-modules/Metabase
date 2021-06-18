@@ -1,0 +1,18 @@
+<script>
+
+(function() {
+    var $module = $('#metabase-module');
+
+    function displayTemplate (href) {
+        var $tab = $module.find(href);
+        var template = $tab.find('template').html();
+        $tab.html(template);
+    }
+    $module.find('#tabbed-menu li a').on('shown.bs.tab', function (e) {
+        displayTemplate(e.target.attributes.href.value);
+    });
+
+    displayTemplate($module.find('#tabbed-menu li:first a')[0].attributes.href.value);
+})()
+
+</script>

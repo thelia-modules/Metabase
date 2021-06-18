@@ -11,13 +11,15 @@
 </style>
 <div class="row">
     <div class="col-md-12">
-        <div class="general-block-decorator">
+        <div class="general-block-decorator" id="metabase-module">
             <div class="row">
 {*                {if $dashboards === ''||null}*}
 {*                    <div class="alert alert-danger">Pour commencer, vous devez configurer le module</div>*}
 {*                {/if}*}
                 <div class="col-md-12">
-
+                    {if $errorMessage}
+                        <div class="alert alert-danger">{$errorMessage}</div>
+                    {/if}
                     <ul id="tabbed-menu" class="nav nav-tabs">
                         {foreach $dashboards as $dashboard}
                         <li class="{if $tab eq "table-{$dashboard@key}"}active{/if}"><a data-toggle="tab" href="#table-{$dashboard@key}">{intl l="Dashboard {$dashboard@key+1}"}</a></li>
@@ -27,7 +29,7 @@
                     <div class="tab-content">
                         {foreach $dashboards as $dashboard}
                             <div id="table-{$dashboard@key}" class="tab-pane {if $tab eq "table-{$dashboard@key}"}active{/if} form-container">
-                                {$dashboard nofilter}
+                                <template id="table-{$dashboard@key}-template" >{$dashboard nofilter}</template>
                             </div>
                         {/foreach}
                     </div>

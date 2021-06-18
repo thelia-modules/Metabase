@@ -33,6 +33,8 @@
     <hook id="metabase.hook.home_top" class="Metabase\Hook\MetabaseHook">
       <tag name="hook.event_listener" event="module.configuration" type="back" method="metabaseConfig" />
       <tag name="hook.event_listener" event="home.top" type="back" method="metabaseHome" />
+      <tag name="hook.event_listener" event="home.js" type="back" method="metabaseHomeJs" />
+
       <argument type="service" id="Metabase\Service\MetabaseService"/>
     </hook>
   </hooks>

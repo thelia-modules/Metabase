@@ -12,6 +12,7 @@
 
 namespace Metabase\Hook;
 
+use Metabase\Exception\MetabaseException;
 use Metabase\Metabase;
 use Metabase\Service\MetabaseService;
 use Thelia\Core\Event\Hook\HookRenderEvent;
@@ -35,8 +36,11 @@ class MetabaseHook extends BaseHook
         // The secret embed key from the admin settings screen
         $metabaseKey = Metabase::getConfigValue(Metabase::CONFIG_KEY_TOKEN);
 
-        $metabase = new \Metabase\Embed($metabaseUrl, $metabaseKey);
+        $dashboards = [];
+        $errorMessage = null;
 
+        $metabase = new \Metabase\Embed($metabaseUrl, $metabaseKey);
+    try {
         $apiResult = json_decode($this->metabaseService->getDashboards(), true);
 
         for ($i = 0; $i < $apiResult[$i]; $i++)
@@ -44,10 +48,17 @@ class MetabaseHook extends BaseHook
             $dashboards [] = $metabase->dashboardIFrame($apiResult[$i]['id']);
         }
 
+    }catch (MetabaseException $exception){
+        $errorMessage = $exception->getMessage();
+    }
+
         $event->add(
             $this->render(
                 'metabase-module.html',
-                ["dashboards" => $dashboards]
+                [
+                    "dashboards" => $dashboards,
+                    "errorMessage" => $errorMessage
+                ]
             )
         );
     }
@@ -61,5 +72,11 @@ class MetabaseHook extends BaseHook
             }
         }
         $event->add($this->render('module-configuration.html'));
+    }
+
+    public function metabaseHomeJs(HookRenderEvent $event) {
+        $event->add($this->render(
+            'metabase-module-js.html'
+        ));
     }
 }
