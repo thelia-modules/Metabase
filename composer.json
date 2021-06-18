@@ -1,0 +1,15 @@
+{
+  "name": "your-vendor/metabase-module",
+  "description": "Metabase module for Thelia",
+  "license": "LGPL-3.0-or-later",
+  "type": "thelia-module",
+  "require": {
+    "thelia/installer": "~1.1",
+    "ipeevski/metabase-php": "^0.2.5",
+    "symfony/http-client": "*"
+
+  },
+  "extra": {
+    "installer-name": "Metabase"
+  }
+}

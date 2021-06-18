@@ -1,0 +1,38 @@
+{if isset($smarty.get.tab)}
+    {$tab=$smarty.get.tab}
+{else}
+    {$tab="table-0"}
+{/if}
+<style>
+    input[type=number]
+    {
+        min-width:100px;
+    }
+</style>
+<div class="row">
+    <div class="col-md-12">
+        <div class="general-block-decorator">
+            <div class="row">
+{*                {if $dashboards === ''||null}*}
+{*                    <div class="alert alert-danger">Pour commencer, vous devez configurer le module</div>*}
+{*                {/if}*}
+                <div class="col-md-12">
+
+                    <ul id="tabbed-menu" class="nav nav-tabs">
+                        {foreach $dashboards as $dashboard}
+                        <li class="{if $tab eq "table-{$dashboard@key}"}active{/if}"><a data-toggle="tab" href="#table-{$dashboard@key}">{intl l="Dashboard {$dashboard@key+1}"}</a></li>
+                        {/foreach}
+                    </ul>
+
+                    <div class="tab-content">
+                        {foreach $dashboards as $dashboard}
+                            <div id="table-{$dashboard@key}" class="tab-pane {if $tab eq "table-{$dashboard@key}"}active{/if} form-container">
+                                {$dashboard nofilter}
+                            </div>
+                        {/foreach}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
