@@ -40,6 +40,7 @@ class MetabaseHook extends BaseHook
         $errorMessage = null;
 
         $metabase = new \Metabase\Embed($metabaseUrl, $metabaseKey);
+
     try {
         $apiResult = json_decode($this->metabaseService->getDashboards(), true);
 

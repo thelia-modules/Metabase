@@ -4,7 +4,6 @@ namespace Metabase\Service;
 
 use Metabase\Exception\MetabaseException;
 use Metabase\Metabase;
-use Symfony\Component\Config\Definition\Exception\Exception;
 use Symfony\Component\HttpClient\HttpClient;
 
 class MetabaseService
@@ -62,17 +61,19 @@ class MetabaseService
                 'headers' => [
                     'Content-Type: application/json'
                 ],
-                'json' =>
-                    [
+                'json' => [
                         'username' => Metabase::getConfigValue(Metabase::CONFIG_USERNAME),
                         'password' => Metabase::getConfigValue(Metabase::CONFIG_PASS)
                     ]
             ]
         );
-            //TODO vérifier vérification du token si non throw metabase exception
 
-            $sessionToken = json_decode($sessionResponse->getContent(), true)['id'];
-            Metabase::setConfigValue(Metabase::CONFIG_SESSION_TOKEN, $sessionToken);
+        if (!Metabase::getConfigValue(Metabase::CONFIG_SESSION_TOKEN))
+        {
+            throw new MetabaseException((Metabase::ERROR_TOKEN_MESSAGE));
+        }
 
+        $sessionToken = json_decode($sessionResponse->getContent(), true)['id'];
+        Metabase::setConfigValue(Metabase::CONFIG_SESSION_TOKEN, $sessionToken);
     }
 }

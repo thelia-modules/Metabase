@@ -14,6 +14,7 @@ class Metabase extends BaseModule
     // The confirmation message
     const SUCCESS_MESSAGE = 'The settings have been successfully updated';
     const ERROR_CONFIG_MESSAGE = 'First, you have to set the module up';
+    const ERROR_TOKEN_MESSAGE = 'Error during session token collecting';
 
     // Configuration parameters
     const CONFIG_KEY_URL = 'metabase_url';
