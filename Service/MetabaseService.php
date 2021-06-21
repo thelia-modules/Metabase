@@ -68,9 +68,9 @@ class MetabaseService
             ]
         );
 
-        if (!Metabase::getConfigValue(Metabase::CONFIG_SESSION_TOKEN))
+        if ($sessionResponse->getStatusCode() === !200)
         {
-            throw new MetabaseException((Metabase::ERROR_TOKEN_MESSAGE));
+            throw new MetabaseException(Metabase::ERROR_TOKEN_MESSAGE);
         }
 
         $sessionToken = json_decode($sessionResponse->getContent(), true)['id'];
