@@ -2,17 +2,16 @@
 
 namespace Metabase\Controller;
 
-use Metabase\Metabase;
 use Metabase\Form\ConfigureMetabase;
-use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
+use Metabase\Metabase;
+use Metabase\Service\MetabaseService;
+use Symfony\Component\Routing\Annotation\Route;
 use Thelia\Controller\Admin\AdminController;
 use Thelia\Core\HttpFoundation\Request;
 use Thelia\Core\Security\AccessManager;
 use Thelia\Core\Security\Resource\AdminResources;
-use Metabase\Service\MetabaseService;
 use Thelia\Core\Translation\Translator;
 use Thelia\Tools\URL;
-use Symfony\Component\Routing\Annotation\Route;
 
 class ConfigurationController extends AdminController
 {
@@ -23,7 +22,7 @@ class ConfigurationController extends AdminController
 
     public function getDashboards(MetabaseService $metabaseService)
     {
-     return $this->jsonResponse($metabaseService->getDashboards());
+        return $this->jsonResponse($metabaseService->getDashboards());
     }
 
     /**
@@ -51,7 +50,6 @@ class ConfigurationController extends AdminController
             if ('stay' !== $request->get('save_mode')) {
                 $url = '/admin/modules';
             }
-
         } catch (\Exception $e) {
             $this->setupFormErrorContext(
                 Translator::getInstance()->trans('Metabase update config'),
@@ -60,6 +58,7 @@ class ConfigurationController extends AdminController
                 $e
             );
         }
+
         return $this->generateRedirect(URL::getInstance()->absoluteUrl($url, ['tab' => 'config', 'success' => 1]));
     }
 }

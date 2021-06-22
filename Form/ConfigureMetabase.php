@@ -63,9 +63,8 @@ class ConfigureMetabase extends BaseForm
     /**
      * @return string the name of your form. This name must be unique
      */
-    public static function getName() :string
+    public static function getName(): string
     {
         return 'configure_metabase_form';
     }
 }
-

@@ -41,24 +41,22 @@ class MetabaseHook extends BaseHook
 
         $metabase = new \Metabase\Embed($metabaseUrl, $metabaseKey);
 
-    try {
-        $apiResult = json_decode($this->metabaseService->getDashboards(), true);
+        try {
+            $apiResult = json_decode($this->metabaseService->getDashboards(), true);
 
-        for ($i = 0; $i < $apiResult[$i]; $i++)
-        {
-            $dashboards [] = $metabase->dashboardIFrame($apiResult[$i]['id']);
+            for ($i = 0; $i < $apiResult[$i]; ++$i) {
+                $dashboards[] = $metabase->dashboardIFrame($apiResult[$i]['id']);
+            }
+        } catch (MetabaseException $exception) {
+            $errorMessage = $exception->getMessage();
         }
-
-    }catch (MetabaseException $exception){
-        $errorMessage = $exception->getMessage();
-    }
 
         $event->add(
             $this->render(
                 'metabase-module.html',
                 [
-                    "dashboards" => $dashboards,
-                    "errorMessage" => $errorMessage
+                    'dashboards' => $dashboards,
+                    'errorMessage' => $errorMessage,
                 ]
             )
         );
@@ -75,7 +73,8 @@ class MetabaseHook extends BaseHook
         $event->add($this->render('module-configuration.html'));
     }
 
-    public function metabaseHomeJs(HookRenderEvent $event) {
+    public function metabaseHomeJs(HookRenderEvent $event)
+    {
         $event->add($this->render(
             'metabase-module-js.html'
         ));

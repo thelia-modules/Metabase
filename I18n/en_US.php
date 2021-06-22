@@ -18,5 +18,5 @@ return [
     'Metabase service configuration' => 'Metabase service configuration',
     'Metabase username (mail)' => 'Metabase username (mail)',
     'Metabase password' => 'Metabase password',
-    'The settings have been successfully updated' => 'The settings have been successfully updated'
+    'The settings have been successfully updated' => 'The settings have been successfully updated',
 ];

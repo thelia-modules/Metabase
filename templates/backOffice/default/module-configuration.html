@@ -11,50 +11,45 @@
             <div class="row">
                 <div class="col-md-12">
 
-                            <div class="title">
-                                {intl l="Metabase service configuration" d='metabase'}
-                            </div>
+                    <div class="title">
+                        {intl l="Metabase service configuration" d='metabase'}
+                    </div>
+                    {form name="configure_metabase_form"}
+                    {if $form_error}<div class="alert alert-danger">{$form_error_message}</div>{/if}
+                        <form action="{url path="/admin/module/metabase/configure"}" method="post">
+                            {form_hidden_fields form=$form}
 
-                            {form name="configure_metabase_form"}
-                            {if $form_error}<div class="alert alert-danger">{$form_error_message}</div>{/if}
+                            {include file = "includes/inner-form-toolbar.html"
+                            hide_flags = true
+                            page_url   = "{url path='/admin/module/metabase'}"
+                            close_url  = "{url path='/admin/modules'}"
+                            }
 
-                                <form action="{url path="/admin/module/metabase/configure"}" method="post">
-                                    {form_hidden_fields form=$form}
+                            {if $form_error}
+                                <div class="alert alert-danger">{$form_error_message}</div>
+                            {/if}
 
-                                    {include file = "includes/inner-form-toolbar.html"
-                                    hide_flags = true
-                                    page_url   = "{url path='/admin/module/metabase'}"
-                                    close_url  = "{url path='/admin/modules'}"
-                                    }
+                            {if $smarty.get.success}
+                                <div class="alert alert-success">{intl l={Metabase\Metabase::SUCCESS_MESSAGE} d='metabase'}</div>
+                            {/if}
 
-                                    {if $form_error}
-                                        <div class="alert alert-danger">{$form_error_message}</div>
-                                    {/if}
-
-                                    {if $smarty.get.success}
-                                        <div class="alert alert-success">{intl l={Metabase\Metabase::SUCCESS_MESSAGE} d='metabase'}</div>
-                                    {/if}
-
-                                    <div class="panel panel-default">
-                                        <div class="panel-heading">
-                                            <div class="panel-title">{intl d='metabase' l="Service configuration"}</div>
-                                        </div>
-                                        <div class="panel-body">
-                                            <div class="row" style="margin-top: 20px;">
-                                                <div class="col-md-6">
-                                                    {render_form_field field="metabase_url" value=$metabase_url}
-                                                    {render_form_field field="metabase_token" value=$metabase_token}
-                                                    {render_form_field field="metabase_username" value=$metabase_token}
-                                                    {render_form_field field="metabase_password" value=$metabase_token}
-
-                                                </div>
-                                            </div>
+                            <div class="panel panel-default">
+                                <div class="panel-heading">
+                                    <div class="panel-title">{intl d='metabase' l="Service configuration"}</div>
+                                </div>
+                                <div class="panel-body">
+                                    <div class="row" style="margin-top: 20px;">
+                                        <div class="col-md-6">
+                                            {render_form_field field="metabase_url" value=$metabase_url}
+                                            {render_form_field field="metabase_token" value=$metabase_token}
+                                            {render_form_field field="metabase_username" value=$metabase_token}
+                                            {render_form_field field="metabase_password" value=$metabase_token}
                                         </div>
                                     </div>
-                                </form>
-                            {/form}
-                        </div>
-                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    {/form}
                 </div>
             </div>
         </div>
