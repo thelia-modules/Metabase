@@ -29,7 +29,7 @@
                                 <div class="alert alert-danger">{$form_error_message}</div>
                             {/if}
 
-                            {if $smarty.get.success}
+                            {if $smarty.get.success|default:null}
                                 <div class="alert alert-success">{intl l={Metabase\Metabase::SUCCESS_MESSAGE} d='metabase'}</div>
                             {/if}
 
@@ -40,10 +40,10 @@
                                 <div class="panel-body">
                                     <div class="row" style="margin-top: 20px;">
                                         <div class="col-md-6">
-                                            {render_form_field field="metabase_url" value=$metabase_url}
-                                            {render_form_field field="metabase_token" value=$metabase_token}
-                                            {render_form_field field="metabase_username" value=$metabase_token}
-                                            {render_form_field field="metabase_password" value=$metabase_token}
+                                            {render_form_field form=$form field="metabase_url"}
+                                            {render_form_field form=$form field="metabase_token"}
+                                            {render_form_field form=$form field="metabase_username"}
+                                            {render_form_field form=$form field="metabase_password"}
                                         </div>
                                     </div>
                                 </div>

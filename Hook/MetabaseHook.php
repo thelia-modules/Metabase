@@ -26,6 +26,7 @@ class MetabaseHook extends BaseHook
 
     public function __construct(MetabaseService $metabaseService)
     {
+        parent::__construct();
         $this->metabaseService = $metabaseService;
     }
 
