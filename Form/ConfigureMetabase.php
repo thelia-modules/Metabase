@@ -33,7 +33,7 @@ class ConfigureMetabase extends BaseForm
                     'constraints' => [new NotBlank()],
                     'required' => true,
                     'data' => Metabase::getConfigValue(Metabase::CONFIG_KEY_TOKEN),
-                    'label' => $translator->trans('Metabase token', [], Metabase::DOMAIN_NAME),
+                    'label' => $translator->trans('Metabase token (integration token)', [], Metabase::DOMAIN_NAME),
                     'label_attr' => ['for' => Metabase::CONFIG_KEY_TOKEN],
                 ]
             )

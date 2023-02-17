@@ -40,12 +40,12 @@ class MetabaseHook extends BaseHook
         $dashboards = [];
         $errorMessage = null;
 
-        $metabase = new \Metabase\Embed($metabaseUrl, $metabaseKey);
+        $metabase = new \Metabase\Embed($metabaseUrl, $metabaseKey, false, "100%", "600");
 
         try {
             $apiResult = json_decode($this->metabaseService->getDashboards(), true);
 
-            for ($i = 0; $i < $apiResult[$i]; ++$i) {
+            for ($i = 0; $i < sizeof($apiResult); ++$i) {
                 $dashboards[] = $metabase->dashboardIFrame($apiResult[$i]['id']);
             }
         } catch (MetabaseException $exception) {

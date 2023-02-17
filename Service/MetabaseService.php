@@ -37,13 +37,211 @@ class MetabaseService
 
             return $this->getDashboards();
         }
-        $dashboards = $metabaseResponse->getContent();
+        return $metabaseResponse->getContent();
+    }
 
-        return $dashboards;
+    public function createDashboard(
+        String $name,
+        String $description,
+        int $collectionId
+    ){
+        if (!Metabase::getConfigValue(Metabase::CONFIG_SESSION_TOKEN)) {
+            $this->getSessionToken();
+        }
+
+        $client = HttpClient::create();
+        $metabaseResponse = $client->request(
+            'POST',
+            Metabase::getConfigValue(Metabase::CONFIG_KEY_URL).'/'.'api/dashboard/',
+            [
+                'headers' => [
+                    'X-Metabase-Session' => Metabase::getConfigValue(Metabase::CONFIG_SESSION_TOKEN),
+                    'Content-Type: application/json',
+                ],
+                'json' => [
+                    "name" =>  $name,
+                    "description" =>  $description,
+                    "collection_id" => $collectionId
+                ],
+            ]
+        );
+
+        $statusCode = $metabaseResponse->getStatusCode();
+        if (401 == $statusCode) {
+            $this->getSessionToken();
+
+            return $this->createDashboard($name, $description, $collectionId);
+        }
+        return $metabaseResponse->getContent();
+    }
+
+    public function createCard(
+        Array $visualization_settings,
+        Array $parameters,
+        String $name,
+        String $description,
+        Array $dataset_query,
+        String $display,
+        int $collectionId
+    ){
+        if (!Metabase::getConfigValue(Metabase::CONFIG_SESSION_TOKEN)) {
+            $this->getSessionToken();
+        }
+        $client = HttpClient::create();
+        $metabaseResponse = $client->request(
+            'POST',
+            Metabase::getConfigValue(Metabase::CONFIG_KEY_URL).'/'.'api/card',
+            [
+                'headers' => [
+                    'X-Metabase-Session' => Metabase::getConfigValue(Metabase::CONFIG_SESSION_TOKEN),
+                    'Content-Type: application/json',
+                ],
+                'json' => [
+                    "visualization_settings" => $visualization_settings,
+                    "parameters" => [$parameters],
+                    "name" =>  $name,
+                    "description" =>  $description,
+                    "dataset_query" =>  $dataset_query,
+                    "display" =>  $display,
+                    "collection_id" => $collectionId
+                ],
+            ]
+        );
+
+        $statusCode = $metabaseResponse->getStatusCode();
+        if (401 == $statusCode) {
+            $this->getSessionToken();
+
+            return $this->createCard($visualization_settings, $parameters, $name, $description, $dataset_query, $display, $collectionId);
+        }
+
+        return $metabaseResponse->getContent();
+    }
+
+    public function addCardToDashboard(int $dashboardId, int $cardId){
+
+        if (!Metabase::getConfigValue(Metabase::CONFIG_SESSION_TOKEN)) {
+            $this->getSessionToken();
+        }
+
+        $client = HttpClient::create();
+        $metabaseResponse = $client->request(
+            'POST',
+            Metabase::getConfigValue(Metabase::CONFIG_KEY_URL).'/'.'api/dashboard/'. $dashboardId.'/cards',
+            [
+                'headers' => [
+                    'X-Metabase-Session' => Metabase::getConfigValue(Metabase::CONFIG_SESSION_TOKEN),
+                    'Content-Type: application/json',
+                ],
+                'json' => [
+                    "cardId" => $cardId
+                ],
+            ]
+        );
+
+        $statusCode = $metabaseResponse->getStatusCode();
+        if (401 == $statusCode) {
+            $this->getSessionToken();
+
+            return $this->addCardToDashboard($dashboardId, $cardId);
+        }
+        return $metabaseResponse->getContent();
+    }
+
+    public function resizeCards(int $dashboardId, int $dashboardCardId, int $cardId){
+
+        if (!Metabase::getConfigValue(Metabase::CONFIG_SESSION_TOKEN)) {
+            $this->getSessionToken();
+        }
+
+        $client = HttpClient::create();
+        $metabaseResponse = $client->request(
+            'PUT',
+            Metabase::getConfigValue(Metabase::CONFIG_KEY_URL).'/'.'api/dashboard/'. $dashboardId.'/cards',
+            [
+                'headers' => [
+                    'X-Metabase-Session' => Metabase::getConfigValue(Metabase::CONFIG_SESSION_TOKEN),
+                    'Content-Type: application/json',
+                ],
+                'json' => [
+                    "cards" => [
+                        [
+                            "id" => $dashboardCardId,
+                            "row" => 0,
+                            "col" => 0,
+                            "size_x" => 18,
+                            "size_y" => 5,
+                            "series" => [
+                            ],
+                            "parameter_mappings" => [
+                                [
+                                    "parameter_id" => "5ef8a7ee",
+                                    "card_id" => $cardId,
+                                    "target" => [
+                                        "dimension",
+                                        [
+                                            "template-tag",
+                                            "start"
+                                        ]
+                                    ]
+                                ]
+                            ]
+                        ]
+                    ]
+                ]
+            ]
+        );
+
+        $statusCode = $metabaseResponse->getStatusCode();
+        if (401 == $statusCode) {
+            $this->getSessionToken();
+
+            return $this->resizeCards($dashboardId,  $dashboardCardId, $cardId);
+        }
+        return $metabaseResponse->getContent();
+    }
+
+    public function publishDashboard(int $dashboardId, array $embedding_params){
+
+        if (!Metabase::getConfigValue(Metabase::CONFIG_SESSION_TOKEN)) {
+            $this->getSessionToken();
+        }
+
+        $client = HttpClient::create();
+        $metabaseResponse = $client->request(
+            'PUT',
+            Metabase::getConfigValue(Metabase::CONFIG_KEY_URL).'/'.'api/dashboard/'. $dashboardId,
+            [
+                'headers' => [
+                    'X-Metabase-Session' => Metabase::getConfigValue(Metabase::CONFIG_SESSION_TOKEN),
+                    'Content-Type: application/json',
+                ],
+                'json' => [
+                    "enable_embedding" => true,
+                    "embedding_params" => $embedding_params,
+                    "parameters" => [[
+                        "name" => "Relative Date",
+                        "slug" => "relative_date",
+                        "id" => "5ef8a7ee",
+                        "type" => "date/relative",
+                        "sectionId" => "date",
+                        "default" => "past1weeks"
+                    ]]
+                ],
+            ]
+        );
+
+        $statusCode = $metabaseResponse->getStatusCode();
+        if (401 == $statusCode) {
+            $this->getSessionToken();
+
+            return $this->publishDashboard($dashboardId, $embedding_params);
+        }
+
+        return $metabaseResponse->getContent();
     }
 
     // session_token expire every 14 days so we have to obtain a new one
-
     public function getSessionToken()
     {
         if (!Metabase::getConfigValue(Metabase::CONFIG_USERNAME) ||
@@ -73,5 +271,133 @@ class MetabaseService
 
         $sessionToken = json_decode($sessionResponse->getContent(), true)['id'];
         Metabase::setConfigValue(Metabase::CONFIG_SESSION_TOKEN, $sessionToken);
+    }
+
+    public function importBDD(string $metabaseName, string $dbName, string $engine, string $host, string $port, string $user, string $password)
+    {
+        if (!Metabase::getConfigValue(Metabase::CONFIG_SESSION_TOKEN)) {
+            $this->getSessionToken();
+        }
+
+        $client = HttpClient::create();
+        $metabaseResponse = $client->request(
+            'POST',
+            Metabase::getConfigValue(Metabase::CONFIG_KEY_URL).'/'.'api/database',
+            [
+                'headers' => [
+                    'X-Metabase-Session' => Metabase::getConfigValue(Metabase::CONFIG_SESSION_TOKEN),
+                    'Content-Type: application/json',
+                ],
+                'json' => [
+                    'name' => $metabaseName,
+                    'engine' => $engine,
+                    "details" => [
+                        "host" => $host,
+                        "port" => $port,
+                        "dbname" => $dbName,
+                        "user" => $user,
+                        "password" => $password,
+                    ],
+                    "is_full_sync" => true
+                ],
+            ]
+        );
+
+        $statusCode = $metabaseResponse->getStatusCode();
+        if (401 == $statusCode) {
+            $this->getSessionToken();
+
+            return $this->importBDD($metabaseName, $dbName, $engine, $host, $port, $user, $password);
+        }
+        return $metabaseResponse->getContent();
+    }
+
+    public function createCollection(int $databaseId)
+    {
+        if (!Metabase::getConfigValue(Metabase::CONFIG_SESSION_TOKEN)) {
+            $this->getSessionToken();
+        }
+
+        $client = HttpClient::create();
+        $metabaseResponse = $client->request(
+            'POST',
+            Metabase::getConfigValue(Metabase::CONFIG_KEY_URL).'/'.'api/collection',
+            [
+                'headers' => [
+                    'X-Metabase-Session' => Metabase::getConfigValue(Metabase::CONFIG_SESSION_TOKEN),
+                    'Content-Type: application/json',
+                ],
+                'json' => [
+                    "name"=> "thelia metabase",
+                    "color"=> "#FFA500"
+                ],
+            ]
+        );
+
+        $statusCode = $metabaseResponse->getStatusCode();
+
+        if (401 == $statusCode) {
+            $this->getSessionToken();
+
+            return $this->createCollection($databaseId);
+        }
+        return $metabaseResponse->getContent();
+    }
+
+    public function checkMetabaseState(String $databaseId)
+    {
+        if (!Metabase::getConfigValue(Metabase::CONFIG_SESSION_TOKEN)) {
+            $this->getSessionToken();
+        }
+
+        $client = HttpClient::create();
+        $metabaseResponse = $client->request(
+            'GET',
+            Metabase::getConfigValue(Metabase::CONFIG_KEY_URL).'/'.'api/database/'. $databaseId,
+            [
+                'headers' => [
+                    'X-Metabase-Session' => Metabase::getConfigValue(Metabase::CONFIG_SESSION_TOKEN),
+                    'Content-Type: application/json',
+                ],
+            ]
+        );
+
+        $statusCode = $metabaseResponse->getStatusCode();
+
+        if (401 == $statusCode) {
+            $this->getSessionToken();
+
+            return $this->createCollection($databaseId);
+        }
+
+        return $metabaseResponse->getContent();
+    }
+
+    public function getAllField(int $databaseId)
+    {
+        if (!Metabase::getConfigValue(Metabase::CONFIG_SESSION_TOKEN)) {
+            $this->getSessionToken();
+        }
+
+        $client = HttpClient::create();
+        $metabaseResponse = $client->request(
+            'GET',
+            Metabase::getConfigValue(Metabase::CONFIG_KEY_URL).'/'.'api/database/'.$databaseId.'/fields',
+            [
+                'headers' => [
+                    'X-Metabase-Session' => Metabase::getConfigValue(Metabase::CONFIG_SESSION_TOKEN),
+                    'Content-Type: application/json',
+                ],
+            ]
+        );
+
+        $statusCode = $metabaseResponse->getStatusCode();
+
+        if (401 == $statusCode) {
+            $this->getSessionToken();
+
+            return $this->createCollection($databaseId);
+        }
+        return $metabaseResponse->getContent();
     }
 }

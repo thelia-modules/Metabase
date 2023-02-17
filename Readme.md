@@ -1,6 +1,6 @@
 # Metabase
 
-Add a short description here. You can also add a screenshot if needed.
+This module allows to connect to your Metabase account and use print some statistics on admin panel 
 
 ## Installation
 
@@ -14,5 +14,14 @@ Add a short description here. You can also add a screenshot if needed.
 Add it in your main thelia composer.json file
 
 ```
-composer require your-vendor/metabase-module:~1.0
+composer require thelia/metabase-module:~1.0
 ```
+
+### Usage
+
+Go to the configuration panel
+
+Configure Metabase with your Url, your mail metabase and your password metabase
+
+To get your integration token : go to https://***your-metabase-url***/admin/settings/embedding-in-other-applications and activate Integration
+
