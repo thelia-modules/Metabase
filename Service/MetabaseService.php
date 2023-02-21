@@ -98,7 +98,7 @@ class MetabaseService
                 ],
                 'json' => [
                     "visualization_settings" => $visualization_settings,
-                    "parameters" => [$parameters],
+                    "parameters" => $parameters,
                     "name" =>  $name,
                     "description" =>  $description,
                     "dataset_query" =>  $dataset_query,
@@ -148,7 +148,16 @@ class MetabaseService
         return $metabaseResponse->getContent();
     }
 
-    public function resizeCards(int $dashboardId, int $dashboardCardId, int $cardId){
+    public function resizeCards(
+        int $dashboardId,
+        int $dashboardCardId,
+        array $parameter_mappings,
+        array $series = [],
+        int $row = 0,
+        int $col = 0,
+        int $size_x = 18,
+        int $size_y = 5
+    ){
 
         if (!Metabase::getConfigValue(Metabase::CONFIG_SESSION_TOKEN)) {
             $this->getSessionToken();
@@ -167,25 +176,12 @@ class MetabaseService
                     "cards" => [
                         [
                             "id" => $dashboardCardId,
-                            "row" => 0,
-                            "col" => 0,
-                            "size_x" => 18,
-                            "size_y" => 5,
-                            "series" => [
-                            ],
-                            "parameter_mappings" => [
-                                [
-                                    "parameter_id" => "5ef8a7ee",
-                                    "card_id" => $cardId,
-                                    "target" => [
-                                        "dimension",
-                                        [
-                                            "template-tag",
-                                            "start"
-                                        ]
-                                    ]
-                                ]
-                            ]
+                            "row" => $row,
+                            "col" => $col,
+                            "size_x" => $size_x,
+                            "size_y" => $size_y,
+                            "series" => $series,
+                            "parameter_mappings" => $parameter_mappings
                         ]
                     ]
                 ]
@@ -201,7 +197,7 @@ class MetabaseService
         return $metabaseResponse->getContent();
     }
 
-    public function publishDashboard(int $dashboardId, array $embedding_params){
+    public function publishDashboard(int $dashboardId, array $embedding_params, array $parameters){
 
         if (!Metabase::getConfigValue(Metabase::CONFIG_SESSION_TOKEN)) {
             $this->getSessionToken();
@@ -219,14 +215,7 @@ class MetabaseService
                 'json' => [
                     "enable_embedding" => true,
                     "embedding_params" => $embedding_params,
-                    "parameters" => [[
-                        "name" => "Relative Date",
-                        "slug" => "relative_date",
-                        "id" => "5ef8a7ee",
-                        "type" => "date/relative",
-                        "sectionId" => "date",
-                        "default" => "past1weeks"
-                    ]]
+                    "parameters" => $parameters
                 ],
             ]
         );
@@ -235,7 +224,7 @@ class MetabaseService
         if (401 == $statusCode) {
             $this->getSessionToken();
 
-            return $this->publishDashboard($dashboardId, $embedding_params);
+            return $this->publishDashboard($dashboardId, $embedding_params, $parameters);
         }
 
         return $metabaseResponse->getContent();
@@ -399,5 +388,44 @@ class MetabaseService
             return $this->createCollection($databaseId);
         }
         return $metabaseResponse->getContent();
+    }
+
+    public function getCard(int $cardId)
+    {
+
+        if (!Metabase::getConfigValue(Metabase::CONFIG_SESSION_TOKEN)) {
+            $this->getSessionToken();
+        }
+
+        $client = HttpClient::create();
+        $metabaseResponse = $client->request(
+            'GET',
+            Metabase::getConfigValue(Metabase::CONFIG_KEY_URL).'/'.'api/card/'.$cardId,
+            [
+                'headers' => [
+                    'X-Metabase-Session' => Metabase::getConfigValue(Metabase::CONFIG_SESSION_TOKEN),
+                    'Content-Type: application/json',
+                ],
+            ]
+        );
+
+        $statusCode = $metabaseResponse->getStatusCode();
+
+        if (401 == $statusCode) {
+            $this->getSessionToken();
+
+            return $this->createCollection($cardId);
+        }
+        return $metabaseResponse->getContent();
+    }
+
+    public function searchField(Array $fields, String $fieldName, String $tableName){
+
+        foreach ($fields as $field){
+            if ($field->name === $fieldName && $field->table_name === $tableName){
+                return $field->id;
+            }
+        }
+        return null;
     }
 }
