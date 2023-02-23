@@ -2,8 +2,10 @@
 
     namespace Metabase\Controller;
 
+    use Metabase\Metabase;
     use Metabase\Service\MetabaseService;
     use Thelia\Controller\Admin\AdminController;
+    use Thelia\Core\Translation\Translator;
 
     class StatisticCategoryController extends AdminController
     {
@@ -15,10 +17,13 @@
          * true == Create a dashboard and cards with categories numbers of sales for a selected date /
          * false == Create a dashboard and cards with categories sales for a selected date
          */
-        public function generateCategoryStatisticsMetabase(MetabaseService $metabaseService, int $databaseId, int $collectionId, bool $count = false)
+        public function generateCategoryStatisticsMetabase(MetabaseService $metabaseService, int $databaseId, int $collectionId, array $fields, bool $count = false)
         {
-            $dashboardName = "Statistic Sales Category";
-            $cardName = "CategorySalesCard_";
+            $translator = Translator::getInstance();
+            $dashboardName = $translator->trans("Dashboard Sales Category", [], Metabase::DOMAIN_NAME);
+            $descriptionDashboard = $translator->trans("Sales Statistic by Category", [], Metabase::DOMAIN_NAME);
+            $cardName = $translator->trans("CategorySalesCard_", [], Metabase::DOMAIN_NAME);
+            $descriptionCard = $translator->trans("card of Sales Statistic by Category", [], Metabase::DOMAIN_NAME);
 
             $query = "select SUM(ROUND(order_product.quantity * IF(order_product.was_in_promo = 1, order_product.promo_price, order_product.price), 2) ) AS TOTAL, DATE_FORMAT(`order_product`.`created_at`, \"%m\") as Date 
                 from `order`
@@ -26,12 +31,14 @@
                 join `product` on `product`.ref = `order_product`.product_ref
                 join `product_category` on (`product`.`id`=`product_category`.`product_id`)
                 join `category_i18n` on `category_i18n`.`id` = `product_category`.`category_id`
-                where [[{{category}} and]] {{date}}
+                where 1=0 [[or {{category}}]] and {{date}} [[and {{orderType}}]]
                 group by Date";
 
             if ($count){
-                $dashboardName = "Statistic Category";
-                $cardName = "CategoryCard_";
+                $dashboardName = $translator->trans("Dashboard Count Category", [], Metabase::DOMAIN_NAME);
+                $descriptionDashboard = $translator->trans("Count Statistic by Category", [], Metabase::DOMAIN_NAME);
+                $cardName = $translator->trans("CategoryCard_", [], Metabase::DOMAIN_NAME);
+                $descriptionCard = $translator->trans("card of Count Statistic by Category", [], Metabase::DOMAIN_NAME);
 
                 $query = "select SUM(`order_product`.quantity) as TOTAL, DATE_FORMAT(`order_product`.`created_at`, \"%m\") as Date 
                 from `order`
@@ -39,17 +46,17 @@
                 join `product` on `product`.ref = `order_product`.product_ref
                 join `product_category` on (`product`.`id`=`product_category`.`product_id`)
                 join `category_i18n` on `category_i18n`.`id` = `product_category`.`category_id`
-                where {{category}} and {{date}}
+                where 1=0 [[or {{category}}]] and {{date}} [[and {{orderType}}]]
                 group by Date";
             }
 
-            $dashboard = json_decode($metabaseService->createDashboard($dashboardName, "Sales Statistic by Category", $collectionId));
-
-            $fields = json_decode($metabaseService->getAllField($databaseId));
+            $dashboard = json_decode($metabaseService->createDashboard($dashboardName, $descriptionDashboard, $collectionId));
 
             $fieldCategoryRef = $metabaseService->searchField($fields, "Meta Title", "Category I18n");
-
             $fieldDate = $metabaseService->searchField($fields, "Created At", "Order");
+            $fieldOrderType = $metabaseService->searchField($fields, "Status ID", "Order");
+
+            $defaultOrderType = $metabaseService->getDefaultOrderType();
 
             $card = json_decode($metabaseService->createCard(
                 ["graph.dimensions" => ["Date"],
@@ -85,10 +92,24 @@
                         "name" => "Date",
                         "slug" => "date",
                         "default" => "past1years"
+                    ],
+                    [
+                        "id" => "f7050c92-f9e0-9453-81fb-58062a1446d6",
+                        "type" => "string/=",
+                        "target" => [
+                            "dimension",
+                            [
+                                "template-tag",
+                                "order_type"
+                            ]
+                        ],
+                        "name" => "Ordertype",
+                        "slug" => "order_type",
+                        "default" => $defaultOrderType
                     ]
                 ],
                 $cardName."1",
-                "card of Statistic by Category",
+                $descriptionCard,
                 [
                     "database" => $databaseId,
                     "native" => [
@@ -119,6 +140,19 @@
                                 "widget-type" => "date/all-options",
                                 "required" => true,
                                 "default" => "past1years"
+                            ],
+                            "order_type" => [
+                                "id" => "f7050c92-f9e0-9453-81fb-58062a1446d6",
+                                "name" => "order_type",
+                                "display-name" => "Ordertype",
+                                "type" => "dimension",
+                                "dimension" => [
+                                    "field",
+                                    $fieldOrderType,
+                                    null
+                                ],
+                                "widget-type" => "string/=",
+                                "default" => $defaultOrderType
                             ]
                         ],
                         "query" => $query
@@ -163,10 +197,24 @@
                         "name" => "Date",
                         "slug" => "date",
                         "default" => "thisyear"
-                    ]
+                    ],
+                    [
+                    "id" => "f7050c92-f9e0-9453-81fb-58062a1446d6",
+                    "type" => "string/=",
+                    "target" => [
+                        "dimension",
+                        [
+                            "template-tag",
+                            "order_type"
+                        ]
+                    ],
+                    "name" => "Ordertype",
+                    "slug" => "order_type",
+                    "default" => $defaultOrderType
+                ]
                 ],
                 $cardName."2",
-                "card of Statistic by Category",
+                $descriptionCard,
                 [
                     "database" => $databaseId,
                     "native" => [
@@ -197,6 +245,19 @@
                                 "widget-type" => "date/all-options",
                                 "required" => true,
                                 "default" => "thisyear"
+                            ],
+                            "order_type" => [
+                                "id" => "f7050c92-f9e0-9453-81fb-58062a1446d6",
+                                "name" => "order_type",
+                                "display-name" => "Ordertype",
+                                "type" => "dimension",
+                                "dimension" => [
+                                    "field",
+                                    $fieldOrderType,
+                                    null
+                                ],
+                                "widget-type" => "string/=",
+                                "default" => $defaultOrderType
                             ]
                         ],
                         "query" => $query
@@ -253,6 +314,28 @@
                             "category"
                         ]
                     ]
+                ],
+                [
+                    "parameter_id" => "64b9491",
+                    "card_id" => $card->id,
+                    "target" => [
+                        "dimension",
+                        [
+                            "template-tag",
+                            "order_type"
+                        ]
+                    ]
+                ],
+                [
+                    "parameter_id" => "64b9491",
+                    "card_id" => $card2->id,
+                    "target" => [
+                        "dimension",
+                        [
+                            "template-tag",
+                            "order_type"
+                        ]
+                    ]
                 ]
             ];
 
@@ -282,9 +365,17 @@
                     "type" => "date/all-options",
                     "sectionId" => "date",
                     "default" => "past1years"
+                ],
+                [
+                    "name" => "orderType",
+                    "slug" => "order_type",
+                    "id" => "64b9491",
+                    "type" => "string/=",
+                    "sectionId" => "string",
+                    "default" => $defaultOrderType
                 ]];
 
             $metabaseService->publishDashboard($dashboard->id,
-                ["date_1" => "enabled", "date_2" => "enabled", "category_reference" => "enabled"], $parameters);
+                ["date_1" => "enabled", "date_2" => "enabled", "category_reference" => "enabled", "order_type" => "enabled"], $parameters);
         }
     }

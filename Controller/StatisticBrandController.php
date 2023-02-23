@@ -2,11 +2,13 @@
 
 namespace Metabase\Controller;
 
+use Metabase\Metabase;
 use Metabase\Service\MetabaseService;
 use Propel\Runtime\ActiveQuery\Criteria;
 use Propel\Runtime\ActiveQuery\Join;
 use Statistic\Statistic;
 use Thelia\Controller\Admin\AdminController;
+use Thelia\Core\Translation\Translator;
 use Thelia\Model\Map\OrderProductTableMap;
 use Thelia\Model\Map\ProductTableMap;
 use Thelia\Model\OrderQuery;
@@ -21,10 +23,13 @@ class StatisticBrandController extends AdminController
      * true == Create a dashboard and cards with brands numbers of sales for a selected date /
      * false == Create a dashboard and cards with brands sales for a selected date
      */
-    public function generateBrandStatisticsMetabase(MetabaseService $metabaseService, int $databaseId, int $collectionId, bool $count = false)
+    public function generateBrandStatisticsMetabase(MetabaseService $metabaseService, int $databaseId, int $collectionId, array $fields, bool $count = false)
     {
-        $dashboardName = "Statistic Sales Brand";
-        $cardName = "BrandSalesCard_";
+        $translator = Translator::getInstance();
+        $dashboardName = $translator->trans("Dashboard Sales Brand", [], Metabase::DOMAIN_NAME);
+        $descriptionDashboard = $translator->trans("Sales Statistic by Brand", [], Metabase::DOMAIN_NAME);
+        $cardName = $translator->trans("BrandSalesCard_", [], Metabase::DOMAIN_NAME);
+        $descriptionCard = $translator->trans("card of Sales Statistic by Brand", [], Metabase::DOMAIN_NAME);
 
         $query = "SELECT SUM((`order_product`.QUANTITY * IF(`order_product`.WAS_IN_PROMO,`order_product`.PROMO_PRICE,`order_product`.PRICE))) AS TOTAL, 
             DATE_FORMAT(`order_product`.`created_at`,\"%m\") as Date 
@@ -32,13 +37,15 @@ class StatisticBrandController extends AdminController
             INNER JOIN `order_product` ON (`order`.`id`=`order_product`.`order_id`) 
             INNER JOIN `product` ON (`order_product`.`product_ref`=`product`.`ref`)
             INNER JOIN `brand_i18n` ON `brand_i18n`.`id`=`product`.`brand_id`
-            WHERE {{brand}} and {{date}}
+            WHERE 1=0 [[or {{brand}}]] and {{date}} [[and {{orderType}}]]
             GROUP BY date";
 
 
         if ($count){
-            $dashboardName = "Statistic Brand";
-            $cardName = "BrandCard_";
+            $dashboardName = $translator->trans("Dashboard Count Brand", [], Metabase::DOMAIN_NAME);
+            $descriptionDashboard = $translator->trans("Count Statistic by Brand", [], Metabase::DOMAIN_NAME);
+            $cardName = $translator->trans("BrandCard_", [], Metabase::DOMAIN_NAME);
+            $descriptionCard = $translator->trans("card of Count Statistic by Brand", [], Metabase::DOMAIN_NAME);
 
             $query = "SELECT SUM(order_product.quantity) AS TOTAL, 
                 DATE_FORMAT(`order_product`.`created_at`,\"%m\") as Date 
@@ -46,17 +53,17 @@ class StatisticBrandController extends AdminController
                 INNER JOIN `order_product` ON (`order`.`id`=`order_product`.`order_id`) 
                 INNER JOIN `product` ON (`order_product`.`product_ref`=`product`.`ref`)
                 INNER JOIN `brand_i18n` ON `brand_i18n`.`id`=`product`.`brand_id`
-                WHERE {{brand}} and {{date}}
+                WHERE 1=0 [[or {{brand}}]] and {{date}} [[and {{orderType}}]]
                 GROUP BY date";
         }
 
-        $dashboard = json_decode($metabaseService->createDashboard($dashboardName, "Sales Statistic by Brand", $collectionId));
-
-        $fields = json_decode($metabaseService->getAllField($databaseId));
+        $dashboard = json_decode($metabaseService->createDashboard($dashboardName, $descriptionDashboard, $collectionId));
 
         $fieldBrandRef = $metabaseService->searchField($fields, "Meta Title", "Brand I18n");
-
         $fieldDate = $metabaseService->searchField($fields, "Created At", "Order");
+        $fieldOrderType = $metabaseService->searchField($fields, "Status ID", "Order");
+
+        $defaultOrderType = $metabaseService->getDefaultOrderType();
 
         $card = json_decode($metabaseService->createCard(
             ["graph.dimensions" => ["Date"],
@@ -92,10 +99,24 @@ class StatisticBrandController extends AdminController
                     "name" => "Date",
                     "slug" => "date",
                     "default" => "past1years"
+                ],
+                [
+                    "id" => "f7050c92-f9e0-9453-81fb-58062a1446d6",
+                    "type" => "string/=",
+                    "target" => [
+                        "dimension",
+                        [
+                            "template-tag",
+                            "order_type"
+                        ]
+                    ],
+                    "name" => "Ordertype",
+                    "slug" => "order_type",
+                    "default" => $defaultOrderType
                 ]
             ],
             $cardName."1",
-            "card of Statistic by Brand",
+            $descriptionCard,
             [
                 "database" => $databaseId,
                 "native" => [
@@ -126,6 +147,19 @@ class StatisticBrandController extends AdminController
                             "widget-type" => "date/all-options",
                             "required" => true,
                             "default" => "past1years"
+                        ],
+                        "order_type" => [
+                            "id" => "f7050c92-f9e0-9453-81fb-58062a1446d6",
+                            "name" => "order_type",
+                            "display-name" => "Ordertype",
+                            "type" => "dimension",
+                            "dimension" => [
+                                "field",
+                                $fieldOrderType,
+                                null
+                            ],
+                            "widget-type" => "string/=",
+                            "default" => $defaultOrderType
                         ]
                     ],
                     "query" => $query
@@ -170,10 +204,24 @@ class StatisticBrandController extends AdminController
                     "name" => "Date",
                     "slug" => "date",
                     "default" => "thisyear"
+                ],
+                [
+                    "id" => "f7050c92-f9e0-9453-81fb-58062a1446d6",
+                    "type" => "string/=",
+                    "target" => [
+                        "dimension",
+                        [
+                            "template-tag",
+                            "order_type"
+                        ]
+                    ],
+                    "name" => "Ordertype",
+                    "slug" => "order_type",
+                    "default" => $defaultOrderType
                 ]
             ],
             $cardName."2",
-            "card of Statistic by Brand",
+            $descriptionCard,
             [
                 "database" => $databaseId,
                 "native" => [
@@ -204,6 +252,19 @@ class StatisticBrandController extends AdminController
                             "widget-type" => "date/all-options",
                             "required" => true,
                             "default" => "thisyear"
+                        ],
+                        "order_type" => [
+                            "id" => "f7050c92-f9e0-9453-81fb-58062a1446d6",
+                            "name" => "order_type",
+                            "display-name" => "Ordertype",
+                            "type" => "dimension",
+                            "dimension" => [
+                                "field",
+                                $fieldOrderType,
+                                null
+                            ],
+                            "widget-type" => "string/=",
+                            "default" => $defaultOrderType
                         ]
                     ],
                     "query" => $query
@@ -260,6 +321,28 @@ class StatisticBrandController extends AdminController
                         "brand"
                     ]
                 ]
+            ],
+            [
+                "parameter_id" => "64b9491",
+                "card_id" => $card->id,
+                "target" => [
+                    "dimension",
+                    [
+                        "template-tag",
+                        "order_type"
+                    ]
+                ]
+            ],
+            [
+                "parameter_id" => "64b9491",
+                "card_id" => $card2->id,
+                "target" => [
+                    "dimension",
+                    [
+                        "template-tag",
+                        "order_type"
+                    ]
+                ]
             ]
         ];
 
@@ -289,9 +372,17 @@ class StatisticBrandController extends AdminController
                 "type" => "date/all-options",
                 "sectionId" => "date",
                 "default" => "past1years"
+            ],
+            [
+                "name" => "orderType",
+                "slug" => "order_type",
+                "id" => "64b9491",
+                "type" => "string/=",
+                "sectionId" => "string",
+                "default" => $defaultOrderType
             ]];
 
         $metabaseService->publishDashboard($dashboard->id,
-            ["date_1" => "enabled", "date_2" => "enabled", "brand_reference" => "enabled"], $parameters);
+            ["date_1" => "enabled", "date_2" => "enabled", "brand_reference" => "enabled", "order_type" => "enabled"], $parameters);
     }
 }

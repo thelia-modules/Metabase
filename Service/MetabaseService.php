@@ -428,4 +428,20 @@ class MetabaseService
         }
         return null;
     }
+
+    public function getDefaultOrderType()
+    {
+        $defaultValues = [];
+        $default = str_split(Metabase::getConfigValue(Metabase::CONFIG_METABASE_ORDER_TYPE));
+
+        $i = 0;
+        foreach ($default as $s){
+            if ($i%2 <> 1){
+                $defaultValues[] = intval($s);
+            }
+            $i=$i+1;
+        }
+
+        return $defaultValues;
+    }
 }

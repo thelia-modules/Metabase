@@ -18,79 +18,12 @@ class GenerateMetabase extends BaseForm
         $translator = Translator::getInstance();
         $this->formBuilder
             ->add(
-                "metabaseName",
+                "order_type",
                 TextType::class,
                 [
-                    'constraints' => [new NotBlank()],
-                    'required' => true,
-                    'data' => Metabase::getConfigValue(Metabase::CONFIG_METABASE_NAME),
-                    'label' => $translator->trans('Metabase name', [], Metabase::DOMAIN_NAME),
+                    'data' => Metabase::getConfigValue(Metabase::CONFIG_METABASE_ORDER_TYPE),
+                    'label' => $translator->trans('order_type', [], Metabase::DOMAIN_NAME),
                     'label_attr' => ['for' => Metabase::CONFIG_METABASE_NAME],
-                ]
-            )
-            ->add(
-                "dbName",
-                TextType::class,
-                [
-                    'constraints' => [new NotBlank()],
-                    'label' => $translator->trans('database name', [], Metabase::DOMAIN_NAME),
-                    'required' => true,
-                    'data' => Metabase::getConfigValue(Metabase::CONFIG_METABASE_DB_NAME),
-                    'label_attr' => ['for' => Metabase::CONFIG_METABASE_DB_NAME],
-                ]
-            )
-            ->add(
-                "engine",
-                TextType::class,
-                [
-                    'constraints' => [new NotBlank()],
-                    'label' => $translator->trans('database engine', [], Metabase::DOMAIN_NAME),
-                    'required' => true,
-                    'data' => Metabase::getConfigValue(Metabase::CONFIG_METABASE_ENGINE),
-                    'label_attr' => ['for' => Metabase::CONFIG_METABASE_ENGINE],
-                ]
-            )
-            ->add(
-                "host",
-                TextType::class,
-                [
-                    'constraints' => [new NotBlank()],
-                    'label' => $translator->trans('database host', [], Metabase::DOMAIN_NAME),
-                    'required' => true,
-                    'data' => Metabase::getConfigValue(Metabase::CONFIG_METABASE_HOST),
-                    'label_attr' => ['for' => Metabase::CONFIG_METABASE_HOST],
-                ]
-            )
-            ->add(
-                "port",
-                TextType::class,
-                [
-                    'constraints' => [new NotBlank()],
-                    'label' => $translator->trans('database port', [], Metabase::DOMAIN_NAME),
-                    'required' => true,
-                    'data' => Metabase::getConfigValue(Metabase::CONFIG_METABASE_PORT),
-                    'label_attr' => ['for' => Metabase::CONFIG_METABASE_PORT],
-                ]
-            )
-            ->add(
-                "user",
-                TextType::class,
-                [
-                    'constraints' => [new NotBlank()],
-                    'label' => $translator->trans('database user', [], Metabase::DOMAIN_NAME),
-                    'required'   => true,
-                    'data' => Metabase::getConfigValue(Metabase::CONFIG_METABASE_DB_USERNAME),
-                    'label_attr' => ['for' => Metabase::CONFIG_METABASE_DB_USERNAME],
-                ]
-            )
-            ->add(
-                "password",
-                PasswordType::class,
-                [
-                    'label' => $translator->trans('database password', [], Metabase::DOMAIN_NAME),
-                    'required'   => false,
-                    'data' => Metabase::getConfigValue(Metabase::CONFIG_METABASE_DB_USERNAME),
-                    'label_attr' => ['for' => Metabase::CONFIG_METABASE_DB_USERNAME],
                 ]
             );
     }

@@ -19,7 +19,7 @@
                     {/if}
                     <ul id="tabbed-menu" class="nav nav-tabs">
                         {foreach $dashboards as $dashboard}
-                        <li class="{if $tab eq "table-{$dashboard@key}"}active{/if}"><a data-toggle="tab" href="#table-{$dashboard@key}">{intl l="Dashboard {$dashboard@key+1}"}</a></li>
+                        <li class="{if $tab eq "table-{$dashboard@key}"}active{/if}"><a data-toggle="tab" href="#table-{$dashboard@key}">{intl l="{$dashboardsName[$dashboard@key]}"}</a></li>
                         {/foreach}
                     </ul>
 

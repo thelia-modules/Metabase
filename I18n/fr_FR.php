@@ -1,22 +1,50 @@
 <?php
 
-/*
- * This file is part of the Thelia package.
- * http://www.thelia.net
- *
- * (c) OpenStudio <info@thelia.net>
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- */
-
-return [
-    'Use Metabase for graph handling' => 'Utiliser Metabase pour la gestion des graphiques',
-    'Metabase url' => 'Url',
-    'Metabase token' => 'Token',
-    'Service configuration' => 'Configuration du service',
-    'Metabase service configuration' => 'Configuration de Metabase',
-    'Metabase username (mail)' => 'Identifiant (email)',
+return array(
+    'BestSellerCard' => 'Meilleures Ventes',
+    'BrandCard_' => 'Nombre de ventes - Marque ',
+    'BrandSalesCard_' => 'Chiffre d\'affaire - Marque ',
+    'CategoryCard_' => 'Nombre de ventes - Catégorie ',
+    'CategorySalesCard_' => 'Chiffre d\'affaire - Catégorie ',
+    'Count Statistic by Brand' => 'Statistique par Marque - Nombre de ventes',
+    'Count Statistic by Category' => 'Statistique par Catégorie - Nombre de ventes',
+    'Count Statistic by Product' => 'Statistique par Produit - Nombre de ventes',
+    'Dashboard Best Seller' => 'Meilleures Ventes',
+    'Dashboard Count Brand' => 'Statistique par Marque - Nombre de ventes',
+    'Dashboard Count Category' => 'Statistique par Catégorie - Nombre de ventes',
+    'Dashboard Count Product' => 'Statistique par Produit - Nombre de ventes',
+    'Dashboard Sales Brand' => 'Statistique par Marque - Chiffre d\'affaire',
+    'Dashboard Sales Category' => 'Statistique par Catégorie - Chiffre d\'affaire',
+    'Dashboard Sales Product' => 'Statistique par Produit - Chiffre d\'affaire',
+    'Metabase generation work in progress ' => 'La Metabase est en train d\'etre importé. Merci de patienté',
+    'Metabase name' => 'Nom de la nouvelle Metabase',
     'Metabase password' => 'Mot de passe',
-    'The settings have been successfully updated' => 'Les données de configuration ont été mises à jour.',
-];
+    'Metabase token (integration token)' => 'Token d\'integration Metabase',
+    'Metabase update config' => 'Mise à jour de la configuration effectué',
+    'Metabase url' => 'Url',
+    'Metabase username (mail)' => 'Identifiant (email)',
+    'ProductsCard_' => 'Nombre de ventes - Produit ',
+    'ProductsSalesCard_' => 'Chiffre d\'affaire - Produit ',
+    'Sale Number' => 'Chiffre d\'affaire annuelle ',
+    'Sales Statistic by Brand' => 'Statistique par Marque - Chiffre d\'affaire',
+    'Sales Statistic by Category' => 'Statistique par Catégorie - Chiffre d\'affaire',
+    'Sales Statistic by Product' => 'Statistique par Produit - Chiffre d\'affaire',
+    'SalesCard' => 'Chiffre d\'affaire',
+    'SalesDashboard' => 'Statistique Annuelle',
+    'card Best Seller' => 'les meilleurs ventes ',
+    'card of Count Statistic by Brand' => 'cartes de statistique par marque en nombre de ventes',
+    'card of Count Statistic by Category' => 'cartes de statistique par catégorie en nombre de ventes',
+    'card of Count Statistic by Product' => 'cartes de statistique par produit en nombre de ventes',
+    'card of Sales Statistic by Brand' => 'cartes de statistique par marque en chiffre d\'affaires',
+    'card of Sales Statistic by Category' => 'cartes de statistique par catégorie en chiffre d\'affaires',
+    'card of Sales Statistic by Product' => 'cartes de statistique par produit en chiffre d\'affaires',
+    'card with sales' => 'chiffre d\'affaires sur l\'année ',
+    'card with the sale number' => 'Chiffre d\'affaire annuelle ',
+    'database engine' => 'Moteur de base de données (MySql, ...)',
+    'database host' => 'Host (localhost)',
+    'database name' => 'Nom de la base de données',
+    'database password' => 'mot de passe de la base de données',
+    'database port' => 'Port (3306)',
+    'database user' => 'utilisateur de la base de données',
+    'sales of the store' => 'Statistique Annuelle',
+);

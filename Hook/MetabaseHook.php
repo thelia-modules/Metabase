@@ -38,6 +38,7 @@ class MetabaseHook extends BaseHook
         $metabaseKey = Metabase::getConfigValue(Metabase::CONFIG_KEY_TOKEN);
 
         $dashboards = [];
+        $dashboardsName = [];
         $errorMessage = null;
 
         $metabase = new \Metabase\Embed($metabaseUrl, $metabaseKey, false, "100%", "600");
@@ -46,17 +47,21 @@ class MetabaseHook extends BaseHook
             $apiResult = json_decode($this->metabaseService->getDashboards(), true);
 
             for ($i = 0; $i < sizeof($apiResult); ++$i) {
+
                 $dashboards[] = $metabase->dashboardIFrame($apiResult[$i]['id']);
+                $dashboardsName[] = $apiResult[$i]['name'];
             }
         } catch (MetabaseException $exception) {
             $errorMessage = $exception->getMessage();
         }
+
 
         $event->add(
             $this->render(
                 'metabase-module.html',
                 [
                     'dashboards' => $dashboards,
+                    'dashboardsName' => $dashboardsName,
                     'errorMessage' => $errorMessage,
                 ]
             )

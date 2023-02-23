@@ -31,6 +31,7 @@ class Metabase extends BaseModule
     const CONFIG_METABASE_PORT = 'metabase_port';
     const CONFIG_METABASE_DB_ID = 'metabase_db_id';
     const CONFIG_METABASE_DB_USERNAME = 'metabase_db-username';
+    const CONFIG_METABASE_ORDER_TYPE = 'metabase_order_type';
 
     /**
      * Autowiring.

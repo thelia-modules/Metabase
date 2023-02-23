@@ -3,6 +3,7 @@
 namespace Metabase\Controller;
 
 use Metabase\Form\GenerateMetabase;
+use Metabase\Form\ImportMetabase;
 use Metabase\Metabase;
 use Metabase\Service\MetabaseService;
 use Thelia\Controller\Admin\AdminController;
@@ -24,7 +25,7 @@ class GenerateMetabaseController extends AdminController
             return $response;
         }
 
-        $form = $this->createForm(GenerateMetabase::getName());
+        $form = $this->createForm(ImportMetabase::getName());
 
         $url = '/admin/module/Metabase';
 
@@ -72,8 +73,13 @@ class GenerateMetabaseController extends AdminController
             return $response;
         }
 
+        $form = $this->createForm(GenerateMetabase::getName());
+
         $url = '/admin/module/Metabase';
         try {
+            $data = $this->validateForm($form)->getData();
+            Metabase::setConfigValue(Metabase::CONFIG_METABASE_ORDER_TYPE, $data["order_type"]);
+
             $state = $metabaseService->checkMetabaseState(
                 Metabase::getConfigValue(Metabase::CONFIG_METABASE_DB_ID)
             );
@@ -99,7 +105,8 @@ class GenerateMetabaseController extends AdminController
         SalesMetabaseController $salesMetabaseController,
         StatisticProductController $statisticProductsController,
         StatisticCategoryController $statisticCategoryController,
-        StatisticBrandController $statisticBrandController
+        StatisticBrandController $statisticBrandController,
+        MainStatisticController $mainStatisticController
     ){
         if (null !== $response = $this->checkAuth([AdminResources::MODULE], ['Metabase'], AccessManager::UPDATE)) {
             return $response;
@@ -109,17 +116,20 @@ class GenerateMetabaseController extends AdminController
 
         $collection = json_decode($this->generateCollection($metabaseService, Metabase::getConfigValue(Metabase::CONFIG_METABASE_DB_ID)));
 
+        $fields = json_decode($metabaseService->getAllField(Metabase::getConfigValue(Metabase::CONFIG_METABASE_DB_ID)));
 
-        $salesMetabaseController->generateSaleMetabase($metabaseService, Metabase::getConfigValue(Metabase::CONFIG_METABASE_DB_ID), $collection->id);
+        $salesMetabaseController->generateSaleMetabase($metabaseService, Metabase::getConfigValue(Metabase::CONFIG_METABASE_DB_ID), $collection->id, $fields);
 
-        $statisticProductsController->generateProductStatisticsMetabase($metabaseService, Metabase::getConfigValue(Metabase::CONFIG_METABASE_DB_ID), $collection->id);
-        $statisticProductsController->generateProductStatisticsMetabase($metabaseService, Metabase::getConfigValue(Metabase::CONFIG_METABASE_DB_ID), $collection->id, true);
+        $statisticProductsController->generateProductStatisticsMetabase($metabaseService, Metabase::getConfigValue(Metabase::CONFIG_METABASE_DB_ID), $collection->id, $fields);
+        $statisticProductsController->generateProductStatisticsMetabase($metabaseService, Metabase::getConfigValue(Metabase::CONFIG_METABASE_DB_ID), $collection->id, $fields, true);
 
-        $statisticCategoryController->generateCategoryStatisticsMetabase($metabaseService, Metabase::getConfigValue(Metabase::CONFIG_METABASE_DB_ID), $collection->id);
-        $statisticCategoryController->generateCategoryStatisticsMetabase($metabaseService, Metabase::getConfigValue(Metabase::CONFIG_METABASE_DB_ID), $collection->id, true);
+        $statisticCategoryController->generateCategoryStatisticsMetabase($metabaseService, Metabase::getConfigValue(Metabase::CONFIG_METABASE_DB_ID), $collection->id, $fields);
+        $statisticCategoryController->generateCategoryStatisticsMetabase($metabaseService, Metabase::getConfigValue(Metabase::CONFIG_METABASE_DB_ID), $collection->id, $fields, true);
 
-        $statisticBrandController->generateBrandStatisticsMetabase($metabaseService, Metabase::getConfigValue(Metabase::CONFIG_METABASE_DB_ID), $collection->id);
-        $statisticBrandController->generateBrandStatisticsMetabase($metabaseService, Metabase::getConfigValue(Metabase::CONFIG_METABASE_DB_ID), $collection->id, true);
+        $statisticBrandController->generateBrandStatisticsMetabase($metabaseService, Metabase::getConfigValue(Metabase::CONFIG_METABASE_DB_ID), $collection->id, $fields);
+        $statisticBrandController->generateBrandStatisticsMetabase($metabaseService, Metabase::getConfigValue(Metabase::CONFIG_METABASE_DB_ID), $collection->id, $fields,true);
+
+        $mainStatisticController->generateMainMetabase($metabaseService, Metabase::getConfigValue(Metabase::CONFIG_METABASE_DB_ID), $collection->id, $fields);
 
         return $this->generateRedirect(URL::getInstance()->absoluteUrl($url, ['tab' => 'generate', 'metabasesuccess' => 1]));
     }

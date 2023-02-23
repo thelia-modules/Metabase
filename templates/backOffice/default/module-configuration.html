@@ -16,6 +16,7 @@
                 <div class="col-md-12">
                     <ul id="tabbed-menu" class="nav nav-tabs">
                         <li class="{if $tab eq "config"}active{/if}"><a data-toggle="tab" href="#config">{intl l="Configuration" d='metabase.bo.default'}</a> </li>
+                        <li class="{if $tab eq "import"}active{/if}"><a data-toggle="tab" href="#import">{intl l="Import Metabase" d='metabase.bo.default'}</a> </li>
                         <li class="{if $tab eq "generate"}active{/if}"><a data-toggle="tab" href="#generate">{intl l="Generate Metabase" d='metabase.bo.default'}</a> </li>
                     </ul>
 
@@ -64,13 +65,13 @@
                                 </form>
                             {/form}
                         </div>
-                        <div id="generate" class="tab-pane {if $tab eq "generate"}active{/if} form-container">
+                        <div id="import" class="tab-pane {if $tab eq "import"}active{/if} form-container">
                             <br>
                             <div class="title">
-                                {intl l="Generate Metabase" d='metabase.bo.default'}
+                                {intl l="Import Metabase" d='metabase.bo.default'}
                             </div>
 
-                            {form name="generate_metabase_form"}
+                            {form name="import_metabase_form"}
                                 <form action="{url path="/admin/module/metabase/importbdd"}" method="post">
                                     {form_hidden_fields form=$form}
 
@@ -112,7 +113,54 @@
                                                     {render_form_field form=$form field="password"}
                                                 </div>
                                                 <button type="submit" class="btn btn-success" >{intl l="Import BDD" d="metabase.bo.default"}</button>
-                                                <a href="/admin/module/metabase/check" class="btn btn-info">{intl l="Check Metabase Status" d="metabase.bo.default"}</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </form>
+                            {/form}
+                        </div>
+                        <div id="generate" class="tab-pane {if $tab eq "generate"}active{/if} form-container">
+                            <br>
+                            <div class="title">
+                                {intl l="Generate Metabase" d='metabase.bo.default'}
+                            </div>
+
+                            {form name="generate_metabase_form"}
+                                <form action="{url path="/admin/module/metabase/check"}" method="post">
+                                    {form_hidden_fields form=$form}
+
+                                    {render_form_field field="success_url" value={url path='/admin/module/Metabase'}}
+                                    {render_form_field field="error_url" value={url path='/admin/module/Metabase'}}
+
+                                    {if $form_error}
+                                        <div class="alert alert-danger">{$form_error_message}</div>
+                                    {/if}
+
+                                    {if $smarty.get.error|default:null}
+                                        <div class="alert alert-danger">{$smarty.get.error|default:null}</div>
+                                    {/if}
+
+                                    {if $smarty.get.metabasesuccess|default:null}
+                                        <div class="alert alert-success">{intl l={Metabase\Metabase::METABASE_SUCCESS_MESSAGE} d='metabase'}</div>
+                                    {/if}
+
+                                    {if $smarty.get.wait|default:null}
+                                        <div class="alert alert-warning">{intl l={Metabase\Metabase::WAIT_MESSAGE} d='metabase'}</div>
+                                    {/if}
+                                    {if $smarty.get.ready|default:null}
+                                        <div class="alert alert-info">{intl l={Metabase\Metabase::READY_MESSAGE} d='metabase'}</div>
+                                    {/if}
+
+                                    <div class="panel panel-default">
+                                        <div class="panel-heading">
+                                            <div class="panel-title">{intl d='metabase' l="Service generate Metabase"}</div>
+                                        </div>
+                                        <div class="panel-body">
+                                            <div class="row" style="margin-top: 20px;">
+                                                <div class="col-md-6">
+                                                    {render_form_field form=$form field="order_type"}
+                                                </div>
+                                                <button type="submit" class="btn btn-info" >{intl l="Check Metabase Status" d="metabase.bo.default"}</button>
                                                 <a href="/admin/module/metabase/generate" class="btn btn-success {if !$smarty.get.ready|default:null}disabled{/if}">{intl l="Generate Metabase Model" d="metabase.bo.default"}</a>
                                             </div>
                                         </div>
