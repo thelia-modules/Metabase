@@ -30,9 +30,15 @@ class StatisticBrandController extends AdminController
         $descriptionDashboard = $translator->trans("Sales Statistic by Brand", [], Metabase::DOMAIN_NAME);
         $cardName = $translator->trans("BrandSalesCard_", [], Metabase::DOMAIN_NAME);
         $descriptionCard = $translator->trans("card of Sales Statistic by Brand", [], Metabase::DOMAIN_NAME);
+        $column_settings = [
+            "[\"name\",\"TOTAL\"]" => [
+                "suffix" => "€",
+                "number_separators" => ", "
+            ]
+        ];
 
         $query = "SELECT SUM((`order_product`.QUANTITY * IF(`order_product`.WAS_IN_PROMO,`order_product`.PROMO_PRICE,`order_product`.PRICE))) AS TOTAL, 
-            DATE_FORMAT(`order_product`.`created_at`,\"%m\") as Date 
+            DATE_FORMAT(`order_product`.`created_at`,\"%b\") as DATE 
             FROM `order` 
             INNER JOIN `order_product` ON (`order`.`id`=`order_product`.`order_id`) 
             INNER JOIN `product` ON (`order_product`.`product_ref`=`product`.`ref`)
@@ -46,15 +52,16 @@ class StatisticBrandController extends AdminController
             $descriptionDashboard = $translator->trans("Count Statistic by Brand", [], Metabase::DOMAIN_NAME);
             $cardName = $translator->trans("BrandCard_", [], Metabase::DOMAIN_NAME);
             $descriptionCard = $translator->trans("card of Count Statistic by Brand", [], Metabase::DOMAIN_NAME);
+            $column_settings = [];
 
             $query = "SELECT SUM(order_product.quantity) AS TOTAL, 
-                DATE_FORMAT(`order_product`.`created_at`,\"%m\") as Date 
+                DATE_FORMAT(`order_product`.`created_at`,\"%b\") as DATE 
                 FROM `order` 
                 INNER JOIN `order_product` ON (`order`.`id`=`order_product`.`order_id`) 
                 INNER JOIN `product` ON (`order_product`.`product_ref`=`product`.`ref`)
                 INNER JOIN `brand_i18n` ON `brand_i18n`.`id`=`product`.`brand_id`
                 WHERE 1=0 [[or {{brand}}]] and {{date}} [[and {{orderType}}]]
-                GROUP BY date";
+                GROUP BY DATE";
         }
 
         $dashboard = json_decode($metabaseService->createDashboard($dashboardName, $descriptionDashboard, $collectionId));
@@ -66,10 +73,11 @@ class StatisticBrandController extends AdminController
         $defaultOrderType = $metabaseService->getDefaultOrderType();
 
         $card = json_decode($metabaseService->createCard(
-            ["graph.dimensions" => ["Date"],
+            ["graph.dimensions" => ["DATE"],
                 "graph.series_order_dimension" => null,
                 "graph.series_order" => null,
-                "graph.metrics" => ["TOTAL"]
+                "graph.metrics" => ["TOTAL"],
+                "column_settings" => $column_settings
             ],
             [
                 [
@@ -96,7 +104,7 @@ class StatisticBrandController extends AdminController
                             "date"
                         ]
                     ],
-                    "name" => "Date",
+                    "name" => "DATE",
                     "slug" => "date",
                     "default" => "past1years"
                 ],
@@ -137,7 +145,7 @@ class StatisticBrandController extends AdminController
                         "date" => [
                             "id" => "42bbcb76-e12d-d9ec-19bd-22a497454a1e",
                             "name" => "date",
-                            "display-name" => "Date",
+                            "display-name" => "DATE",
                             "type" => "dimension",
                             "dimension" => [
                                 "field",
@@ -171,10 +179,11 @@ class StatisticBrandController extends AdminController
         ));
 
         $card2 = json_decode($metabaseService->createCard(
-            ["graph.dimensions" => ["Date"],
+            ["graph.dimensions" => ["DATE"],
                 "graph.series_order_dimension" => null,
                 "graph.series_order" => null,
-                "graph.metrics" => ["brand"]
+                "graph.metrics" => ["brand"],
+                "column_settings" => $column_settings
             ],
             [
                 [
@@ -201,7 +210,7 @@ class StatisticBrandController extends AdminController
                             "date"
                         ]
                     ],
-                    "name" => "Date",
+                    "name" => "DATE",
                     "slug" => "date",
                     "default" => "thisyear"
                 ],
@@ -242,7 +251,7 @@ class StatisticBrandController extends AdminController
                         "date" => [
                             "id" => "42bbcb76-e12d-d9ec-19bd-22a497454a1e",
                             "name" => "date",
-                            "display-name" => "Date",
+                            "display-name" => "DATE",
                             "type" => "dimension",
                             "dimension" => [
                                 "field",

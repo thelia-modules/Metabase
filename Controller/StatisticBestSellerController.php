@@ -7,31 +7,29 @@
     use Thelia\Controller\Admin\AdminController;
     use Thelia\Core\Translation\Translator;
 
-    class MainStatisticController extends AdminController
+    class StatisticBestSellerController extends AdminController
     {
-        public function generateMainMetabase(MetabaseService $metabaseService, int $databaseId, int $collectionId)
+        public function generateBestSellerStatisticsMetabase(MetabaseService $metabaseService, int $databaseId, int $collectionId, array $fields)
         {
             $translator = Translator::getInstance();
             $dashboardName = $translator->trans("Dashboard Best Seller", [], Metabase::DOMAIN_NAME);
             $cardName = $translator->trans("BestSellerCard", [], Metabase::DOMAIN_NAME);
             $descriptionCard = $translator->trans("card Best Seller", [], Metabase::DOMAIN_NAME);
 
-            $query = "SELECT SUM(`order_product`.`quantity`) AS total_sold,
-                    SUM((`order_product`.QUANTITY * IF(`order_product`.WAS_IN_PROMO,`order_product`.PROMO_PRICE,`order_product`.PRICE))) AS total_ht,
-                    SUM((`order_product`.QUANTITY * IF(`order_product`.WAS_IN_PROMO,`order_product_tax`.PROMO_AMOUNT,`order_product_tax`.AMOUNT))) AS tax,
-                    `order_product`.`title` AS title,
-                    `order_product`.`product_ref` AS product_ref, 
-                    `order_product`.`product_sale_elements_id` AS product_sale_elements_id
+            $query = "SELECT SUM(`order_product`.`quantity`) AS TOTAL_SOLD,
+                    SUM((`order_product`.QUANTITY * IF(`order_product`.WAS_IN_PROMO,`order_product`.PROMO_PRICE,`order_product`.PRICE))) AS TOTAL_HT,
+                    SUM((`order_product`.QUANTITY * IF(`order_product`.WAS_IN_PROMO,`order_product_tax`.PROMO_AMOUNT,`order_product_tax`.AMOUNT))) AS TAX,
+                    `order_product`.`title` AS TITLE,
+                    `order_product`.`product_ref` AS PRODUCT_REFERENCE, 
+                    `order_product`.`product_sale_elements_id` AS PSE
                     FROM `order`
                     INNER JOIN `order_product` ON `order`.`id`=`order_product`.`order_id`
                     INNER JOIN `order_product_tax` ON `order_product`.`id`=`order_product_tax`.`order_product_id`
                     [[WHERE {{date}}]]
-                    GROUP BY `order_product`.`product_ref`, title, product_ref, product_sale_elements_id
-                    ORDER BY total_sold DESC";
+                    GROUP BY title, PRODUCT_REFERENCE, PSE
+                    ORDER BY TOTAL_SOLD DESC";
 
             $dashboard = json_decode($metabaseService->createDashboard($dashboardName, "Best Seller dashboard", $collectionId));
-
-            $fields = json_decode($metabaseService->getAllField($databaseId));
 
             $fieldDate = $metabaseService->searchField($fields, "Created At", "Order");
 
@@ -40,8 +38,16 @@
                     "graph.series_order_dimension" => null,
                     "graph.series_order" => null,
                     "column_settings" => [
-                        "[\"name\",\"total_ht\"]" => ["suffix" => "€"],
-                        "[\"name\",\"tax\"]" => ["suffix" => "€"]
+                        "[\"name\",\"total_ht\"]" =>
+                            [
+                                "suffix" => "€",
+                                "number_separators" => ", "
+                            ],
+                        "[\"name\",\"tax\"]" =>
+                            [
+                                "suffix" => "€",
+                                "number_separators" => ", "
+                            ]
                     ],
                     "graph.metrics" => ["category"]
                 ],
@@ -101,17 +107,6 @@
                         [
                             "template-tag",
                             "date"
-                        ]
-                    ]
-                ],
-                [
-                    "parameter_id" => "23d0dc83",
-                    "card_id" => $card->id,
-                    "target" => [
-                        "dimension",
-                        [
-                            "template-tag",
-                            "category"
                         ]
                     ]
                 ]

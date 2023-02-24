@@ -7,20 +7,20 @@
     use Thelia\Controller\Admin\AdminController;
     use Thelia\Core\Translation\Translator;
 
-    class SalesMetabaseController extends AdminController
+    class MainStatisticMetabaseController extends AdminController
     {
         /**
          * Creer un tableau avec le chiffre d'affaires du magasin
          */
-        public function generateSaleMetabase(MetabaseService $metabaseService, int $databaseId, int $collectionId, array $fields)
+        public function generateMainStatisticMetabase(MetabaseService $metabaseService, int $databaseId, int $collectionId, array $fields)
         {
             $translator = Translator::getInstance();
-            $dashboardName = $translator->trans("SalesDashboard", [], Metabase::DOMAIN_NAME);
-            $descriptionDashboard = $translator->trans("sales of the store", [], Metabase::DOMAIN_NAME);
-            $cardName = $translator->trans("SalesCard", [], Metabase::DOMAIN_NAME);
-            $descriptionCard = $translator->trans("card with sales", [], Metabase::DOMAIN_NAME);
-            $cardNameNumber = $translator->trans("Sale Number", [], Metabase::DOMAIN_NAME);
-            $descriptionCardNumber = $translator->trans("card with the sale number", [], Metabase::DOMAIN_NAME);
+            $dashboardName = $translator->trans("MainDashboard", [], Metabase::DOMAIN_NAME);
+            $descriptionDashboard = $translator->trans("main dashboard", [], Metabase::DOMAIN_NAME);
+            $cardName = $translator->trans("MainCard", [], Metabase::DOMAIN_NAME);
+            $descriptionCard = $translator->trans("main card", [], Metabase::DOMAIN_NAME);
+            $cardNameNumber = $translator->trans("MainCardNumber", [], Metabase::DOMAIN_NAME);
+            $descriptionCardNumber = $translator->trans("main card with number", [], Metabase::DOMAIN_NAME);
 
             $dashboard = json_decode($metabaseService->createDashboard($dashboardName, $descriptionDashboard, $collectionId));
 
@@ -30,7 +30,7 @@
             $defaultOrderType = $metabaseService->getDefaultOrderType();
 
             $query = "select SUM(ROUND(IF(op.`was_in_promo`, op.`promo_price` + opt.`promo_amount`, op.`price` + opt.`amount`), 2) * op.`quantity`) - SUM(ROUND(`order`.`discount`, 2)) + SUM(`order`.`postage`) as TOTAL, 
-                    DATE_FORMAT(op.`created_at`, \"%b \") as DATE 
+                    DATE_FORMAT(op.`created_at`, \"%d/%m\") as DATE 
                     from `order_product` as op 
                     join `order_product_tax` as opt on op.`id` = opt.`order_product_id` 
                     join `order` on `order`.`id` = op.`order_id`
@@ -52,7 +52,7 @@
                             "suffix" => "€",
                             "number_separators" => ", "
                         ]
-                    ]
+                    ],
                 ],
                 [
                     [
@@ -61,7 +61,7 @@
                         "target" => ["dimension", ["template-tag", "start"]],
                         "name" => "Start",
                         "slug" => "start",
-                        "default" => "past1years"
+                        "default" => "past30days"
                     ],
                     [
                         "id" => "f7050c92-f9e0-9453-81fb-58062a1446d6",
@@ -78,7 +78,7 @@
                         "default" => $defaultOrderType
                     ]
                 ],
-                $cardName."1",
+                $cardName,
                 $descriptionCard,
                 [
                     "database" => $databaseId,
@@ -95,84 +95,7 @@
                                     null
                                 ],
                                 "widget-type" => "date/relative",
-                                "default" => "past1years",
-                                "required" => true
-                            ],
-                            "order_type" => [
-                                "id" => "f7050c92-f9e0-9453-81fb-58062a1446d6",
-                                "name" => "order_type",
-                                "display-name" => "Ordertype",
-                                "type" => "dimension",
-                                "dimension" => [
-                                    "field",
-                                    $fieldOrderType,
-                                    null
-                                ],
-                                "widget-type" => "string/=",
-                                "default" => $defaultOrderType
-                            ]
-                        ],
-                        "query" => $query
-                    ],
-                    "type" => "native"
-                ],
-                "line",
-                $collectionId
-            ));
-
-            $card2 = json_decode($metabaseService->createCard(
-                [
-                    "graph.dimensions" => ["DATE"],
-                    "graph.metrics" => ["TOTAL"],
-                    "column_settings" => [
-                        "[\"name\",\"TOTAL\"]" => [
-                            "suffix" => "€",
-                            "number_separators" => ", "
-                        ]
-                    ]
-                ],
-                [
-                    [
-                        "id" => "908503d9-269d-df89-d591-79a5d8810583",
-                        "type" => "date/relative",
-                        "target" => ["dimension", ["template-tag", "start"]],
-                        "name" => "Start",
-                        "slug" => "start",
-                        "default" => "thisyear"
-                    ],
-                    [
-                        "id" => "f7050c92-f9e0-9453-81fb-58062a1446d6",
-                        "type" => "string/=",
-                        "target" => [
-                            "dimension",
-                            [
-                                "template-tag",
-                                "order_type"
-                            ]
-                        ],
-                        "name" => "Ordertype",
-                        "slug" => "order_type",
-                        "default" => $defaultOrderType
-                    ]
-                ],
-                $cardName."2",
-                $descriptionCard,
-                [
-                    "database" => $databaseId,
-                    "native" => [
-                        "template-tags" => [
-                            "start" => [
-                                "id" => "908503d9-269d-df89-d591-79a5d8810583",
-                                "name" => "start",
-                                "display-name" => "Start",
-                                "type" => "dimension",
-                                "dimension" => [
-                                    "field",
-                                    $fieldDate,
-                                    null
-                                ],
-                                "widget-type" => "date/relative",
-                                "default" => "thisyear",
+                                "default" => "past30days",
                                 "required" => true
                             ],
                             "order_type" => [
@@ -215,7 +138,7 @@
                         "target" => ["dimension", ["template-tag", "start"]],
                         "name" => "Start",
                         "slug" => "start",
-                        "default" => "past1years"
+                        "default" => "past30days"
                     ],
                     [
                         "id" => "f7050c92-f9e0-9453-81fb-58062a1446d6",
@@ -232,7 +155,7 @@
                         "default" => $defaultOrderType
                     ]
                 ],
-                $cardNameNumber."1",
+                $cardNameNumber,
                 $descriptionCardNumber,
                 [
                     "database" => $databaseId,
@@ -249,84 +172,7 @@
                                     null
                                 ],
                                 "widget-type" => "date/relative",
-                                "default" => "past1years",
-                                "required" => true
-                            ],
-                            "order_type" => [
-                                "id" => "f7050c92-f9e0-9453-81fb-58062a1446d6",
-                                "name" => "order_type",
-                                "display-name" => "Ordertype",
-                                "type" => "dimension",
-                                "dimension" => [
-                                    "field",
-                                    $fieldOrderType,
-                                    null
-                                ],
-                                "widget-type" => "string/=",
-                                "default" => $defaultOrderType
-                            ]
-                        ],
-                        "query" => $query2
-                    ],
-                    "type" => "native"
-                ],
-                "scalar",
-                $collectionId
-            ));
-
-            $card4 = json_decode($metabaseService->createCard(
-                [
-                    "graph.dimensions" => ["DATE"],
-                    "graph.metrics" => ["TOTAL"],
-                    "column_settings" => [
-                        "[\"name\",\"TOTAL\"]" => [
-                            "suffix" => "€",
-                            "number_separators" => ", "
-                        ]
-                    ]
-                ],
-                [
-                    [
-                    "id" => "908503d9-269d-df89-d591-79a5d8810583",
-                    "type" => "date/relative",
-                    "target" => ["dimension", ["template-tag", "start"]],
-                    "name" => "Start",
-                    "slug" => "start",
-                    "default" => "thisyear"
-                    ],
-                    [
-                        "id" => "f7050c92-f9e0-9453-81fb-58062a1446d6",
-                        "type" => "string/=",
-                        "target" => [
-                            "dimension",
-                            [
-                                "template-tag",
-                                "order_type"
-                            ]
-                        ],
-                        "name" => "Ordertype",
-                        "slug" => "order_type",
-                        "default" => $defaultOrderType
-                    ]
-                ],
-                $cardNameNumber."2",
-                $descriptionCardNumber,
-                [
-                    "database" => $databaseId,
-                    "native" => [
-                        "template-tags" => [
-                            "start" => [
-                                "id" => "908503d9-269d-df89-d591-79a5d8810583",
-                                "name" => "start",
-                                "display-name" => "Start",
-                                "type" => "dimension",
-                                "dimension" => [
-                                    "field",
-                                    $fieldDate,
-                                    null
-                                ],
-                                "widget-type" => "date/relative",
-                                "default" => "thisyear",
+                                "default" => "past30days",
                                 "required" => true
                             ],
                             "order_type" => [
@@ -353,7 +199,6 @@
 
             $dashboardCard = json_decode($metabaseService->addCardToDashboard($dashboard->id, $card->id));
             $dashboardCard2 = json_decode($metabaseService->addCardToDashboard($dashboard->id, $card3->id));
-            $dashboardCard3 = json_decode($metabaseService->addCardToDashboard($dashboard->id, $card4->id));
 
             $parameter_mappings = [
                 [
@@ -368,30 +213,8 @@
                     ]
                 ],
                 [
-                    "parameter_id" => "5ef8a7ef",
-                    "card_id" => $card2->id,
-                    "target" => [
-                        "dimension",
-                        [
-                            "template-tag",
-                            "start"
-                        ]
-                    ]
-                ],
-                [
                     "parameter_id" => "5ef8a7ee",
                     "card_id" => $card3->id,
-                    "target" => [
-                        "dimension",
-                        [
-                            "template-tag",
-                            "start"
-                        ]
-                    ]
-                ],
-                [
-                    "parameter_id" => "5ef8a7ef",
-                    "card_id" => $card4->id,
                     "target" => [
                         "dimension",
                         [
@@ -413,17 +236,6 @@
                 ],
                 [
                     "parameter_id" => "64b9491",
-                    "card_id" => $card2->id,
-                    "target" => [
-                        "dimension",
-                        [
-                            "template-tag",
-                            "order_type"
-                        ]
-                    ]
-                ],
-                [
-                    "parameter_id" => "64b9491",
                     "card_id" => $card3->id,
                     "target" => [
                         "dimension",
@@ -433,23 +245,10 @@
                         ]
                     ]
                 ],
-                [
-                    "parameter_id" => "64b9491",
-                    "card_id" => $card4->id,
-                    "target" => [
-                        "dimension",
-                        [
-                            "template-tag",
-                            "order_type"
-                        ]
-                    ]
-                ]
             ];
 
-            $series = json_decode($metabaseService->getCard($card2->id), true);
-            $metabaseService->resizeCards($dashboard->id, $dashboardCard->id, $parameter_mappings, [$series], 0,0, 18, 4);
-            $metabaseService->resizeCards($dashboard->id, $dashboardCard2->id, $parameter_mappings, [], 6,0, 9, 3);
-            $metabaseService->resizeCards($dashboard->id, $dashboardCard3->id, $parameter_mappings, [],6,9, 9, 3);
+            $metabaseService->resizeCards($dashboard->id, $dashboardCard->id, $parameter_mappings, [], 0,0, 18, 4);
+            $metabaseService->resizeCards($dashboard->id, $dashboardCard2->id, $parameter_mappings, [], 6,0, 18, 3);
 
             $parameters = [
                 [
@@ -458,15 +257,7 @@
                     "id" => "5ef8a7ee",
                     "type" => "date/all-options",
                     "sectionId" => "date",
-                    "default" => "thisyear"
-                ],
-                [
-                    "name" => "Date 2",
-                    "slug" => "date_2",
-                    "id" => "5ef8a7ef",
-                    "type" => "date/all-options",
-                    "sectionId" => "date",
-                    "default" => "past1years"
+                    "default" => "past30days"
                 ],
                 [
                     "name" => "orderType",
@@ -477,6 +268,6 @@
                     "default" => $defaultOrderType
                 ]];
 
-            $metabaseService->publishDashboard($dashboard->id, ["date_1" => "enabled", "date_2" => "enabled", "order_type" => "enabled"], $parameters);
+            $metabaseService->publishDashboard($dashboard->id, ["date_1" => "enabled", "order_type" => "enabled"], $parameters);
         }
     }

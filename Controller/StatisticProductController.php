@@ -24,35 +24,43 @@
             $descriptionDashboard = $translator->trans("Sales Statistic by Product", [], Metabase::DOMAIN_NAME);
             $cardName = $translator->trans("ProductsSalesCard_", [], Metabase::DOMAIN_NAME);
             $descriptionCard = $translator->trans("card of Sales Statistic by Product", [], Metabase::DOMAIN_NAME);
+            $column_settings = [
+                "[\"name\",\"TOTAL\"]" => [
+                    "suffix" => "€",
+                    "number_separators" => ", "
+                ]
+            ];
 
             $query = "select SUM((`order_product`.quantity * IF(`order_product`.was_in_promo,`order_product`.promo_price,`order_product`.price))) AS TOTAL, 
-                DATE_FORMAT(`order_product`.`created_at`,  \"%m\") as Date 
+                DATE_FORMAT(`order_product`.`created_at`,  \"%b\") as DATE 
                 from `order`
                 join `order_product` on `order`.`id` = `order_product`.`order_id`
                 join `order_product_tax` on `order_product`.`id` = `order_product_tax`.`order_product_id`
                 join `product` on `product`.ref = `order_product`.product_ref
-                where 1=0 [[or {{product}}]] and {{date}} [[and {{orderType}}]]
-                group by Date";
+                where 1=0 [[or {{ref}}]][[or {{title}}]] and {{date}} [[and {{orderType}}]]
+                group by DATE";
 
             if ($count){
                 $dashboardName = $translator->trans("Dashboard Count Product", [], Metabase::DOMAIN_NAME);
                 $descriptionDashboard = $translator->trans("Count Statistic by Product", [], Metabase::DOMAIN_NAME);
                 $cardName = $translator->trans("ProductsCard_", [], Metabase::DOMAIN_NAME);
                 $descriptionCard = $translator->trans("card of Count Statistic by Product", [], Metabase::DOMAIN_NAME);
+                $column_settings = [];
 
                 $query = "select SUM(`order_product`.quantity) as TOTAL, 
-                DATE_FORMAT(`order_product`.`created_at`, \"%m\") as Date 
+                DATE_FORMAT(`order_product`.`created_at`, \"%b\") as DATE 
                 from `order`
                 join `order_status` on `order`.status_id = `order_status`.id
                 join `order_product` on `order`.id = `order_product`.order_id
                 join `product` on `product`.ref = `order_product`.product_ref
-                where 1=0 [[or {{product}}]] and {{date}} [[and {{orderType}}]]
-                group by Date";
+                where 1=0 [[or {{ref}}]][[or {{title}}]] and {{date}} [[and {{orderType}}]]
+                group by DATE";
             }
 
             $dashboard = json_decode($metabaseService->createDashboard($dashboardName, $descriptionDashboard, $collectionId));
 
             $fieldProdRef = $metabaseService->searchField($fields, "Ref", "Product");
+            $fieldProdTitle = $metabaseService->searchField($fields, "Title", "Order Product");
             $fieldDate = $metabaseService->searchField($fields, "Created At", "Order");
             $fieldOrderType = $metabaseService->searchField($fields, "Status ID", "Order");
 
@@ -62,7 +70,8 @@
                 ["graph.dimensions" => [""],
                     "graph.series_order_dimension" => null,
                     "graph.series_order" => null,
-                    "graph.metrics" => [null]
+                    "graph.metrics" => [null],
+                    "column_settings" => $column_settings
                 ],
                 [
                     [
@@ -72,11 +81,25 @@
                             "dimension",
                             [
                                 "template-tag",
-                                "product"
+                                "ref"
                             ]
                         ],
-                        "name" => "product",
-                        "slug" => "product",
+                        "name" => "ref",
+                        "slug" => "ref",
+                        "default" => null
+                    ],
+                    [
+                        "id" => "96525f8f-b1d4-c21b-4207-4b41357d57cd",
+                        "type" => "string/=",
+                        "target" => [
+                            "dimension",
+                            [
+                                "template-tag",
+                                "title"
+                            ]
+                        ],
+                        "name" => "title",
+                        "slug" => "title",
                         "default" => null
                     ],
                     [
@@ -89,7 +112,7 @@
                                 "date"
                             ]
                         ],
-                        "name" => "Date",
+                        "name" => "DATE",
                         "slug" => "date",
                         "default" => "past1years"
                     ],
@@ -114,10 +137,10 @@
                     "database" => $databaseId,
                     "native" => [
                         "template-tags" =>  [
-                            "product" => [
+                            "ref" => [
                                 "id" => "96525f8f-b1d4-c21b-4207-4b41357d57cd",
-                                "name" => "product",
-                                "display-name" => "Product",
+                                "name" => "ref",
+                                "display-name" => "ref",
                                 "type" => "dimension",
                                 "dimension" => [
                                     "field",
@@ -127,10 +150,23 @@
                                 "widget-type" => "string/=",
                                 "default" => null
                             ],
+                            "title" => [
+                                "id" => "96525f8f-b1d4-c21b-4207-4b41357d57cd",
+                                "name" => "title",
+                                "display-name" => "Title",
+                                "type" => "dimension",
+                                "dimension" => [
+                                    "field",
+                                    $fieldProdTitle,
+                                    null
+                                ],
+                                "widget-type" => "string/=",
+                                "default" => null
+                            ],
                             "date" => [
                                 "id" => "42bbcb76-e12d-d9ec-19bd-22a497454a1e",
                                 "name" => "date",
-                                "display-name" => "Date",
+                                "display-name" => "DATE",
                                 "type" => "dimension",
                                 "dimension" => [
                                     "field",
@@ -164,10 +200,11 @@
             ));
 
             $card2 = json_decode($metabaseService->createCard(
-                ["graph.dimensions" => ["Date"],
+                ["graph.dimensions" => ["DATE"],
                     "graph.series_order_dimension" => null,
                     "graph.series_order" => null,
-                    "graph.metrics" => ["product"]
+                    "graph.metrics" => ["ref"],
+                    "column_settings" => $column_settings
                 ],
                 [
                     [
@@ -177,11 +214,25 @@
                             "dimension",
                             [
                                 "template-tag",
-                                "product"
+                                "ref"
                             ]
                         ],
-                        "name" => "product",
-                        "slug" => "product",
+                        "name" => "ref",
+                        "slug" => "ref",
+                        "default" => null
+                    ],
+                    [
+                        "id" => "96525f8f-b1d4-c21b-4207-4b41357d57cd",
+                        "type" => "string/=",
+                        "target" => [
+                            "dimension",
+                            [
+                                "template-tag",
+                                "title"
+                            ]
+                        ],
+                        "name" => "title",
+                        "slug" => "title",
                         "default" => null
                     ],
                     [
@@ -194,7 +245,7 @@
                                 "date"
                             ]
                         ],
-                        "name" => "Date",
+                        "name" => "DATE",
                         "slug" => "date",
                         "default" => "thisyear"
                     ],
@@ -219,10 +270,10 @@
                     "database" => $databaseId,
                     "native" => [
                         "template-tags" =>  [
-                            "product" => [
+                            "ref" => [
                                 "id" => "96525f8f-b1d4-c21b-4207-4b41357d57cd",
-                                "name" => "product",
-                                "display-name" => "Product",
+                                "name" => "ref",
+                                "display-name" => "ref",
                                 "type" => "dimension",
                                 "dimension" => [
                                     "field",
@@ -232,10 +283,23 @@
                                 "widget-type" => "string/=",
                                 "default" => null
                             ],
+                            "title" => [
+                                "id" => "96525f8f-b1d4-c21b-4207-4b41357d57cd",
+                                "name" => "title",
+                                "display-name" => "Title",
+                                "type" => "dimension",
+                                "dimension" => [
+                                    "field",
+                                    $fieldProdTitle,
+                                    null
+                                ],
+                                "widget-type" => "string/=",
+                                "default" => null
+                            ],
                             "date" => [
                                 "id" => "42bbcb76-e12d-d9ec-19bd-22a497454a1e",
                                 "name" => "date",
-                                "display-name" => "Date",
+                                "display-name" => "DATE",
                                 "type" => "dimension",
                                 "dimension" => [
                                     "field",
@@ -300,7 +364,7 @@
                         "dimension",
                         [
                             "template-tag",
-                            "product"
+                            "ref"
                         ]
                     ]
                 ],
@@ -311,7 +375,29 @@
                         "dimension",
                         [
                             "template-tag",
-                            "product"
+                            "ref"
+                        ]
+                    ]
+                ],
+                [
+                    "parameter_id" => "23d0dc84",
+                    "card_id" => $card2->id,
+                    "target" => [
+                        "dimension",
+                        [
+                            "template-tag",
+                            "title"
+                        ]
+                    ]
+                ],
+                [
+                    "parameter_id" => "23d0dc84",
+                    "card_id" => $card->id,
+                    "target" => [
+                        "dimension",
+                        [
+                            "template-tag",
+                            "title"
                         ]
                     ]
                 ],
@@ -351,6 +437,13 @@
                     "sectionId" => "string"
                 ],
                 [
+                    "name" => "Product Title",
+                    "slug" => "product_title",
+                    "id" => "23d0dc84",
+                    "type" => "string/=",
+                    "sectionId" => "string"
+                ],
+                [
                     "name" => "Date 1",
                     "slug" => "date_1",
                     "id" => "44928ac5",
@@ -376,6 +469,6 @@
                 ]];
 
             $metabaseService->publishDashboard($dashboard->id,
-                ["date_1" => "enabled", "date_2" => "enabled", "product_reference" => "enabled", "order_type" => "enabled"], $parameters);
+                ["date_1" => "enabled", "date_2" => "enabled", "product_reference" => "enabled", "product_title" => "enabled", "order_type" => "enabled"], $parameters);
         }
     }

@@ -19,9 +19,24 @@
                     {/if}
                     <ul id="tabbed-menu" class="nav nav-tabs">
                         {foreach $dashboards as $dashboard}
+                            {if $dashboard@key == 3}
+                                {break}
+                            {/if}
                         <li class="{if $tab eq "table-{$dashboard@key}"}active{/if}"><a data-toggle="tab" href="#table-{$dashboard@key}">{intl l="{$dashboardsName[$dashboard@key]}"}</a></li>
                         {/foreach}
                     </ul>
+
+                    <div class="dropdown">
+                        <button class="btn btn-primary dropdown-toggle" type="button" id="othersStatistic" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            {$othersStatistics}
+                        </button>
+
+                        <div id="tabbed-menu" class="dropdown-menu" aria-labelledby="othersStatistic">
+                            {foreach $dashboards as $dashboard}
+                                <li class="dropdown-item"><a data-toggle="tab" href="#table-{$dashboard@key}">{intl l="{$dashboardsName[$dashboard@key]}"}</a></li>
+                            {/foreach}
+                        </div>
+                    </div>
 
                     <div class="tab-content">
                         {foreach $dashboards as $dashboard}

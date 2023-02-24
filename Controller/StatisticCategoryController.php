@@ -24,30 +24,37 @@
             $descriptionDashboard = $translator->trans("Sales Statistic by Category", [], Metabase::DOMAIN_NAME);
             $cardName = $translator->trans("CategorySalesCard_", [], Metabase::DOMAIN_NAME);
             $descriptionCard = $translator->trans("card of Sales Statistic by Category", [], Metabase::DOMAIN_NAME);
+            $column_settings = [
+                "[\"name\",\"TOTAL\"]" => [
+                    "suffix" => "€",
+                    "number_separators" => ", "
+                ]
+            ];
 
-            $query = "select SUM(ROUND(order_product.quantity * IF(order_product.was_in_promo = 1, order_product.promo_price, order_product.price), 2) ) AS TOTAL, DATE_FORMAT(`order_product`.`created_at`, \"%m\") as Date 
+            $query = "select SUM(ROUND(order_product.quantity * IF(order_product.was_in_promo = 1, order_product.promo_price, order_product.price), 2) ) AS TOTAL, DATE_FORMAT(`order_product`.`created_at`, \"%b\") as DATE 
                 from `order`
                 join `order_product` on `order`.id = `order_product`.order_id
                 join `product` on `product`.ref = `order_product`.product_ref
                 join `product_category` on (`product`.`id`=`product_category`.`product_id`)
                 join `category_i18n` on `category_i18n`.`id` = `product_category`.`category_id`
                 where 1=0 [[or {{category}}]] and {{date}} [[and {{orderType}}]]
-                group by Date";
+                group by DATE";
 
             if ($count){
                 $dashboardName = $translator->trans("Dashboard Count Category", [], Metabase::DOMAIN_NAME);
                 $descriptionDashboard = $translator->trans("Count Statistic by Category", [], Metabase::DOMAIN_NAME);
                 $cardName = $translator->trans("CategoryCard_", [], Metabase::DOMAIN_NAME);
                 $descriptionCard = $translator->trans("card of Count Statistic by Category", [], Metabase::DOMAIN_NAME);
+                $column_settings = [];
 
-                $query = "select SUM(`order_product`.quantity) as TOTAL, DATE_FORMAT(`order_product`.`created_at`, \"%m\") as Date 
+                $query = "select SUM(`order_product`.quantity) as TOTAL, DATE_FORMAT(`order_product`.`created_at`, \"%b\") as DATE 
                 from `order`
                 join `order_product` on `order`.id = `order_product`.order_id
                 join `product` on `product`.ref = `order_product`.product_ref
                 join `product_category` on (`product`.`id`=`product_category`.`product_id`)
                 join `category_i18n` on `category_i18n`.`id` = `product_category`.`category_id`
                 where 1=0 [[or {{category}}]] and {{date}} [[and {{orderType}}]]
-                group by Date";
+                group by DATE";
             }
 
             $dashboard = json_decode($metabaseService->createDashboard($dashboardName, $descriptionDashboard, $collectionId));
@@ -59,10 +66,11 @@
             $defaultOrderType = $metabaseService->getDefaultOrderType();
 
             $card = json_decode($metabaseService->createCard(
-                ["graph.dimensions" => ["Date"],
+                ["graph.dimensions" => ["DATE"],
                     "graph.series_order_dimension" => null,
                     "graph.series_order" => null,
-                    "graph.metrics" => ["category"]
+                    "graph.metrics" => ["CATEGORY"],
+                    "column_settings" => $column_settings
                 ],
                 [
                     [
@@ -89,7 +97,7 @@
                                 "date"
                             ]
                         ],
-                        "name" => "Date",
+                        "name" => "DATE",
                         "slug" => "date",
                         "default" => "past1years"
                     ],
@@ -130,7 +138,7 @@
                             "date" => [
                                 "id" => "42bbcb76-e12d-d9ec-19bd-22a497454a1e",
                                 "name" => "date",
-                                "display-name" => "Date",
+                                "display-name" => "DATE",
                                 "type" => "dimension",
                                 "dimension" => [
                                     "field",
@@ -164,10 +172,11 @@
             ));
 
             $card2 = json_decode($metabaseService->createCard(
-                ["graph.dimensions" => ["Date"],
+                ["graph.dimensions" => ["DATE"],
                     "graph.series_order_dimension" => null,
                     "graph.series_order" => null,
-                    "graph.metrics" => ["category"]
+                    "graph.metrics" => ["category"],
+                    "column_settings" => $column_settings
                 ],
                 [
                     [
@@ -194,7 +203,7 @@
                                 "date"
                             ]
                         ],
-                        "name" => "Date",
+                        "name" => "DATE",
                         "slug" => "date",
                         "default" => "thisyear"
                     ],
@@ -235,7 +244,7 @@
                             "date" => [
                                 "id" => "42bbcb76-e12d-d9ec-19bd-22a497454a1e",
                                 "name" => "date",
-                                "display-name" => "Date",
+                                "display-name" => "DATE",
                                 "type" => "dimension",
                                 "dimension" => [
                                     "field",

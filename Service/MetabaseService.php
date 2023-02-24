@@ -37,6 +37,7 @@ class MetabaseService
 
             return $this->getDashboards();
         }
+
         return $metabaseResponse->getContent();
     }
 
@@ -301,7 +302,7 @@ class MetabaseService
         return $metabaseResponse->getContent();
     }
 
-    public function createCollection(int $databaseId)
+    public function createCollection(int $databaseId, String $name, int $parentId = null)
     {
         if (!Metabase::getConfigValue(Metabase::CONFIG_SESSION_TOKEN)) {
             $this->getSessionToken();
@@ -317,8 +318,9 @@ class MetabaseService
                     'Content-Type: application/json',
                 ],
                 'json' => [
-                    "name"=> "thelia metabase",
-                    "color"=> "#FFA500"
+                    "name"=> $name,
+                    "color"=> "#FFA500",
+                    "parent_id" => $parentId
                 ],
             ]
         );
@@ -328,7 +330,7 @@ class MetabaseService
         if (401 == $statusCode) {
             $this->getSessionToken();
 
-            return $this->createCollection($databaseId);
+            return $this->createCollection($databaseId, $name, $parentId);
         }
         return $metabaseResponse->getContent();
     }
@@ -392,7 +394,6 @@ class MetabaseService
 
     public function getCard(int $cardId)
     {
-
         if (!Metabase::getConfigValue(Metabase::CONFIG_SESSION_TOKEN)) {
             $this->getSessionToken();
         }
@@ -414,7 +415,7 @@ class MetabaseService
         if (401 == $statusCode) {
             $this->getSessionToken();
 
-            return $this->createCollection($cardId);
+            return $this->getCard($cardId);
         }
         return $metabaseResponse->getContent();
     }

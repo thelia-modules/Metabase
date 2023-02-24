@@ -17,6 +17,7 @@ use Metabase\Metabase;
 use Metabase\Service\MetabaseService;
 use Thelia\Core\Event\Hook\HookRenderEvent;
 use Thelia\Core\Hook\BaseHook;
+use Thelia\Core\Translation\Translator;
 use Thelia\Model\ModuleConfig;
 use Thelia\Model\ModuleConfigQuery;
 
@@ -32,6 +33,7 @@ class MetabaseHook extends BaseHook
 
     public function metabaseHome(HookRenderEvent $event)
     {
+        $translator = Translator::getInstance();
         // The url of the metabase installation
         $metabaseUrl = Metabase::getConfigValue(Metabase::CONFIG_KEY_URL);
         // The secret embed key from the admin settings screen
@@ -48,20 +50,24 @@ class MetabaseHook extends BaseHook
 
             for ($i = 0; $i < sizeof($apiResult); ++$i) {
 
-                $dashboards[] = $metabase->dashboardIFrame($apiResult[$i]['id']);
-                $dashboardsName[] = $apiResult[$i]['name'];
+                $dashboards[$apiResult[$i]['id']] = $metabase->dashboardIFrame($apiResult[$i]['id']);
+                $dashboardsName[$apiResult[$i]['id']] = $apiResult[$i]['name'];
             }
+
         } catch (MetabaseException $exception) {
             $errorMessage = $exception->getMessage();
         }
 
+        ksort($dashboards);
+        ksort($dashboardsName);
 
-        $event->add(
+            $event->add(
             $this->render(
                 'metabase-module.html',
                 [
-                    'dashboards' => $dashboards,
-                    'dashboardsName' => $dashboardsName,
+                    'dashboards' => array_values($dashboards),
+                    'dashboardsName' => array_values($dashboardsName),
+                    'othersStatistics' => $translator->trans("All Statistics", [], Metabase::DOMAIN_NAME),
                     'errorMessage' => $errorMessage,
                 ]
             )
