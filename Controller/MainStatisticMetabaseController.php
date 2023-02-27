@@ -2,6 +2,7 @@
 
     namespace Metabase\Controller;
 
+    use DateTime;
     use Metabase\Metabase;
     use Metabase\Service\MetabaseService;
     use Thelia\Controller\Admin\AdminController;
@@ -24,24 +25,28 @@
 
             $dashboard = json_decode($metabaseService->createDashboard($dashboardName, $descriptionDashboard, $collectionId));
 
-            $fieldDate = $metabaseService->searchField($fields, "Created At", "Order");
             $fieldOrderType = $metabaseService->searchField($fields, "Status ID", "Order");
 
             $defaultOrderType = $metabaseService->getDefaultOrderType();
 
-            $query = "select SUM(ROUND(IF(op.`was_in_promo`, op.`promo_price` + opt.`promo_amount`, op.`price` + opt.`amount`), 2) * op.`quantity`) - SUM(ROUND(`order`.`discount`, 2)) + SUM(`order`.`postage`) as TOTAL, 
-                    DATE_FORMAT(op.`created_at`, \"%d/%m\") as DATE 
-                    from `order_product` as op 
-                    join `order_product_tax` as opt on op.`id` = opt.`order_product_id` 
-                    join `order` on `order`.`id` = op.`order_id`
-                    where {{start}} [[and {{orderType}}]]
-                    group by DATE";
+            $endDate = new DateTime('now');
+            $startDate = new DateTime('now');
+            $startDate = $startDate->modify('-31 day');
 
-            $query2 = "select SUM(ROUND(IF(op.`was_in_promo`, op.`promo_price` + opt.`promo_amount`, op.`price` + opt.`amount`), 2) * op.`quantity`) - SUM(ROUND(`order`.`discount`, 2)) + SUM(`order`.`postage`) as TOTAL
-                    from `order_product` as op 
-                    join `order_product_tax` as opt on op.`id` = opt.`order_product_id` 
-                    join `order` on `order`.`id` = op.`order_id`
-                    where {{start}} [[and {{orderType}}]]";
+            $query = "SELECT `order`.`invoice_date` as DATE, 
+                    SUM((`order_product`.QUANTITY * IF(`order_product`.WAS_IN_PROMO,`order_product`.PROMO_PRICE,`order_product`.PRICE))) + SUM((`order_product`.QUANTITY * IF(`order_product`.WAS_IN_PROMO,`order_product_tax`.PROMO_AMOUNT,`order_product_tax`.AMOUNT))) - SUM(`order`.discount) AS TOTAL 
+                    FROM `order` 
+                    INNER JOIN `order_product` ON (`order`.`id`=`order_product`.`order_id`) 
+                    LEFT JOIN `order_product_tax` ON (`order_product`.`id`=`order_product_tax`.`order_product_id`) 
+                    WHERE (`order`.`invoice_date`>={{start}} AND `order`.`invoice_date`<={{end}}) AND {{orderType}} 
+                    GROUP BY DATE
+                    order BY DATE";
+
+            $query2 = "SELECT SUM((`order_product`.QUANTITY * IF(`order_product`.WAS_IN_PROMO,`order_product`.PROMO_PRICE,`order_product`.PRICE))) + SUM((`order_product`.QUANTITY * IF(`order_product`.WAS_IN_PROMO,`order_product_tax`.PROMO_AMOUNT,`order_product_tax`.AMOUNT))) - SUM(`order`.discount) AS TOTAL 
+                    FROM `order`
+                    INNER JOIN `order_product` ON (`order`.`id`=`order_product`.`order_id`) 
+                    LEFT JOIN `order_product_tax` ON (`order_product`.`id`=`order_product_tax`.`order_product_id`) 
+                    WHERE (`order`.`invoice_date`>={{start}} AND `order`.`invoice_date`<={{end}}) AND {{orderType}}";
 
             $card = json_decode($metabaseService->createCard(
                 [
@@ -53,15 +58,28 @@
                             "number_separators" => ", "
                         ]
                     ],
+                    "series_settings" => [
+                        "TOTAL" => [
+                            "line.missing" => "zero"
+                        ]
+                    ]
                 ],
                 [
                     [
                         "id" => "908503d9-269d-df89-d591-79a5d8810583",
-                        "type" => "date/relative",
+                        "type" => "date/single",
                         "target" => ["dimension", ["template-tag", "start"]],
                         "name" => "Start",
                         "slug" => "start",
-                        "default" => "past30days"
+                        "default" => $startDate->format("Y-m-d")
+                    ],
+                    [
+                        "id" => "908503d9-269d-df89-d591-79a5d8810584",
+                        "type" => "date/single",
+                        "target" => ["dimension", ["template-tag", "end"]],
+                        "name" => "End",
+                        "slug" => "end",
+                        "default" => $endDate->format("Y-m-d")
                     ],
                     [
                         "id" => "f7050c92-f9e0-9453-81fb-58062a1446d6",
@@ -70,11 +88,11 @@
                             "dimension",
                             [
                                 "template-tag",
-                                "order_type"
+                                "orderType"
                             ]
                         ],
                         "name" => "Ordertype",
-                        "slug" => "order_type",
+                        "slug" => "orderType",
                         "default" => $defaultOrderType
                     ]
                 ],
@@ -88,19 +106,21 @@
                                 "id" => "908503d9-269d-df89-d591-79a5d8810583",
                                 "name" => "start",
                                 "display-name" => "Start",
-                                "type" => "dimension",
-                                "dimension" => [
-                                    "field",
-                                    $fieldDate,
-                                    null
-                                ],
-                                "widget-type" => "date/relative",
-                                "default" => "past30days",
+                                "type" => "date",
+                                "default" => $startDate->format("Y-m-d"),
                                 "required" => true
                             ],
-                            "order_type" => [
+                            "end" => [
+                                "id" => "908503d9-269d-df89-d591-79a5d8810584",
+                                "name" => "end",
+                                "display-name" => "End",
+                                "type" => "date",
+                                "default" => $endDate->format("Y-m-d"),
+                                "required" => true
+                            ],
+                            "orderType" => [
                                 "id" => "f7050c92-f9e0-9453-81fb-58062a1446d6",
-                                "name" => "order_type",
+                                "name" => "orderType",
                                 "display-name" => "Ordertype",
                                 "type" => "dimension",
                                 "dimension" => [
@@ -129,16 +149,29 @@
                             "suffix" => "€",
                             "number_separators" => ", "
                         ]
+                    ],
+                    "series_settings" => [
+                        "TOTAL" => [
+                            "line.missing" => "zero"
+                        ]
                     ]
                 ],
                 [
                     [
                         "id" => "908503d9-269d-df89-d591-79a5d8810583",
-                        "type" => "date/relative",
+                        "type" => "date/single",
                         "target" => ["dimension", ["template-tag", "start"]],
                         "name" => "Start",
                         "slug" => "start",
-                        "default" => "past30days"
+                        "default" => $startDate->format("Y-m-d")
+                    ],
+                    [
+                        "id" => "908503d9-269d-df89-d591-79a5d8810584",
+                        "type" => "date/single",
+                        "target" => ["dimension", ["template-tag", "end"]],
+                        "name" => "End",
+                        "slug" => "end",
+                        "default" => $endDate->format("Y-m-d")
                     ],
                     [
                         "id" => "f7050c92-f9e0-9453-81fb-58062a1446d6",
@@ -147,11 +180,11 @@
                             "dimension",
                             [
                                 "template-tag",
-                                "order_type"
+                                "orderType"
                             ]
                         ],
                         "name" => "Ordertype",
-                        "slug" => "order_type",
+                        "slug" => "orderType",
                         "default" => $defaultOrderType
                     ]
                 ],
@@ -165,19 +198,21 @@
                                 "id" => "908503d9-269d-df89-d591-79a5d8810583",
                                 "name" => "start",
                                 "display-name" => "Start",
-                                "type" => "dimension",
-                                "dimension" => [
-                                    "field",
-                                    $fieldDate,
-                                    null
-                                ],
-                                "widget-type" => "date/relative",
-                                "default" => "past30days",
+                                "type" => "date",
+                                "default" => $startDate->format("Y-m-d"),
                                 "required" => true
                             ],
-                            "order_type" => [
+                            "end" => [
+                                "id" => "908503d9-269d-df89-d591-79a5d8810584",
+                                "name" => "end",
+                                "display-name" => "End",
+                                "type" => "date",
+                                "default" => $endDate->format("Y-m-d"),
+                                "required" => true
+                            ],
+                            "orderType" => [
                                 "id" => "f7050c92-f9e0-9453-81fb-58062a1446d6",
-                                "name" => "order_type",
+                                "name" => "orderType",
                                 "display-name" => "Ordertype",
                                 "type" => "dimension",
                                 "dimension" => [
@@ -202,10 +237,10 @@
 
             $parameter_mappings = [
                 [
-                    "parameter_id" => "5ef8a7ee",
+                    "parameter_id" => "3bcb6715",
                     "card_id" => $card->id,
                     "target" => [
-                        "dimension",
+                        "variable",
                         [
                             "template-tag",
                             "start"
@@ -213,13 +248,35 @@
                     ]
                 ],
                 [
-                    "parameter_id" => "5ef8a7ee",
+                    "parameter_id" => "3bcb6715",
                     "card_id" => $card3->id,
                     "target" => [
-                        "dimension",
+                        "variable",
                         [
                             "template-tag",
                             "start"
+                        ]
+                    ]
+                ],
+                [
+                    "parameter_id" => "3bcb6716",
+                    "card_id" => $card->id,
+                    "target" => [
+                        "variable",
+                        [
+                            "template-tag",
+                            "end"
+                        ]
+                    ]
+                ],
+                [
+                    "parameter_id" => "3bcb6716",
+                    "card_id" => $card3->id,
+                    "target" => [
+                        "variable",
+                        [
+                            "template-tag",
+                            "end"
                         ]
                     ]
                 ],
@@ -230,7 +287,7 @@
                         "dimension",
                         [
                             "template-tag",
-                            "order_type"
+                            "orderType"
                         ]
                     ]
                 ],
@@ -241,7 +298,7 @@
                         "dimension",
                         [
                             "template-tag",
-                            "order_type"
+                            "orderType"
                         ]
                     ]
                 ],
@@ -252,22 +309,30 @@
 
             $parameters = [
                 [
-                    "name" => "Date 1",
-                    "slug" => "date_1",
-                    "id" => "5ef8a7ee",
-                    "type" => "date/all-options",
+                    "name" => "Date Start",
+                    "slug" => "start",
+                    "id" => "3bcb6715",
+                    "type" => "date/single",
                     "sectionId" => "date",
-                    "default" => "past30days"
+                    "default" => $startDate->format("Y-m-d")
+                ],
+                [
+                    "name" => "Date End",
+                    "slug" => "end",
+                    "id" => "3bcb6716",
+                    "type" => "date/single",
+                    "sectionId" => "date",
+                    "default" => $endDate->format("Y-m-d")
                 ],
                 [
                     "name" => "orderType",
-                    "slug" => "order_type",
+                    "slug" => "orderType",
                     "id" => "64b9491",
                     "type" => "string/=",
                     "sectionId" => "string",
                     "default" => $defaultOrderType
                 ]];
 
-            $metabaseService->publishDashboard($dashboard->id, ["date_1" => "enabled", "order_type" => "enabled"], $parameters);
+            $metabaseService->publishDashboard($dashboard->id, ["start" => "enabled", "end" => "enabled", "orderType" => "enabled"], $parameters);
         }
     }

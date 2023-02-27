@@ -193,7 +193,15 @@ class MetabaseService
         if (401 == $statusCode) {
             $this->getSessionToken();
 
-            return $this->resizeCards($dashboardId,  $dashboardCardId, $cardId);
+            return $this->resizeCards(
+                $dashboardId,
+                $dashboardCardId,
+                $parameter_mappings,
+                $series,
+                $row,
+                $col,
+                $size_x,
+                $size_y);
         }
         return $metabaseResponse->getContent();
     }
