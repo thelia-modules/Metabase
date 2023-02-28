@@ -32,11 +32,12 @@
             ];
 
             $query = "select SUM((`order_product`.quantity * IF(`order_product`.was_in_promo,`order_product`.promo_price,`order_product`.price))) AS TOTAL, 
-                DATE_FORMAT(`order_product`.`created_at`,  \"%b\") as DATE 
+                DATE_FORMAT(`order`.`invoice_date`,  \"%b\") as DATE
                 from `order`
                 join `order_product` on `order`.`id` = `order_product`.`order_id`
                 join `order_product_tax` on `order_product`.`id` = `order_product_tax`.`order_product_id`
-                join `product` on `product`.ref = `order_product`.product_ref
+                join `product` on `product`.ref = `order_product`.`product_ref`
+                join `product_i18n` ON `product_i18n`.`id`=`product`.`id`
                 where 1=0 [[or {{ref}}]][[or {{title}}]] and {{date}} [[and {{orderType}}]]
                 group by DATE";
 
@@ -47,12 +48,13 @@
                 $descriptionCard = $translator->trans("card of Count Statistic by Product", [], Metabase::DOMAIN_NAME);
                 $column_settings = [];
 
-                $query = "select SUM(`order_product`.quantity) as TOTAL, 
-                DATE_FORMAT(`order_product`.`created_at`, \"%b\") as DATE 
+                $query = "select SUM(`order_product`.quantity) as TOTAL,
+                DATE_FORMAT(`order`.`invoice_date`, \"%b\") as DATE
                 from `order`
                 join `order_status` on `order`.status_id = `order_status`.id
                 join `order_product` on `order`.id = `order_product`.order_id
                 join `product` on `product`.ref = `order_product`.product_ref
+                join `product_i18n` ON `product_i18n`.`id`=`product`.`id`
                 where 1=0 [[or {{ref}}]][[or {{title}}]] and {{date}} [[and {{orderType}}]]
                 group by DATE";
             }
@@ -60,8 +62,8 @@
             $dashboard = json_decode($metabaseService->createDashboard($dashboardName, $descriptionDashboard, $collectionId));
 
             $fieldProdRef = $metabaseService->searchField($fields, "Ref", "Product");
-            $fieldProdTitle = $metabaseService->searchField($fields, "Title", "Order Product");
-            $fieldDate = $metabaseService->searchField($fields, "Created At", "Order");
+            $fieldProdTitle = $metabaseService->searchField($fields, "Title", "Product I18n");
+            $fieldDate = $metabaseService->searchField($fields, "Invoice Date", "Order");
             $fieldOrderType = $metabaseService->searchField($fields, "Status ID", "Order");
 
             $defaultOrderType = $metabaseService->getDefaultOrderType();
@@ -75,7 +77,7 @@
                 ],
                 [
                     [
-                        "id" => "96525f8f-b1d4-c21b-4207-4b41357d57cd",
+                        "id" => "96525f8f-b1d4-c21b-4207-4b41357d57ce",
                         "type" => "string/=",
                         "target" => [
                             "dimension",
@@ -123,11 +125,11 @@
                             "dimension",
                             [
                                 "template-tag",
-                                "order_type"
+                                "orderType"
                             ]
                         ],
                         "name" => "Ordertype",
-                        "slug" => "order_type",
+                        "slug" => "orderType",
                         "default" => $defaultOrderType
                     ]
                 ],
@@ -138,7 +140,7 @@
                     "native" => [
                         "template-tags" =>  [
                             "ref" => [
-                                "id" => "96525f8f-b1d4-c21b-4207-4b41357d57cd",
+                                "id" => "96525f8f-b1d4-c21b-4207-4b41357d57ce",
                                 "name" => "ref",
                                 "display-name" => "ref",
                                 "type" => "dimension",
@@ -177,9 +179,9 @@
                                 "required" => true,
                                 "default" => "past1years"
                             ],
-                            "order_type" => [
+                            "orderType" => [
                                 "id" => "f7050c92-f9e0-9453-81fb-58062a1446d6",
-                                "name" => "order_type",
+                                "name" => "orderType",
                                 "display-name" => "Ordertype",
                                 "type" => "dimension",
                                 "dimension" => [
@@ -208,7 +210,7 @@
                 ],
                 [
                     [
-                        "id" => "96525f8f-b1d4-c21b-4207-4b41357d57cd",
+                        "id" => "96525f8f-b1d4-c21b-4207-4b41357d57ce",
                         "type" => "string/=",
                         "target" => [
                             "dimension",
@@ -256,11 +258,11 @@
                             "dimension",
                             [
                                 "template-tag",
-                                "order_type"
+                                "orderType"
                             ]
                         ],
                         "name" => "Ordertype",
-                        "slug" => "order_type",
+                        "slug" => "orderType",
                         "default" => $defaultOrderType
                     ]
                 ],
@@ -271,7 +273,7 @@
                     "native" => [
                         "template-tags" =>  [
                             "ref" => [
-                                "id" => "96525f8f-b1d4-c21b-4207-4b41357d57cd",
+                                "id" => "96525f8f-b1d4-c21b-4207-4b41357d57ce",
                                 "name" => "ref",
                                 "display-name" => "ref",
                                 "type" => "dimension",
@@ -310,9 +312,9 @@
                                 "required" => true,
                                 "default" => "thisyear"
                             ],
-                            "order_type" => [
+                            "orderType" => [
                                 "id" => "f7050c92-f9e0-9453-81fb-58062a1446d6",
-                                "name" => "order_type",
+                                "name" => "orderType",
                                 "display-name" => "Ordertype",
                                 "type" => "dimension",
                                 "dimension" => [
@@ -408,7 +410,7 @@
                         "dimension",
                         [
                             "template-tag",
-                            "order_type"
+                            "orderType"
                         ]
                     ]
                 ],
@@ -419,7 +421,7 @@
                         "dimension",
                         [
                             "template-tag",
-                            "order_type"
+                            "orderType"
                         ]
                     ]
                 ]
@@ -461,7 +463,7 @@
                 ],
                 [
                     "name" => "orderType",
-                    "slug" => "order_type",
+                    "slug" => "orderType",
                     "id" => "64b9491",
                     "type" => "string/=",
                     "sectionId" => "string",
@@ -469,6 +471,6 @@
                 ]];
 
             $metabaseService->publishDashboard($dashboard->id,
-                ["date_1" => "enabled", "date_2" => "enabled", "product_reference" => "enabled", "product_title" => "enabled", "order_type" => "enabled"], $parameters);
+                ["date_1" => "enabled", "date_2" => "enabled", "product_reference" => "enabled", "product_title" => "enabled", "orderType" => "enabled"], $parameters);
         }
     }

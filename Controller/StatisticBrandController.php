@@ -38,7 +38,7 @@ class StatisticBrandController extends AdminController
         ];
 
         $query = "SELECT SUM((`order_product`.QUANTITY * IF(`order_product`.WAS_IN_PROMO,`order_product`.PROMO_PRICE,`order_product`.PRICE))) AS TOTAL, 
-            DATE_FORMAT(`order_product`.`created_at`,\"%b\") as DATE 
+            DATE_FORMAT(`order`.`invoice_date`,\"%b\") as DATE
             FROM `order` 
             INNER JOIN `order_product` ON (`order`.`id`=`order_product`.`order_id`) 
             INNER JOIN `product` ON (`order_product`.`product_ref`=`product`.`ref`)
@@ -55,7 +55,7 @@ class StatisticBrandController extends AdminController
             $column_settings = [];
 
             $query = "SELECT SUM(order_product.quantity) AS TOTAL, 
-                DATE_FORMAT(`order_product`.`created_at`,\"%b\") as DATE 
+                DATE_FORMAT(`order`.`invoice_date`,\"%b\") as DATE
                 FROM `order` 
                 INNER JOIN `order_product` ON (`order`.`id`=`order_product`.`order_id`) 
                 INNER JOIN `product` ON (`order_product`.`product_ref`=`product`.`ref`)
@@ -66,8 +66,8 @@ class StatisticBrandController extends AdminController
 
         $dashboard = json_decode($metabaseService->createDashboard($dashboardName, $descriptionDashboard, $collectionId));
 
-        $fieldBrandRef = $metabaseService->searchField($fields, "Meta Title", "Brand I18n");
-        $fieldDate = $metabaseService->searchField($fields, "Created At", "Order");
+        $fieldBrandRef = $metabaseService->searchField($fields, "Title", "Brand I18n");
+        $fieldDate = $metabaseService->searchField($fields, "Invoice Date", "Order");
         $fieldOrderType = $metabaseService->searchField($fields, "Status ID", "Order");
 
         $defaultOrderType = $metabaseService->getDefaultOrderType();
@@ -115,11 +115,11 @@ class StatisticBrandController extends AdminController
                         "dimension",
                         [
                             "template-tag",
-                            "order_type"
+                            "orderType"
                         ]
                     ],
                     "name" => "Ordertype",
-                    "slug" => "order_type",
+                    "slug" => "orderType",
                     "default" => $defaultOrderType
                 ]
             ],
@@ -156,9 +156,9 @@ class StatisticBrandController extends AdminController
                             "required" => true,
                             "default" => "past1years"
                         ],
-                        "order_type" => [
+                        "orderType" => [
                             "id" => "f7050c92-f9e0-9453-81fb-58062a1446d6",
-                            "name" => "order_type",
+                            "name" => "orderType",
                             "display-name" => "Ordertype",
                             "type" => "dimension",
                             "dimension" => [
@@ -221,11 +221,11 @@ class StatisticBrandController extends AdminController
                         "dimension",
                         [
                             "template-tag",
-                            "order_type"
+                            "orderType"
                         ]
                     ],
                     "name" => "Ordertype",
-                    "slug" => "order_type",
+                    "slug" => "orderType",
                     "default" => $defaultOrderType
                 ]
             ],
@@ -262,9 +262,9 @@ class StatisticBrandController extends AdminController
                             "required" => true,
                             "default" => "thisyear"
                         ],
-                        "order_type" => [
+                        "orderType" => [
                             "id" => "f7050c92-f9e0-9453-81fb-58062a1446d6",
-                            "name" => "order_type",
+                            "name" => "orderType",
                             "display-name" => "Ordertype",
                             "type" => "dimension",
                             "dimension" => [
@@ -338,7 +338,7 @@ class StatisticBrandController extends AdminController
                     "dimension",
                     [
                         "template-tag",
-                        "order_type"
+                        "orderType"
                     ]
                 ]
             ],
@@ -349,7 +349,7 @@ class StatisticBrandController extends AdminController
                     "dimension",
                     [
                         "template-tag",
-                        "order_type"
+                        "orderType"
                     ]
                 ]
             ]
@@ -384,7 +384,7 @@ class StatisticBrandController extends AdminController
             ],
             [
                 "name" => "orderType",
-                "slug" => "order_type",
+                "slug" => "orderType",
                 "id" => "64b9491",
                 "type" => "string/=",
                 "sectionId" => "string",
@@ -392,6 +392,6 @@ class StatisticBrandController extends AdminController
             ]];
 
         $metabaseService->publishDashboard($dashboard->id,
-            ["date_1" => "enabled", "date_2" => "enabled", "brand_reference" => "enabled", "order_type" => "enabled"], $parameters);
+            ["date_1" => "enabled", "date_2" => "enabled", "brand_reference" => "enabled", "orderType" => "enabled"], $parameters);
     }
 }

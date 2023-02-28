@@ -24,24 +24,42 @@
 
             $dashboard = json_decode($metabaseService->createDashboard($dashboardName, $descriptionDashboard, $collectionId));
 
-            $fieldDate = $metabaseService->searchField($fields, "Created At", "Order");
+            $fieldDate = $metabaseService->searchField($fields, "Invoice Date", "Order");
             $fieldOrderType = $metabaseService->searchField($fields, "Status ID", "Order");
 
             $defaultOrderType = $metabaseService->getDefaultOrderType();
 
-            $query = "select SUM(ROUND(IF(op.`was_in_promo`, op.`promo_price` + opt.`promo_amount`, op.`price` + opt.`amount`), 2) * op.`quantity`) - SUM(ROUND(`order`.`discount`, 2)) + SUM(`order`.`postage`) as TOTAL, 
-                    DATE_FORMAT(op.`created_at`, \"%b \") as DATE 
-                    from `order_product` as op 
-                    join `order_product_tax` as opt on op.`id` = opt.`order_product_id` 
-                    join `order` on `order`.`id` = op.`order_id`
-                    where {{start}} [[and {{orderType}}]]
-                    group by DATE";
+            $query = "SELECT q1.DATE1 as DATE, (q1.CA - q2.DISCOUNT) as TOTAL
+                        FROM (
+                            SELECT DATE_FORMAT(`order`.`invoice_date`, \"%b\") as DATE1,
+                            SUM((`order_product`.QUANTITY * IF(`order_product`.WAS_IN_PROMO,`order_product`.PROMO_PRICE,`order_product`.PRICE))) as CA
+                            FROM `order`
+                            INNER JOIN `order_product` ON (`order`.`id`=`order_product`.`order_id`)
+                            LEFT JOIN `order_product_tax` ON (`order_product`.`id`=`order_product_tax`.`order_product_id`)
+                            WHERE {{start}} AND {{orderType}}
+                            GROUP BY DATE1
+                            ) as q1,
+                            (
+                            SELECT DATE_FORMAT(`order`.`invoice_date`, \"%b\") as DATE2, SUM(`order`.`discount`) AS DISCOUNT
+                            FROM `order`
+                            where {{start}} AND {{orderType}}
+                            GROUP BY DATE2
+                        ) as q2
+                        where q1.DATE1 = q2.DATE2";
 
-            $query2 = "select SUM(ROUND(IF(op.`was_in_promo`, op.`promo_price` + opt.`promo_amount`, op.`price` + opt.`amount`), 2) * op.`quantity`) - SUM(ROUND(`order`.`discount`, 2)) + SUM(`order`.`postage`) as TOTAL
-                    from `order_product` as op 
-                    join `order_product_tax` as opt on op.`id` = opt.`order_product_id` 
-                    join `order` on `order`.`id` = op.`order_id`
-                    where {{start}} [[and {{orderType}}]]";
+            $query2 = "SELECT (q1.CA - q2.DISCOUNT) as TOTAL
+                        FROM (
+                            SELECT SUM((`order_product`.QUANTITY * IF(`order_product`.WAS_IN_PROMO,`order_product`.PROMO_PRICE,`order_product`.PRICE))) AS CA
+                            FROM `order`
+                            INNER JOIN `order_product` ON (`order`.`id`=`order_product`.`order_id`)
+                            LEFT JOIN `order_product_tax` ON (`order_product`.`id`=`order_product_tax`.`order_product_id`)
+                            WHERE {{start}} AND {{orderType}}
+                            ) as q1,
+                            (
+                            SELECT SUM(`order`.`discount`) AS DISCOUNT
+                            FROM `order`
+                            where {{start}} AND {{orderType}}
+                            ) as q2";
 
             $card = json_decode($metabaseService->createCard(
                 [
@@ -70,11 +88,11 @@
                             "dimension",
                             [
                                 "template-tag",
-                                "order_type"
+                                "orderType"
                             ]
                         ],
                         "name" => "Ordertype",
-                        "slug" => "order_type",
+                        "slug" => "orderType",
                         "default" => $defaultOrderType
                     ]
                 ],
@@ -98,9 +116,9 @@
                                 "default" => "past1years",
                                 "required" => true
                             ],
-                            "order_type" => [
+                            "orderType" => [
                                 "id" => "f7050c92-f9e0-9453-81fb-58062a1446d6",
-                                "name" => "order_type",
+                                "name" => "orderType",
                                 "display-name" => "Ordertype",
                                 "type" => "dimension",
                                 "dimension" => [
@@ -147,11 +165,11 @@
                             "dimension",
                             [
                                 "template-tag",
-                                "order_type"
+                                "orderType"
                             ]
                         ],
                         "name" => "Ordertype",
-                        "slug" => "order_type",
+                        "slug" => "orderType",
                         "default" => $defaultOrderType
                     ]
                 ],
@@ -175,9 +193,9 @@
                                 "default" => "thisyear",
                                 "required" => true
                             ],
-                            "order_type" => [
+                            "orderType" => [
                                 "id" => "f7050c92-f9e0-9453-81fb-58062a1446d6",
-                                "name" => "order_type",
+                                "name" => "orderType",
                                 "display-name" => "Ordertype",
                                 "type" => "dimension",
                                 "dimension" => [
@@ -224,11 +242,11 @@
                             "dimension",
                             [
                                 "template-tag",
-                                "order_type"
+                                "orderType"
                             ]
                         ],
                         "name" => "Ordertype",
-                        "slug" => "order_type",
+                        "slug" => "orderType",
                         "default" => $defaultOrderType
                     ]
                 ],
@@ -252,9 +270,9 @@
                                 "default" => "past1years",
                                 "required" => true
                             ],
-                            "order_type" => [
+                            "orderType" => [
                                 "id" => "f7050c92-f9e0-9453-81fb-58062a1446d6",
-                                "name" => "order_type",
+                                "name" => "orderType",
                                 "display-name" => "Ordertype",
                                 "type" => "dimension",
                                 "dimension" => [
@@ -301,11 +319,11 @@
                             "dimension",
                             [
                                 "template-tag",
-                                "order_type"
+                                "orderType"
                             ]
                         ],
                         "name" => "Ordertype",
-                        "slug" => "order_type",
+                        "slug" => "orderType",
                         "default" => $defaultOrderType
                     ]
                 ],
@@ -329,9 +347,9 @@
                                 "default" => "thisyear",
                                 "required" => true
                             ],
-                            "order_type" => [
+                            "orderType" => [
                                 "id" => "f7050c92-f9e0-9453-81fb-58062a1446d6",
-                                "name" => "order_type",
+                                "name" => "orderType",
                                 "display-name" => "Ordertype",
                                 "type" => "dimension",
                                 "dimension" => [
@@ -407,7 +425,7 @@
                         "dimension",
                         [
                             "template-tag",
-                            "order_type"
+                            "orderType"
                         ]
                     ]
                 ],
@@ -418,7 +436,7 @@
                         "dimension",
                         [
                             "template-tag",
-                            "order_type"
+                            "orderType"
                         ]
                     ]
                 ],
@@ -429,7 +447,7 @@
                         "dimension",
                         [
                             "template-tag",
-                            "order_type"
+                            "orderType"
                         ]
                     ]
                 ],
@@ -440,7 +458,7 @@
                         "dimension",
                         [
                             "template-tag",
-                            "order_type"
+                            "orderType"
                         ]
                     ]
                 ]
@@ -470,13 +488,13 @@
                 ],
                 [
                     "name" => "orderType",
-                    "slug" => "order_type",
+                    "slug" => "orderType",
                     "id" => "64b9491",
                     "type" => "string/=",
                     "sectionId" => "string",
                     "default" => $defaultOrderType
                 ]];
 
-            $metabaseService->publishDashboard($dashboard->id, ["date_1" => "enabled", "date_2" => "enabled", "order_type" => "enabled"], $parameters);
+            $metabaseService->publishDashboard($dashboard->id, ["date_1" => "enabled", "date_2" => "enabled", "orderType" => "enabled"], $parameters);
         }
     }

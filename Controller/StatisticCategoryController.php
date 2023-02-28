@@ -31,7 +31,8 @@
                 ]
             ];
 
-            $query = "select SUM(ROUND(order_product.quantity * IF(order_product.was_in_promo = 1, order_product.promo_price, order_product.price), 2) ) AS TOTAL, DATE_FORMAT(`order_product`.`created_at`, \"%b\") as DATE 
+            $query = "select SUM(ROUND(order_product.quantity * IF(order_product.was_in_promo = 1, order_product.promo_price, order_product.price), 2) ) AS TOTAL,
+                DATE_FORMAT(`order`.`invoice_date`, \"%b\") as DATE
                 from `order`
                 join `order_product` on `order`.id = `order_product`.order_id
                 join `product` on `product`.ref = `order_product`.product_ref
@@ -47,7 +48,8 @@
                 $descriptionCard = $translator->trans("card of Count Statistic by Category", [], Metabase::DOMAIN_NAME);
                 $column_settings = [];
 
-                $query = "select SUM(`order_product`.quantity) as TOTAL, DATE_FORMAT(`order_product`.`created_at`, \"%b\") as DATE 
+                $query = "select SUM(`order_product`.quantity) as TOTAL,
+                DATE_FORMAT(`order`.`invoice_date`, \"%b\") as DATE
                 from `order`
                 join `order_product` on `order`.id = `order_product`.order_id
                 join `product` on `product`.ref = `order_product`.product_ref
@@ -59,8 +61,8 @@
 
             $dashboard = json_decode($metabaseService->createDashboard($dashboardName, $descriptionDashboard, $collectionId));
 
-            $fieldCategoryRef = $metabaseService->searchField($fields, "Meta Title", "Category I18n");
-            $fieldDate = $metabaseService->searchField($fields, "Created At", "Order");
+            $fieldCategoryRef = $metabaseService->searchField($fields, "Title", "Category I18n");
+            $fieldDate = $metabaseService->searchField($fields, "Invoice Date", "Order");
             $fieldOrderType = $metabaseService->searchField($fields, "Status ID", "Order");
 
             $defaultOrderType = $metabaseService->getDefaultOrderType();
@@ -108,11 +110,11 @@
                             "dimension",
                             [
                                 "template-tag",
-                                "order_type"
+                                "orderType"
                             ]
                         ],
                         "name" => "Ordertype",
-                        "slug" => "order_type",
+                        "slug" => "orderType",
                         "default" => $defaultOrderType
                     ]
                 ],
@@ -149,9 +151,9 @@
                                 "required" => true,
                                 "default" => "past1years"
                             ],
-                            "order_type" => [
+                            "orderType" => [
                                 "id" => "f7050c92-f9e0-9453-81fb-58062a1446d6",
-                                "name" => "order_type",
+                                "name" => "orderType",
                                 "display-name" => "Ordertype",
                                 "type" => "dimension",
                                 "dimension" => [
@@ -214,11 +216,11 @@
                         "dimension",
                         [
                             "template-tag",
-                            "order_type"
+                            "orderType"
                         ]
                     ],
                     "name" => "Ordertype",
-                    "slug" => "order_type",
+                    "slug" => "orderType",
                     "default" => $defaultOrderType
                 ]
                 ],
@@ -255,9 +257,9 @@
                                 "required" => true,
                                 "default" => "thisyear"
                             ],
-                            "order_type" => [
+                            "orderType" => [
                                 "id" => "f7050c92-f9e0-9453-81fb-58062a1446d6",
-                                "name" => "order_type",
+                                "name" => "orderType",
                                 "display-name" => "Ordertype",
                                 "type" => "dimension",
                                 "dimension" => [
@@ -331,7 +333,7 @@
                         "dimension",
                         [
                             "template-tag",
-                            "order_type"
+                            "orderType"
                         ]
                     ]
                 ],
@@ -342,7 +344,7 @@
                         "dimension",
                         [
                             "template-tag",
-                            "order_type"
+                            "orderType"
                         ]
                     ]
                 ]
@@ -377,7 +379,7 @@
                 ],
                 [
                     "name" => "orderType",
-                    "slug" => "order_type",
+                    "slug" => "orderType",
                     "id" => "64b9491",
                     "type" => "string/=",
                     "sectionId" => "string",
@@ -385,6 +387,6 @@
                 ]];
 
             $metabaseService->publishDashboard($dashboard->id,
-                ["date_1" => "enabled", "date_2" => "enabled", "category_reference" => "enabled", "order_type" => "enabled"], $parameters);
+                ["date_1" => "enabled", "date_2" => "enabled", "category_reference" => "enabled", "orderType" => "enabled"], $parameters);
         }
     }
