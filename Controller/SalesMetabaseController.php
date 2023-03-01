@@ -29,6 +29,12 @@
 
             $defaultOrderType = $metabaseService->getDefaultOrderType();
 
+            $uuidStartDate = uniqid();
+            $uuidOrderType = uniqid();
+            $uuidParamDate1 = uniqid();
+            $uuidParamDate2 = uniqid();
+            $uuidParamOrderType = uniqid();
+
             $query = "SELECT q1.DATE1 as DATE, (q1.CA - q2.DISCOUNT) as TOTAL
                         FROM (
                             SELECT DATE_FORMAT(`order`.`invoice_date`, \"%b\") as DATE1,
@@ -74,7 +80,7 @@
                 ],
                 [
                     [
-                        "id" => "908503d9-269d-df89-d591-79a5d8810583",
+                        "id" => $uuidStartDate,
                         "type" => "date/relative",
                         "target" => ["dimension", ["template-tag", "start"]],
                         "name" => "Start",
@@ -82,7 +88,7 @@
                         "default" => "past1years"
                     ],
                     [
-                        "id" => "f7050c92-f9e0-9453-81fb-58062a1446d6",
+                        "id" => $uuidParamOrderType,
                         "type" => "string/=",
                         "target" => [
                             "dimension",
@@ -103,7 +109,7 @@
                     "native" => [
                         "template-tags" => [
                             "start" => [
-                                "id" => "908503d9-269d-df89-d591-79a5d8810583",
+                                "id" => $uuidStartDate,
                                 "name" => "start",
                                 "display-name" => "Start",
                                 "type" => "dimension",
@@ -117,7 +123,7 @@
                                 "required" => true
                             ],
                             "orderType" => [
-                                "id" => "f7050c92-f9e0-9453-81fb-58062a1446d6",
+                                "id" => $uuidOrderType,
                                 "name" => "orderType",
                                 "display-name" => "Ordertype",
                                 "type" => "dimension",
@@ -151,7 +157,7 @@
                 ],
                 [
                     [
-                        "id" => "908503d9-269d-df89-d591-79a5d8810583",
+                        "id" => $uuidStartDate,
                         "type" => "date/relative",
                         "target" => ["dimension", ["template-tag", "start"]],
                         "name" => "Start",
@@ -159,7 +165,7 @@
                         "default" => "thisyear"
                     ],
                     [
-                        "id" => "f7050c92-f9e0-9453-81fb-58062a1446d6",
+                        "id" => $uuidOrderType,
                         "type" => "string/=",
                         "target" => [
                             "dimension",
@@ -180,7 +186,7 @@
                     "native" => [
                         "template-tags" => [
                             "start" => [
-                                "id" => "908503d9-269d-df89-d591-79a5d8810583",
+                                "id" => $uuidStartDate,
                                 "name" => "start",
                                 "display-name" => "Start",
                                 "type" => "dimension",
@@ -194,7 +200,7 @@
                                 "required" => true
                             ],
                             "orderType" => [
-                                "id" => "f7050c92-f9e0-9453-81fb-58062a1446d6",
+                                "id" => $uuidOrderType,
                                 "name" => "orderType",
                                 "display-name" => "Ordertype",
                                 "type" => "dimension",
@@ -228,7 +234,7 @@
                 ],
                 [
                     [
-                        "id" => "908503d9-269d-df89-d591-79a5d8810583",
+                        "id" => $uuidStartDate,
                         "type" => "date/relative",
                         "target" => ["dimension", ["template-tag", "start"]],
                         "name" => "Start",
@@ -236,7 +242,7 @@
                         "default" => "past1years"
                     ],
                     [
-                        "id" => "f7050c92-f9e0-9453-81fb-58062a1446d6",
+                        "id" => $uuidOrderType,
                         "type" => "string/=",
                         "target" => [
                             "dimension",
@@ -257,7 +263,7 @@
                     "native" => [
                         "template-tags" => [
                             "start" => [
-                                "id" => "908503d9-269d-df89-d591-79a5d8810583",
+                                "id" => $uuidStartDate,
                                 "name" => "start",
                                 "display-name" => "Start",
                                 "type" => "dimension",
@@ -271,7 +277,7 @@
                                 "required" => true
                             ],
                             "orderType" => [
-                                "id" => "f7050c92-f9e0-9453-81fb-58062a1446d6",
+                                "id" => $uuidOrderType,
                                 "name" => "orderType",
                                 "display-name" => "Ordertype",
                                 "type" => "dimension",
@@ -305,7 +311,7 @@
                 ],
                 [
                     [
-                    "id" => "908503d9-269d-df89-d591-79a5d8810583",
+                    "id" => $uuidStartDate,
                     "type" => "date/relative",
                     "target" => ["dimension", ["template-tag", "start"]],
                     "name" => "Start",
@@ -313,7 +319,7 @@
                     "default" => "thisyear"
                     ],
                     [
-                        "id" => "f7050c92-f9e0-9453-81fb-58062a1446d6",
+                        "id" => $uuidOrderType,
                         "type" => "string/=",
                         "target" => [
                             "dimension",
@@ -334,7 +340,7 @@
                     "native" => [
                         "template-tags" => [
                             "start" => [
-                                "id" => "908503d9-269d-df89-d591-79a5d8810583",
+                                "id" => $uuidStartDate,
                                 "name" => "start",
                                 "display-name" => "Start",
                                 "type" => "dimension",
@@ -348,7 +354,7 @@
                                 "required" => true
                             ],
                             "orderType" => [
-                                "id" => "f7050c92-f9e0-9453-81fb-58062a1446d6",
+                                "id" => $uuidOrderType,
                                 "name" => "orderType",
                                 "display-name" => "Ordertype",
                                 "type" => "dimension",
@@ -375,7 +381,7 @@
 
             $parameter_mappings = [
                 [
-                    "parameter_id" => "5ef8a7ee",
+                    "parameter_id" => $uuidParamDate1,
                     "card_id" => $card->id,
                     "target" => [
                         "dimension",
@@ -386,7 +392,7 @@
                     ]
                 ],
                 [
-                    "parameter_id" => "5ef8a7ef",
+                    "parameter_id" => $uuidParamDate2,
                     "card_id" => $card2->id,
                     "target" => [
                         "dimension",
@@ -397,7 +403,7 @@
                     ]
                 ],
                 [
-                    "parameter_id" => "5ef8a7ee",
+                    "parameter_id" => $uuidParamDate1,
                     "card_id" => $card3->id,
                     "target" => [
                         "dimension",
@@ -408,7 +414,7 @@
                     ]
                 ],
                 [
-                    "parameter_id" => "5ef8a7ef",
+                    "parameter_id" => $uuidParamDate2,
                     "card_id" => $card4->id,
                     "target" => [
                         "dimension",
@@ -419,7 +425,7 @@
                     ]
                 ],
                 [
-                    "parameter_id" => "64b9491",
+                    "parameter_id" => $uuidParamOrderType,
                     "card_id" => $card->id,
                     "target" => [
                         "dimension",
@@ -430,7 +436,7 @@
                     ]
                 ],
                 [
-                    "parameter_id" => "64b9491",
+                    "parameter_id" => $uuidParamOrderType,
                     "card_id" => $card2->id,
                     "target" => [
                         "dimension",
@@ -441,7 +447,7 @@
                     ]
                 ],
                 [
-                    "parameter_id" => "64b9491",
+                    "parameter_id" => $uuidParamOrderType,
                     "card_id" => $card3->id,
                     "target" => [
                         "dimension",
@@ -452,7 +458,7 @@
                     ]
                 ],
                 [
-                    "parameter_id" => "64b9491",
+                    "parameter_id" => $uuidParamOrderType,
                     "card_id" => $card4->id,
                     "target" => [
                         "dimension",
@@ -473,7 +479,7 @@
                 [
                     "name" => "Date 1",
                     "slug" => "date_1",
-                    "id" => "5ef8a7ee",
+                    "id" => $uuidParamDate1,
                     "type" => "date/all-options",
                     "sectionId" => "date",
                     "default" => "thisyear"
@@ -481,7 +487,7 @@
                 [
                     "name" => "Date 2",
                     "slug" => "date_2",
-                    "id" => "5ef8a7ef",
+                    "id" => $uuidParamDate2,
                     "type" => "date/all-options",
                     "sectionId" => "date",
                     "default" => "past1years"
@@ -489,7 +495,7 @@
                 [
                     "name" => "orderType",
                     "slug" => "orderType",
-                    "id" => "64b9491",
+                    "id" => $uuidParamOrderType,
                     "type" => "string/=",
                     "sectionId" => "string",
                     "default" => $defaultOrderType

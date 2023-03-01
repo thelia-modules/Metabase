@@ -37,6 +37,14 @@ class StatisticBrandController extends AdminController
             ]
         ];
 
+        $uuidBrand = uniqid();
+        $uuidDate = uniqid();
+        $uuidOrderType = uniqid();
+        $uuidParamBrand = uniqid();
+        $uuidParamDate1 = uniqid();
+        $uuidParamDate2 = uniqid();
+        $uuidParamOrderType = uniqid();
+
         $query = "SELECT SUM((`order_product`.QUANTITY * IF(`order_product`.WAS_IN_PROMO,`order_product`.PROMO_PRICE,`order_product`.PRICE))) AS TOTAL, 
             DATE_FORMAT(`order`.`invoice_date`,\"%b\") as DATE
             FROM `order` 
@@ -81,7 +89,7 @@ class StatisticBrandController extends AdminController
             ],
             [
                 [
-                    "id" => "96525f8f-b1d4-c21b-4207-4b41357d57cd",
+                    "id" => $uuidBrand,
                     "type" => "string/=",
                     "target" => [
                         "dimension",
@@ -95,7 +103,7 @@ class StatisticBrandController extends AdminController
                     "default" => null
                 ],
                 [
-                    "id" => "42bbcb76-e12d-d9ec-19bd-22a497454a1e",
+                    "id" => $uuidDate,
                     "type" => "date/all-options",
                     "target" => [
                         "dimension",
@@ -109,7 +117,7 @@ class StatisticBrandController extends AdminController
                     "default" => "past1years"
                 ],
                 [
-                    "id" => "f7050c92-f9e0-9453-81fb-58062a1446d6",
+                    "id" => $uuidOrderType,
                     "type" => "string/=",
                     "target" => [
                         "dimension",
@@ -130,7 +138,7 @@ class StatisticBrandController extends AdminController
                 "native" => [
                     "template-tags" =>  [
                         "brand" => [
-                            "id" => "96525f8f-b1d4-c21b-4207-4b41357d57cd",
+                            "id" => $uuidBrand,
                             "name" => "brand",
                             "display-name" => "Brand",
                             "type" => "dimension",
@@ -143,7 +151,7 @@ class StatisticBrandController extends AdminController
                             "default" => null
                         ],
                         "date" => [
-                            "id" => "42bbcb76-e12d-d9ec-19bd-22a497454a1e",
+                            "id" => $uuidDate,
                             "name" => "date",
                             "display-name" => "DATE",
                             "type" => "dimension",
@@ -157,7 +165,7 @@ class StatisticBrandController extends AdminController
                             "default" => "past1years"
                         ],
                         "orderType" => [
-                            "id" => "f7050c92-f9e0-9453-81fb-58062a1446d6",
+                            "id" => $uuidOrderType,
                             "name" => "orderType",
                             "display-name" => "Ordertype",
                             "type" => "dimension",
@@ -187,7 +195,7 @@ class StatisticBrandController extends AdminController
             ],
             [
                 [
-                    "id" => "96525f8f-b1d4-c21b-4207-4b41357d57cd",
+                    "id" => $uuidBrand,
                     "type" => "string/=",
                     "target" => [
                         "dimension",
@@ -201,7 +209,7 @@ class StatisticBrandController extends AdminController
                     "default" => null
                 ],
                 [
-                    "id" => "42bbcb76-e12d-d9ec-19bd-22a497454a1e",
+                    "id" => $uuidDate,
                     "type" => "date/all-options",
                     "target" => [
                         "dimension",
@@ -215,7 +223,7 @@ class StatisticBrandController extends AdminController
                     "default" => "thisyear"
                 ],
                 [
-                    "id" => "f7050c92-f9e0-9453-81fb-58062a1446d6",
+                    "id" => $uuidOrderType,
                     "type" => "string/=",
                     "target" => [
                         "dimension",
@@ -236,7 +244,7 @@ class StatisticBrandController extends AdminController
                 "native" => [
                     "template-tags" =>  [
                         "brand" => [
-                            "id" => "96525f8f-b1d4-c21b-4207-4b41357d57cd",
+                            "id" => $uuidBrand,
                             "name" => "brand",
                             "display-name" => "Brand",
                             "type" => "dimension",
@@ -249,7 +257,7 @@ class StatisticBrandController extends AdminController
                             "default" => null
                         ],
                         "date" => [
-                            "id" => "42bbcb76-e12d-d9ec-19bd-22a497454a1e",
+                            "id" => $uuidDate,
                             "name" => "date",
                             "display-name" => "DATE",
                             "type" => "dimension",
@@ -263,7 +271,7 @@ class StatisticBrandController extends AdminController
                             "default" => "thisyear"
                         ],
                         "orderType" => [
-                            "id" => "f7050c92-f9e0-9453-81fb-58062a1446d6",
+                            "id" => $uuidOrderType,
                             "name" => "orderType",
                             "display-name" => "Ordertype",
                             "type" => "dimension",
@@ -288,7 +296,7 @@ class StatisticBrandController extends AdminController
 
         $parameter_mappings = [
             [
-                "parameter_id" => "eb41a963",
+                "parameter_id" => $uuidParamDate1,
                 "card_id" => $card2->id,
                 "target" => [
                     "dimension",
@@ -299,7 +307,7 @@ class StatisticBrandController extends AdminController
                 ]
             ],
             [
-                "parameter_id" => "44928ac5",
+                "parameter_id" => $uuidParamDate2,
                 "card_id" => $card->id,
                 "target" => [
                     "dimension",
@@ -310,7 +318,7 @@ class StatisticBrandController extends AdminController
                 ]
             ],
             [
-                "parameter_id" => "23d0dc83",
+                "parameter_id" => $uuidParamBrand,
                 "card_id" => $card2->id,
                 "target" => [
                     "dimension",
@@ -321,7 +329,7 @@ class StatisticBrandController extends AdminController
                 ]
             ],
             [
-                "parameter_id" => "23d0dc83",
+                "parameter_id" => $uuidParamBrand,
                 "card_id" => $card->id,
                 "target" => [
                     "dimension",
@@ -332,7 +340,7 @@ class StatisticBrandController extends AdminController
                 ]
             ],
             [
-                "parameter_id" => "64b9491",
+                "parameter_id" => "$uuidParamOrderType",
                 "card_id" => $card->id,
                 "target" => [
                     "dimension",
@@ -343,7 +351,7 @@ class StatisticBrandController extends AdminController
                 ]
             ],
             [
-                "parameter_id" => "64b9491",
+                "parameter_id" => $uuidParamOrderType,
                 "card_id" => $card2->id,
                 "target" => [
                     "dimension",
@@ -362,14 +370,14 @@ class StatisticBrandController extends AdminController
             [
                 "name" => "Brand Reference",
                 "slug" => "brand_reference",
-                "id" => "23d0dc83",
+                "id" => $uuidParamBrand,
                 "type" => "string/=",
                 "sectionId" => "string"
             ],
             [
                 "name" => "Date 1",
                 "slug" => "date_1",
-                "id" => "44928ac5",
+                "id" => $uuidParamDate1,
                 "type" => "date/all-options",
                 "sectionId" => "date",
                 "default" => "thisyear"
@@ -377,7 +385,7 @@ class StatisticBrandController extends AdminController
             [
                 "name" => "Date 2",
                 "slug" => "date_2",
-                "id" => "eb41a963",
+                "id" => $uuidParamDate2,
                 "type" => "date/all-options",
                 "sectionId" => "date",
                 "default" => "past1years"
@@ -385,7 +393,7 @@ class StatisticBrandController extends AdminController
             [
                 "name" => "orderType",
                 "slug" => "orderType",
-                "id" => "64b9491",
+                "id" => $uuidParamOrderType,
                 "type" => "string/=",
                 "sectionId" => "string",
                 "default" => $defaultOrderType

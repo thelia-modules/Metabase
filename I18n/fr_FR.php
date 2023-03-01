@@ -30,7 +30,6 @@ return array(
     'Metabase username (mail)' => 'Identifiant (email)',
     'ProductsCard_' => 'Nombre de ventes - Produit - Période ',
     'ProductsSalesCard_' => 'Chiffre d\'affaire - Produit - Période ',
-    'RootCollection' => 'New Store',
     'Sale Number' => 'Chiffre d\'affaire annuelle - Ventes - Période ',
     'Sales Statistic by Brand' => 'Statistique par Marque - Chiffre d\'affaire',
     'Sales Statistic by Category' => 'Statistique par Catégorie - Chiffre d\'affaire',

@@ -34,7 +34,7 @@ class GenerateMetabaseController extends AdminController
 
             $jsonBdd = $this->addBddMetabase(
                 $metabaseService,
-                $data["metabaseName"],
+                $data["dbName"],
                 $data["dbName"],
                 $data["engine"],
                 $data["host"],
@@ -116,7 +116,7 @@ class GenerateMetabaseController extends AdminController
         $url = '/admin/module/Metabase';
 
         $translator = Translator::getInstance();
-        $rootCollectionName = $translator->trans("RootCollection", [], Metabase::DOMAIN_NAME);
+        $rootCollectionName = Metabase::getConfigValue(Metabase::CONFIG_METABASE_NAME);
         $mainCollectionName = $translator->trans("MainCollection", [], Metabase::DOMAIN_NAME);
         $statCollectionName = $translator->trans("StatCollection", [], Metabase::DOMAIN_NAME);
 

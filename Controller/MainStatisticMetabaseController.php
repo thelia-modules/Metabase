@@ -33,6 +33,13 @@
             $startDate = new DateTime('now');
             $startDate = $startDate->modify('-31 day');
 
+            $uuidStartDate = uniqid();
+            $uuidEndDate = uniqid();
+            $uuidOrderType = uniqid();
+            $uuidParamStart = uniqid();
+            $uuidParamEnd = uniqid();
+            $uuidParamOrderType = uniqid();
+
             $query = "SELECT `order`.`invoice_date` as DATE, 
                     SUM((`order_product`.QUANTITY * IF(`order_product`.WAS_IN_PROMO,`order_product`.PROMO_PRICE,`order_product`.PRICE))) + SUM((`order_product`.QUANTITY * IF(`order_product`.WAS_IN_PROMO,`order_product_tax`.PROMO_AMOUNT,`order_product_tax`.AMOUNT))) - SUM(`order`.discount) AS TOTAL 
                     FROM `order` 
@@ -66,7 +73,7 @@
                 ],
                 [
                     [
-                        "id" => "908503d9-269d-df89-d591-79a5d8810583",
+                        "id" => $uuidStartDate,
                         "type" => "date/single",
                         "target" => ["dimension", ["template-tag", "start"]],
                         "name" => "Start",
@@ -74,7 +81,7 @@
                         "default" => $startDate->format("Y-m-d")
                     ],
                     [
-                        "id" => "908503d9-269d-df89-d591-79a5d8810584",
+                        "id" => $uuidEndDate,
                         "type" => "date/single",
                         "target" => ["dimension", ["template-tag", "end"]],
                         "name" => "End",
@@ -82,7 +89,7 @@
                         "default" => $endDate->format("Y-m-d")
                     ],
                     [
-                        "id" => "f7050c92-f9e0-9453-81fb-58062a1446d6",
+                        "id" => $uuidOrderType,
                         "type" => "string/=",
                         "target" => [
                             "dimension",
@@ -103,7 +110,7 @@
                     "native" => [
                         "template-tags" => [
                             "start" => [
-                                "id" => "908503d9-269d-df89-d591-79a5d8810583",
+                                "id" => $uuidStartDate,
                                 "name" => "start",
                                 "display-name" => "Start",
                                 "type" => "date",
@@ -111,7 +118,7 @@
                                 "required" => true
                             ],
                             "end" => [
-                                "id" => "908503d9-269d-df89-d591-79a5d8810584",
+                                "id" => $uuidEndDate,
                                 "name" => "end",
                                 "display-name" => "End",
                                 "type" => "date",
@@ -119,7 +126,7 @@
                                 "required" => true
                             ],
                             "orderType" => [
-                                "id" => "f7050c92-f9e0-9453-81fb-58062a1446d6",
+                                "id" => $uuidOrderType,
                                 "name" => "orderType",
                                 "display-name" => "Ordertype",
                                 "type" => "dimension",
@@ -158,7 +165,7 @@
                 ],
                 [
                     [
-                        "id" => "908503d9-269d-df89-d591-79a5d8810583",
+                        "id" => $uuidStartDate,
                         "type" => "date/single",
                         "target" => ["dimension", ["template-tag", "start"]],
                         "name" => "Start",
@@ -166,7 +173,7 @@
                         "default" => $startDate->format("Y-m-d")
                     ],
                     [
-                        "id" => "908503d9-269d-df89-d591-79a5d8810584",
+                        "id" => $uuidEndDate,
                         "type" => "date/single",
                         "target" => ["dimension", ["template-tag", "end"]],
                         "name" => "End",
@@ -174,7 +181,7 @@
                         "default" => $endDate->format("Y-m-d")
                     ],
                     [
-                        "id" => "f7050c92-f9e0-9453-81fb-58062a1446d6",
+                        "id" => $uuidOrderType,
                         "type" => "string/=",
                         "target" => [
                             "dimension",
@@ -195,7 +202,7 @@
                     "native" => [
                         "template-tags" => [
                             "start" => [
-                                "id" => "908503d9-269d-df89-d591-79a5d8810583",
+                                "id" => $uuidStartDate,
                                 "name" => "start",
                                 "display-name" => "Start",
                                 "type" => "date",
@@ -203,7 +210,7 @@
                                 "required" => true
                             ],
                             "end" => [
-                                "id" => "908503d9-269d-df89-d591-79a5d8810584",
+                                "id" => $uuidEndDate,
                                 "name" => "end",
                                 "display-name" => "End",
                                 "type" => "date",
@@ -211,7 +218,7 @@
                                 "required" => true
                             ],
                             "orderType" => [
-                                "id" => "f7050c92-f9e0-9453-81fb-58062a1446d6",
+                                "id" => $uuidOrderType,
                                 "name" => "orderType",
                                 "display-name" => "Ordertype",
                                 "type" => "dimension",
@@ -237,7 +244,7 @@
 
             $parameter_mappings = [
                 [
-                    "parameter_id" => "3bcb6715",
+                    "parameter_id" => $uuidParamStart,
                     "card_id" => $card->id,
                     "target" => [
                         "variable",
@@ -248,7 +255,7 @@
                     ]
                 ],
                 [
-                    "parameter_id" => "3bcb6715",
+                    "parameter_id" => $uuidParamStart,
                     "card_id" => $card3->id,
                     "target" => [
                         "variable",
@@ -259,7 +266,7 @@
                     ]
                 ],
                 [
-                    "parameter_id" => "3bcb6716",
+                    "parameter_id" => $uuidParamEnd,
                     "card_id" => $card->id,
                     "target" => [
                         "variable",
@@ -270,7 +277,7 @@
                     ]
                 ],
                 [
-                    "parameter_id" => "3bcb6716",
+                    "parameter_id" => $uuidParamEnd,
                     "card_id" => $card3->id,
                     "target" => [
                         "variable",
@@ -281,7 +288,7 @@
                     ]
                 ],
                 [
-                    "parameter_id" => "64b9491",
+                    "parameter_id" => $uuidParamOrderType,
                     "card_id" => $card->id,
                     "target" => [
                         "dimension",
@@ -292,7 +299,7 @@
                     ]
                 ],
                 [
-                    "parameter_id" => "64b9491",
+                    "parameter_id" => $uuidParamOrderType,
                     "card_id" => $card3->id,
                     "target" => [
                         "dimension",
@@ -311,7 +318,7 @@
                 [
                     "name" => "Date Start",
                     "slug" => "start",
-                    "id" => "3bcb6715",
+                    "id" => $uuidParamStart,
                     "type" => "date/single",
                     "sectionId" => "date",
                     "default" => $startDate->format("Y-m-d")
@@ -319,7 +326,7 @@
                 [
                     "name" => "Date End",
                     "slug" => "end",
-                    "id" => "3bcb6716",
+                    "id" => $uuidParamEnd,
                     "type" => "date/single",
                     "sectionId" => "date",
                     "default" => $endDate->format("Y-m-d")
@@ -327,7 +334,7 @@
                 [
                     "name" => "orderType",
                     "slug" => "orderType",
-                    "id" => "64b9491",
+                    "id" => $uuidParamOrderType,
                     "type" => "string/=",
                     "sectionId" => "string",
                     "default" => $defaultOrderType

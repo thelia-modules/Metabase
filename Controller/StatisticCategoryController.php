@@ -31,6 +31,14 @@
                 ]
             ];
 
+            $uuidCategory = uniqid();
+            $uuidDate = uniqid();
+            $uuidOrderType = uniqid();
+            $uuidParamCategory = uniqid();
+            $uuidParamDate1 = uniqid();
+            $uuidParamDate2 = uniqid();
+            $uuidParamOrderType = uniqid();
+
             $query = "select SUM(ROUND(order_product.quantity * IF(order_product.was_in_promo = 1, order_product.promo_price, order_product.price), 2) ) AS TOTAL,
                 DATE_FORMAT(`order`.`invoice_date`, \"%b\") as DATE
                 from `order`
@@ -76,7 +84,7 @@
                 ],
                 [
                     [
-                        "id" => "96525f8f-b1d4-c21b-4207-4b41357d57cd",
+                        "id" => $uuidCategory,
                         "type" => "string/=",
                         "target" => [
                             "dimension",
@@ -90,7 +98,7 @@
                         "default" => null
                     ],
                     [
-                        "id" => "42bbcb76-e12d-d9ec-19bd-22a497454a1e",
+                        "id" => $uuidDate,
                         "type" => "date/all-options",
                         "target" => [
                             "dimension",
@@ -104,7 +112,7 @@
                         "default" => "past1years"
                     ],
                     [
-                        "id" => "f7050c92-f9e0-9453-81fb-58062a1446d6",
+                        "id" => $uuidOrderType,
                         "type" => "string/=",
                         "target" => [
                             "dimension",
@@ -125,7 +133,7 @@
                     "native" => [
                         "template-tags" =>  [
                             "category" => [
-                                "id" => "96525f8f-b1d4-c21b-4207-4b41357d57cd",
+                                "id" => $uuidCategory,
                                 "name" => "category",
                                 "display-name" => "Category",
                                 "type" => "dimension",
@@ -138,7 +146,7 @@
                                 "default" => null
                             ],
                             "date" => [
-                                "id" => "42bbcb76-e12d-d9ec-19bd-22a497454a1e",
+                                "id" => $uuidDate,
                                 "name" => "date",
                                 "display-name" => "DATE",
                                 "type" => "dimension",
@@ -152,7 +160,7 @@
                                 "default" => "past1years"
                             ],
                             "orderType" => [
-                                "id" => "f7050c92-f9e0-9453-81fb-58062a1446d6",
+                                "id" => $uuidOrderType,
                                 "name" => "orderType",
                                 "display-name" => "Ordertype",
                                 "type" => "dimension",
@@ -182,7 +190,7 @@
                 ],
                 [
                     [
-                        "id" => "96525f8f-b1d4-c21b-4207-4b41357d57cd",
+                        "id" => $uuidCategory,
                         "type" => "string/=",
                         "target" => [
                             "dimension",
@@ -196,7 +204,7 @@
                         "default" => null
                     ],
                     [
-                        "id" => "42bbcb76-e12d-d9ec-19bd-22a497454a1e",
+                        "id" => $uuidDate,
                         "type" => "date/all-options",
                         "target" => [
                             "dimension",
@@ -210,7 +218,7 @@
                         "default" => "thisyear"
                     ],
                     [
-                    "id" => "f7050c92-f9e0-9453-81fb-58062a1446d6",
+                    "id" => $uuidOrderType,
                     "type" => "string/=",
                     "target" => [
                         "dimension",
@@ -231,7 +239,7 @@
                     "native" => [
                         "template-tags" =>  [
                             "category" => [
-                                "id" => "96525f8f-b1d4-c21b-4207-4b41357d57cd",
+                                "id" => $uuidCategory,
                                 "name" => "category",
                                 "display-name" => "Category",
                                 "type" => "dimension",
@@ -244,7 +252,7 @@
                                 "default" => null
                             ],
                             "date" => [
-                                "id" => "42bbcb76-e12d-d9ec-19bd-22a497454a1e",
+                                "id" => $uuidDate,
                                 "name" => "date",
                                 "display-name" => "DATE",
                                 "type" => "dimension",
@@ -258,7 +266,7 @@
                                 "default" => "thisyear"
                             ],
                             "orderType" => [
-                                "id" => "f7050c92-f9e0-9453-81fb-58062a1446d6",
+                                "id" => $uuidOrderType,
                                 "name" => "orderType",
                                 "display-name" => "Ordertype",
                                 "type" => "dimension",
@@ -283,7 +291,7 @@
 
             $parameter_mappings = [
                 [
-                    "parameter_id" => "eb41a963",
+                    "parameter_id" => $uuidParamDate1,
                     "card_id" => $card2->id,
                     "target" => [
                         "dimension",
@@ -294,7 +302,7 @@
                     ]
                 ],
                 [
-                    "parameter_id" => "44928ac5",
+                    "parameter_id" => $uuidParamDate2,
                     "card_id" => $card->id,
                     "target" => [
                         "dimension",
@@ -305,7 +313,7 @@
                     ]
                 ],
                 [
-                    "parameter_id" => "23d0dc83",
+                    "parameter_id" => $uuidParamCategory,
                     "card_id" => $card2->id,
                     "target" => [
                         "dimension",
@@ -316,7 +324,7 @@
                     ]
                 ],
                 [
-                    "parameter_id" => "23d0dc83",
+                    "parameter_id" => $uuidParamCategory,
                     "card_id" => $card->id,
                     "target" => [
                         "dimension",
@@ -327,7 +335,7 @@
                     ]
                 ],
                 [
-                    "parameter_id" => "64b9491",
+                    "parameter_id" => $uuidParamOrderType,
                     "card_id" => $card->id,
                     "target" => [
                         "dimension",
@@ -338,7 +346,7 @@
                     ]
                 ],
                 [
-                    "parameter_id" => "64b9491",
+                    "parameter_id" => $uuidParamOrderType,
                     "card_id" => $card2->id,
                     "target" => [
                         "dimension",
@@ -357,14 +365,14 @@
                 [
                     "name" => "Category Reference",
                     "slug" => "category_reference",
-                    "id" => "23d0dc83",
+                    "id" => $uuidParamCategory,
                     "type" => "string/=",
                     "sectionId" => "string"
                 ],
                 [
                     "name" => "Date 1",
                     "slug" => "date_1",
-                    "id" => "44928ac5",
+                    "id" => $uuidParamDate1,
                     "type" => "date/all-options",
                     "sectionId" => "date",
                     "default" => "thisyear"
@@ -372,7 +380,7 @@
                 [
                     "name" => "Date 2",
                     "slug" => "date_2",
-                    "id" => "eb41a963",
+                    "id" => $uuidParamDate2,
                     "type" => "date/all-options",
                     "sectionId" => "date",
                     "default" => "past1years"
@@ -380,7 +388,7 @@
                 [
                     "name" => "orderType",
                     "slug" => "orderType",
-                    "id" => "64b9491",
+                    "id" => $uuidParamOrderType,
                     "type" => "string/=",
                     "sectionId" => "string",
                     "default" => $defaultOrderType

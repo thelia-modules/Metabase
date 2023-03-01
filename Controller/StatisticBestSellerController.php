@@ -16,6 +16,9 @@
             $cardName = $translator->trans("BestSellerCard", [], Metabase::DOMAIN_NAME);
             $descriptionCard = $translator->trans("card Best Seller", [], Metabase::DOMAIN_NAME);
 
+            $uuidDate = uniqid();
+            $uuidParamDate = uniqid();
+
             $query = "SELECT SUM(`order_product`.`quantity`) AS TOTAL_SOLD,
                     SUM((`order_product`.QUANTITY * IF(`order_product`.WAS_IN_PROMO,`order_product`.PROMO_PRICE,`order_product`.PRICE))) AS TOTAL_HT,
                     SUM((`order_product`.QUANTITY * IF(`order_product`.WAS_IN_PROMO,`order_product_tax`.PROMO_AMOUNT,`order_product_tax`.AMOUNT))) AS TAX,
@@ -53,7 +56,7 @@
                 ],
                 [
                     [
-                        "id" => "42bbcb76-e12d-d9ec-19bd-22a497454a1e",
+                        "id" => $uuidDate,
                         "type" => "date/all-options",
                         "target" => [
                             "dimension",
@@ -74,7 +77,7 @@
                     "native" => [
                         "template-tags" =>  [
                             "date" => [
-                                "id" => "42bbcb76-e12d-d9ec-19bd-22a497454a1e",
+                                "id" => $uuidDate,
                                 "name" => "date",
                                 "display-name" => "Date",
                                 "type" => "dimension",
@@ -100,7 +103,7 @@
 
             $parameter_mappings = [
                 [
-                    "parameter_id" => "44928ac5",
+                    "parameter_id" => $uuidParamDate,
                     "card_id" => $card->id,
                     "target" => [
                         "dimension",
@@ -118,7 +121,7 @@
                 [
                     "name" => "Date",
                     "slug" => "date",
-                    "id" => "44928ac5",
+                    "id" => $uuidParamDate,
                     "type" => "date/all-options",
                     "sectionId" => "date",
                     "default" => "thisyear"
