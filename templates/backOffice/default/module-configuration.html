@@ -18,6 +18,7 @@
                         <li class="{if $tab eq "config"}active{/if}"><a data-toggle="tab" href="#config">{intl l="Configuration" d='metabase.bo.default'}</a> </li>
                         <li class="{if $tab eq "import"}active{/if}"><a data-toggle="tab" href="#import">{intl l="Import Metabase" d='metabase.bo.default'}</a> </li>
                         <li class="{if $tab eq "generate"}active{/if}"><a data-toggle="tab" href="#generate">{intl l="Generate Metabase" d='metabase.bo.default'}</a> </li>
+                        <li class="{if $tab eq "syncing"}active{/if}"><a data-toggle="tab" href="#syncing">{intl l="Syncing Metabase" d='metabase.bo.default'}</a> </li>
                     </ul>
 
                     <div class="tab-content">
@@ -162,6 +163,63 @@
                                                 </div>
                                                 <button type="submit" class="btn btn-info" >{intl l="Check Metabase Status" d="metabase.bo.default"}</button>
                                                 <a href="/admin/module/metabase/generate" class="btn btn-success {if !$smarty.get.ready|default:null}disabled{/if}">{intl l="Generate Metabase Model" d="metabase.bo.default"}</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </form>
+                            {/form}
+                        </div>
+
+                        <div id="syncing" class="tab-pane {if $tab eq "syncing"}active{/if} form-container">
+                            <br>
+                            <div class="title">
+                                {intl l="Syncing Metabase" d='metabase.bo.default'}
+                            </div>
+
+                            {form name="syncing_metabase_form"}
+                                <form action="{url path="/admin/module/metabase/syncing"}" method="post">
+                                    {form_hidden_fields form=$form}
+
+                                    {render_form_field field="success_url" value={url path='/admin/module/Metabase'}}
+                                    {render_form_field field="error_url" value={url path='/admin/module/Metabase'}}
+
+                                    {if $form_error}
+                                        <div class="alert alert-danger">{$form_error_message}</div>
+                                    {/if}
+
+
+                                    {if $smarty.get.syncing|default:null}
+                                        <div class="alert alert-success">{intl l={Metabase\Metabase::METABASE_SYNCING_MESSAGE} d='metabase'}</div>
+                                    {/if}
+
+                                    <div class="panel panel-default">
+                                        <div class="panel-heading">
+                                            <div class="panel-title">{intl d='metabase' l="Syncing parameter Metabase"}</div>
+                                        </div>
+                                        <div class="panel-body">
+                                            <div class="row" style="margin-top: 20px;">
+                                                <div class="col-md-9">
+                                                    {render_form_field form=$form field="syncingOption"}
+                                                </div>
+                                                <div class="col-md-4">
+                                                    {intl d='metabase' l="Database syncing"}
+                                                    {render_form_field form=$form field="syncingSchedule"}
+                                                    {render_form_field form=$form field="syncingTime"}
+                                                </div>
+                                                <div class="col-md-4">
+                                                    {intl d='metabase' l="Scanning for Filter Values"}
+                                                    {intl d='metabase' l="(Select is_full_sync Option)"}
+
+                                                    {render_form_field form=$form field="scanningSchedule"}
+                                                    {render_form_field form=$form field="scanningFrame"}
+                                                    {render_form_field form=$form field="scanningDay"}
+                                                    {render_form_field form=$form field="scanningTime"}
+                                                </div>
+                                                <div class="col-md-4">
+                                                    {intl d='metabase' l="Periodically refingerprint tables"}
+                                                    {render_form_field form=$form field="refingerprint"}
+                                                </div>
+                                                <button type="submit" class="btn btn-success" >{intl l="Update Syncing Parameters" d="metabase.bo.default"}</button>
                                             </div>
                                         </div>
                                     </div>

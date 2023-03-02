@@ -5,6 +5,7 @@ namespace Metabase\Service;
 use Metabase\Exception\MetabaseException;
 use Metabase\Metabase;
 use Symfony\Component\HttpClient\HttpClient;
+use Thelia\Core\Translation\Translator;
 
 class MetabaseService
 {
@@ -295,6 +296,8 @@ class MetabaseService
                         "dbname" => $dbName,
                         "user" => $user,
                         "password" => $password,
+                        "advanced-options" => true,
+                        "let-user-control-scheduling" => true,
                     ],
                     "is_full_sync" => true
                 ],
@@ -366,7 +369,7 @@ class MetabaseService
         if (401 == $statusCode) {
             $this->getSessionToken();
 
-            return $this->createCollection($databaseId);
+            return $this->checkMetabaseState($databaseId);
         }
 
         return $metabaseResponse->getContent();
@@ -395,7 +398,7 @@ class MetabaseService
         if (401 == $statusCode) {
             $this->getSessionToken();
 
-            return $this->createCollection($databaseId);
+            return $this->getAllField($databaseId);
         }
         return $metabaseResponse->getContent();
     }
@@ -428,6 +431,81 @@ class MetabaseService
         return $metabaseResponse->getContent();
     }
 
+    public function updateSyncingParameters(
+        int $dashboardId,
+        bool $isFullSync,
+        bool $isOnDemand,
+        bool $refingerprint,
+        String $scheduleSyncType,
+        String $scheduleScanType,
+        int $syncHours = 0,
+        int $syncMin = 0,
+        int $scanHours = 0,
+        $scanFrame = null,
+        $scanDay = null
+    ){
+        if (!Metabase::getConfigValue(Metabase::CONFIG_SESSION_TOKEN)) {
+            $this->getSessionToken();
+        }
+
+        $client = HttpClient::create();
+        $metabaseResponse = $client->request(
+            'PUT',
+            Metabase::getConfigValue(Metabase::CONFIG_KEY_URL).'/'.'api/database/'. $dashboardId,
+            [
+                'headers' => [
+                    'X-Metabase-Session' => Metabase::getConfigValue(Metabase::CONFIG_SESSION_TOKEN),
+                    'Content-Type: application/json',
+                ],
+                'json' => [
+                    "engine" => Metabase::getConfigValue(Metabase::CONFIG_METABASE_ENGINE),
+                    "name" => Metabase::getConfigValue(Metabase::CONFIG_METABASE_DB_NAME),
+                    "details" => ["let-user-control-scheduling"=> true],
+                    "can_manage" => true,
+                    "is_full_sync" => $isFullSync,
+                    "is_on_demand" => $isOnDemand,
+                    "schedules" => [
+                        "metadata_sync" => [
+                            "schedule_minute" => $syncMin,
+                            "schedule_day"=> null,
+                            "schedule_frame"=> null,
+                            "schedule_hour" => $syncHours,
+                            "schedule_type" => $scheduleSyncType
+                        ],
+                        "cache_field_values" => [
+                            "schedule_minute" => 0,
+                            "schedule_day"=> $scanDay,
+                            "schedule_frame"=> $scanFrame,
+                            "schedule_hour" => $scanHours,
+                            "schedule_type" => $scheduleScanType
+                        ]
+                    ],
+                    "refingerprint" => $refingerprint
+                ]
+            ]
+        );
+
+        $statusCode = $metabaseResponse->getStatusCode();
+        if (401 == $statusCode) {
+            $this->getSessionToken();
+
+            return $this->updateSyncingParameters(
+                $dashboardId,
+                $isFullSync,
+                $isOnDemand,
+                $refingerprint,
+                $scheduleSyncType,
+                $scheduleScanType,
+                $syncHours,
+                $syncMin,
+                $scanHours,
+                $scanFrame,
+                $scanDay);
+        }
+
+        return $metabaseResponse->getContent();
+    }
+
     public function searchField(Array $fields, String $fieldName, String $tableName){
 
         foreach ($fields as $field){
@@ -452,5 +530,80 @@ class MetabaseService
         }
 
         return $defaultValues;
+    }
+
+    public function verifyFormSyncing(array $data): array
+    {
+        $verifiedData = [];
+
+        if ($data["syncingOption"]=== null){
+            throw new \Exception(Translator::getInstance()->trans("Choose a Syncing Option"));
+        }
+
+        if ($data["syncingSchedule"]=== null){
+            throw new \Exception(Translator::getInstance()->trans("Choose a Syncing Schedule"));
+        }
+
+        if ($data["syncingOption"]!== "sync_only" && $data["scanningSchedule"]=== null){
+            throw new \Exception(Translator::getInstance()->trans("Choose a Scanning Schedule"));
+        }
+
+        $verifiedData["is_full_sync"] = false;
+        $verifiedData["is_on_demand"] = false;
+        $verifiedData["refingerprint"] = $data["refingerprint"];
+        $verifiedData["syncing_schedule"] = $data["syncingSchedule"];
+        $verifiedData["scanning_schedule"]= $data["scanningSchedule"];
+
+        if ($data["syncingOption"]=== "is_full_sync"){
+            $verifiedData["is_full_sync"] = true;
+        }
+
+        if ($data["syncingOption"]=== "is_on_demand"){
+            $verifiedData["is_on_demand"] = true;
+        }
+
+        $verifiedData["sync_hours"] = 0;
+        $verifiedData["sync_minutes"] = 0;
+
+        if ($data["syncingSchedule"] == "hourly"){
+            if ($data["syncingTime"] < 0 || $data["syncingTime"] > 60){
+                throw new \Exception(Translator::getInstance()->trans("Syncing time must be in range [0-60]"));
+            }
+            $verifiedData["sync_minutes"] = $data["syncingTime"];
+        }
+
+        if ($data["syncingSchedule"] == "daily"){
+            if ($data["syncingTime"] < 0 || $data["syncingTime"] > 24){
+                throw new \Exception(Translator::getInstance()->trans("Syncing time must be in range [0-24]"));
+            }
+            $verifiedData["sync_hours"] = $data["syncingTime"];
+        }
+
+        if ($data["scanningTime"] < 0 || $data["scanningTime"] > 24){
+            throw new \Exception(Translator::getInstance()->trans("Scanning time must be in range [0-24]"));
+        }
+        $verifiedData["scan_hours"] = $data["scanningTime"];
+        $verifiedData["scan_frame"] = null;
+        $verifiedData["scan_day"] = null;
+
+        if ($data["scanningSchedule"] === "monthly")
+        {
+            if ($data["scanningFrame"] === null)
+            {
+                $verifiedData["scanning_schedule"] = "weekly";
+            }
+            $verifiedData["scan_frame"] = $data["scanningFrame"];
+
+            if ($data["scanningFrame"] === null && $data["scanningDay"] === null)
+            {
+                throw new \Exception(Translator::getInstance()->trans("You can't select Calendar day for Weekly scan"));
+            }
+            if ($data["scanningFrame"] !== "mid")
+            {
+                $verifiedData["scan_day"] = $data["scanningDay"];
+            }
+        }
+
+        return $verifiedData;
     }
 }

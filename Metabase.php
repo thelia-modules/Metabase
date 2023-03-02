@@ -15,6 +15,7 @@ class Metabase extends BaseModule
     const WAIT_MESSAGE = 'Metabase is syncing your database table. It will take few more minutes';
     const READY_MESSAGE = 'Metabase is ready to use you can generate your Metabase Model';
     const METABASE_SUCCESS_MESSAGE = 'Metabase successfully generate model';
+    const METABASE_SYNCING_MESSAGE = 'Metabase database parameters has been successfully updated';
     const ERROR_CONFIG_MESSAGE = 'First, you have to set the module up';
     const ERROR_TOKEN_MESSAGE = 'Error during session token collecting';
 
@@ -32,6 +33,14 @@ class Metabase extends BaseModule
     const CONFIG_METABASE_DB_ID = 'metabase_db_id';
     const CONFIG_METABASE_DB_USERNAME = 'metabase_db-username';
     const CONFIG_METABASE_ORDER_TYPE = 'metabase_order_type';
+    const METABASE_SYNCING_OPTION = 'metabase_syncing_option';
+    const METABASE_SYNCING_SCHEDULE = 'metabase_syncing_schedule';
+    const METABASE_SYNCING_TIME = 'metabase_syncing_time';
+    const METABASE_SCANNING_SCHEDULE = 'metabase_scanning_schedule';
+    const METABASE_SCANNING_TIME = 'metabase_scanning_time';
+    const METABASE_SCANNING_FRAME = "metabase_scanning_frame";
+    const METABASE_SCANNING_DAY = "metabase_scanning_day";
+    const METABASE_REFINGERPRINT = 'metabase_refingerprint';
 
     /**
      * Autowiring.

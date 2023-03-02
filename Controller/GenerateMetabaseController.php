@@ -4,6 +4,7 @@ namespace Metabase\Controller;
 
 use Metabase\Form\GenerateMetabase;
 use Metabase\Form\ImportMetabase;
+use Metabase\Form\SyncingMetabase;
 use Metabase\Metabase;
 use Metabase\Service\MetabaseService;
 use Thelia\Controller\Admin\AdminController;
@@ -140,6 +141,59 @@ class GenerateMetabaseController extends AdminController
         $statisticBrandController->generateBrandStatisticsMetabase($metabaseService, Metabase::getConfigValue(Metabase::CONFIG_METABASE_DB_ID), $statisticCollection->id, $fields,true);
 
         return $this->generateRedirect(URL::getInstance()->absoluteUrl($url, ['tab' => 'generate', 'metabasesuccess' => 1]));
+    }
+
+    /**
+     * @Route("/admin/module/metabase/syncing", name="metabase.syncing")
+     */
+    public function updateSyncingParameterMetabase(MetabaseService $metabaseService)
+    {
+        if (null !== $response = $this->checkAuth([AdminResources::MODULE], ['Metabase'], AccessManager::UPDATE)) {
+            return $response;
+        }
+
+        $form = $this->createForm(SyncingMetabase::getName());
+
+        $url = '/admin/module/Metabase';
+
+        try {
+            $data = $this->validateForm($form)->getData();
+
+            $verifiedData = $metabaseService->verifyFormSyncing($data);
+
+            Metabase::setConfigValue(Metabase::METABASE_SYNCING_OPTION, $data["syncingOption"]);
+            Metabase::setConfigValue(Metabase::METABASE_SYNCING_SCHEDULE, $data["syncingSchedule"]);
+            Metabase::setConfigValue(Metabase::METABASE_SYNCING_TIME, $data["syncingTime"]);
+            Metabase::setConfigValue(Metabase::METABASE_SCANNING_SCHEDULE, $data["scanningSchedule"]);
+            Metabase::setConfigValue(Metabase::METABASE_SCANNING_TIME, $data["scanningTime"]);
+            Metabase::setConfigValue(Metabase::METABASE_SCANNING_FRAME, $data["scanningFrame"]);
+            Metabase::setConfigValue(Metabase::METABASE_SCANNING_DAY, $data["scanningDay"]);
+            Metabase::setConfigValue(Metabase::METABASE_REFINGERPRINT, $data["refingerprint"]);
+
+            $metabaseService->updateSyncingParameters(
+                Metabase::getConfigValue(Metabase::CONFIG_METABASE_DB_ID),
+                $verifiedData["is_full_sync"],
+                $verifiedData["is_on_demand"],
+                $verifiedData["refingerprint"],
+                $verifiedData["syncing_schedule"],
+                $verifiedData["scanning_schedule"],
+                $verifiedData["sync_hours"],
+                $verifiedData["sync_minutes"],
+                $verifiedData["scan_hours"],
+                $verifiedData["scan_frame"],
+                $verifiedData["scan_day"],
+            );
+
+        } catch (\Exception $e) {
+            $this->setupFormErrorContext(
+                Translator::getInstance()->trans('Metabase sync parameters updated'),
+                $message = $e->getMessage(),
+                $form,
+                $e
+            );
+        }
+
+        return $this->generateRedirect(URL::getInstance()->absoluteUrl($url, ['tab' => 'syncing', 'syncing' => 1]));
     }
 
     private function addBddMetabase(MetabaseService $metabaseService, String $metabaseName, String $dbName, String $engine, String $host, String $port, String $user, String $password="")
