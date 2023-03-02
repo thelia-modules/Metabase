@@ -27,7 +27,7 @@
                             <br>
 
                             <div class="title">
-                                {intl l="Metabase service configuration" d='metabase'}
+                                {intl l="Metabase service configuration" d='metabase.bo.default'}
                             </div>
                             {form name="configure_metabase_form"}
                             {if $form_error}<div class="alert alert-danger">{$form_error_message}</div>{/if}
@@ -45,12 +45,12 @@
                                     {/if}
 
                                     {if $smarty.get.success|default:null}
-                                        <div class="alert alert-success">{intl l={Metabase\Metabase::SUCCESS_MESSAGE} d='metabase'}</div>
+                                        <div class="alert alert-success">{intl l={Metabase\Metabase::SUCCESS_MESSAGE} d='metabase.bo.default'}</div>
                                     {/if}
 
                                     <div class="panel panel-default">
                                         <div class="panel-heading">
-                                            <div class="panel-title">{intl d='metabase' l="Service configuration"}</div>
+                                            <div class="panel-title">{intl d='metabase.bo.default' l="Service configuration"}</div>
                                         </div>
                                         <div class="panel-body">
                                             <div class="row" style="margin-top: 20px;">
@@ -88,19 +88,19 @@
                                     {/if}
 
                                     {if $smarty.get.metabasesuccess|default:null}
-                                        <div class="alert alert-success">{intl l={Metabase\Metabase::METABASE_SUCCESS_MESSAGE} d='metabase'}</div>
+                                        <div class="alert alert-success">{intl l={Metabase\Metabase::METABASE_SUCCESS_MESSAGE} d='metabase.bo.default'}</div>
                                     {/if}
 
                                     {if $smarty.get.wait|default:null}
-                                        <div class="alert alert-warning">{intl l={Metabase\Metabase::WAIT_MESSAGE} d='metabase'}</div>
+                                        <div class="alert alert-warning">{intl l={Metabase\Metabase::WAIT_MESSAGE} d='metabase.bo.default'}</div>
                                     {/if}
                                     {if $smarty.get.ready|default:null}
-                                        <div class="alert alert-info">{intl l={Metabase\Metabase::READY_MESSAGE} d='metabase'}</div>
+                                        <div class="alert alert-info">{intl l={Metabase\Metabase::READY_MESSAGE} d='metabase.bo.default'}</div>
                                     {/if}
 
                                     <div class="panel panel-default">
                                         <div class="panel-heading">
-                                            <div class="panel-title">{intl d='metabase' l="Service generate"}</div>
+                                            <div class="panel-title">{intl d='metabase.bo.default' l="Service generate"}</div>
                                         </div>
                                         <div class="panel-body">
                                             <div class="row" style="margin-top: 20px;">
@@ -142,19 +142,19 @@
                                     {/if}
 
                                     {if $smarty.get.metabasesuccess|default:null}
-                                        <div class="alert alert-success">{intl l={Metabase\Metabase::METABASE_SUCCESS_MESSAGE} d='metabase'}</div>
+                                        <div class="alert alert-success">{intl l={Metabase\Metabase::METABASE_SUCCESS_MESSAGE} d='metabase.bo.default'}</div>
                                     {/if}
 
                                     {if $smarty.get.wait|default:null}
-                                        <div class="alert alert-warning">{intl l={Metabase\Metabase::WAIT_MESSAGE} d='metabase'}</div>
+                                        <div class="alert alert-warning">{intl l={Metabase\Metabase::WAIT_MESSAGE} d='metabase.bo.default'}</div>
                                     {/if}
                                     {if $smarty.get.ready|default:null}
-                                        <div class="alert alert-info">{intl l={Metabase\Metabase::READY_MESSAGE} d='metabase'}</div>
+                                        <div class="alert alert-info">{intl l={Metabase\Metabase::READY_MESSAGE} d='metabase.bo.default'}</div>
                                     {/if}
 
                                     <div class="panel panel-default">
                                         <div class="panel-heading">
-                                            <div class="panel-title">{intl d='metabase' l="Service generate Metabase"}</div>
+                                            <div class="panel-title">{intl d='metabase.bo.default' l="Service generate Metabase"}</div>
                                         </div>
                                         <div class="panel-body">
                                             <div class="row" style="margin-top: 20px;">
@@ -189,12 +189,12 @@
 
 
                                     {if $smarty.get.syncing|default:null}
-                                        <div class="alert alert-success">{intl l={Metabase\Metabase::METABASE_SYNCING_MESSAGE} d='metabase'}</div>
+                                        <div class="alert alert-success">{intl l={Metabase\Metabase::METABASE_SYNCING_MESSAGE} d='metabase.bo.default'}</div>
                                     {/if}
 
                                     <div class="panel panel-default">
                                         <div class="panel-heading">
-                                            <div class="panel-title">{intl d='metabase' l="Syncing parameter Metabase"}</div>
+                                            <div class="panel-title">{intl l="Syncing parameter Metabase" d='metabase.bo.default'}</div>
                                         </div>
                                         <div class="panel-body">
                                             <div class="row" style="margin-top: 20px;">
@@ -202,13 +202,13 @@
                                                     {render_form_field form=$form field="syncingOption"}
                                                 </div>
                                                 <div class="col-md-4">
-                                                    {intl d='metabase' l="Database syncing"}
+                                                    {intl l="Database syncing" d='metabase.bo.default'}
                                                     {render_form_field form=$form field="syncingSchedule"}
                                                     {render_form_field form=$form field="syncingTime"}
                                                 </div>
                                                 <div class="col-md-4">
-                                                    {intl d='metabase' l="Scanning for Filter Values"}
-                                                    {intl d='metabase' l="(Select is_full_sync Option)"}
+                                                    {intl l="Scanning for Filter Values" d='metabase.bo.default'}
+                                                    {intl l="(Select is_full_sync Option)" d='metabase.bo.default'}
 
                                                     {render_form_field form=$form field="scanningSchedule"}
                                                     {render_form_field form=$form field="scanningFrame"}
@@ -216,7 +216,7 @@
                                                     {render_form_field form=$form field="scanningTime"}
                                                 </div>
                                                 <div class="col-md-4">
-                                                    {intl d='metabase' l="Periodically refingerprint tables"}
+                                                    {intl l="fingerprint tables" d='metabase.bo.default'}
                                                     {render_form_field form=$form field="refingerprint"}
                                                 </div>
                                                 <button type="submit" class="btn btn-success" >{intl l="Update Syncing Parameters" d="metabase.bo.default"}</button>
