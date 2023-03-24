@@ -43,13 +43,15 @@
                             INNER JOIN `order_product` ON (`order`.`id`=`order_product`.`order_id`)
                             LEFT JOIN `order_product_tax` ON (`order_product`.`id`=`order_product_tax`.`order_product_id`)
                             WHERE {{start}} AND {{orderType}}
-                            GROUP BY DATE1
+                            group by DATE_FORMAT(`order`.`invoice_date`, \"%m\"), DATE1
+                            order by DATE_FORMAT(`order`.`invoice_date`, \"%m\")
                             ) as q1,
                             (
                             SELECT DATE_FORMAT(`order`.`invoice_date`, \"%b\") as DATE2, SUM(`order`.`discount`) AS DISCOUNT
                             FROM `order`
                             where {{start}} AND {{orderType}}
-                            GROUP BY DATE2
+                            group by DATE_FORMAT(`order`.`invoice_date`, \"%m\"), DATE2
+                            order by DATE_FORMAT(`order`.`invoice_date`, \"%m\")
                         ) as q2
                         where q1.DATE1 = q2.DATE2";
 

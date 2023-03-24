@@ -47,7 +47,8 @@
                 join `product_category` on (`product`.`id`=`product_category`.`product_id`)
                 join `category_i18n` on `category_i18n`.`id` = `product_category`.`category_id`
                 where 1=0 [[or {{category}}]] and {{date}} [[and {{orderType}}]]
-                group by DATE";
+                group by DATE_FORMAT(`order`.`invoice_date`, \"%m\"), DATE
+                order by DATE_FORMAT(`order`.`invoice_date`, \"%m\")";
 
             if ($count){
                 $dashboardName = $translator->trans("Dashboard Count Category", [], Metabase::DOMAIN_NAME);
@@ -64,7 +65,8 @@
                 join `product_category` on (`product`.`id`=`product_category`.`product_id`)
                 join `category_i18n` on `category_i18n`.`id` = `product_category`.`category_id`
                 where 1=0 [[or {{category}}]] and {{date}} [[and {{orderType}}]]
-                group by DATE";
+                group by DATE_FORMAT(`order`.`invoice_date`, \"%m\"), DATE
+                order by DATE_FORMAT(`order`.`invoice_date`, \"%m\")";
             }
 
             $dashboard = json_decode($metabaseService->createDashboard($dashboardName, $descriptionDashboard, $collectionId));
@@ -79,7 +81,7 @@
                 ["graph.dimensions" => ["DATE"],
                     "graph.series_order_dimension" => null,
                     "graph.series_order" => null,
-                    "graph.metrics" => ["CATEGORY"],
+                    "graph.metrics" => ["TOTAL"],
                     "column_settings" => $column_settings
                 ],
                 [
@@ -185,7 +187,7 @@
                 ["graph.dimensions" => ["DATE"],
                     "graph.series_order_dimension" => null,
                     "graph.series_order" => null,
-                    "graph.metrics" => ["category"],
+                    "graph.metrics" => ["TOTAL"],
                     "column_settings" => $column_settings
                 ],
                 [

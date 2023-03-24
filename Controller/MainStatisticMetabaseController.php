@@ -40,14 +40,14 @@
             $uuidParamEnd = uniqid();
             $uuidParamOrderType = uniqid();
 
-            $query = "SELECT `order`.`invoice_date` as DATE, 
+            $query = "SELECT DATE_FORMAT(`order`.`invoice_date`,\"%d %b %Y\") as DATE,
                     SUM((`order_product`.QUANTITY * IF(`order_product`.WAS_IN_PROMO,`order_product`.PROMO_PRICE,`order_product`.PRICE))) + SUM((`order_product`.QUANTITY * IF(`order_product`.WAS_IN_PROMO,`order_product_tax`.PROMO_AMOUNT,`order_product_tax`.AMOUNT))) - SUM(`order`.discount) AS TOTAL 
                     FROM `order` 
                     INNER JOIN `order_product` ON (`order`.`id`=`order_product`.`order_id`) 
                     LEFT JOIN `order_product_tax` ON (`order_product`.`id`=`order_product_tax`.`order_product_id`) 
                     WHERE (`order`.`invoice_date`>={{start}} AND `order`.`invoice_date`<={{end}}) AND {{orderType}} 
-                    GROUP BY DATE
-                    order BY DATE";
+                    group by DATE_FORMAT(`order`.`invoice_date`, \"%m %Y\"), DATE
+                    order by DATE_FORMAT(`order`.`invoice_date`, \"%m %Y\")";
 
             $query2 = "SELECT SUM((`order_product`.QUANTITY * IF(`order_product`.WAS_IN_PROMO,`order_product`.PROMO_PRICE,`order_product`.PRICE))) + SUM((`order_product`.QUANTITY * IF(`order_product`.WAS_IN_PROMO,`order_product_tax`.PROMO_AMOUNT,`order_product_tax`.AMOUNT))) - SUM(`order`.discount) AS TOTAL 
                     FROM `order`

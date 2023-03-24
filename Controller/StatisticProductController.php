@@ -49,7 +49,8 @@
                 join `product` on `product`.ref = `order_product`.`product_ref`
                 join `product_i18n` ON `product_i18n`.`id`=`product`.`id`
                 where 1=0 [[or {{ref}}]][[or {{title}}]] and {{date}} [[and {{orderType}}]]
-                group by DATE";
+                group by DATE_FORMAT(`order`.`invoice_date`, \"%m\"), DATE
+                order by DATE_FORMAT(`order`.`invoice_date`, \"%m\")";
 
             if ($count){
                 $dashboardName = $translator->trans("Dashboard Count Product", [], Metabase::DOMAIN_NAME);
@@ -66,7 +67,8 @@
                 join `product` on `product`.ref = `order_product`.product_ref
                 join `product_i18n` ON `product_i18n`.`id`=`product`.`id`
                 where 1=0 [[or {{ref}}]][[or {{title}}]] and {{date}} [[and {{orderType}}]]
-                group by DATE";
+                group by DATE_FORMAT(`order`.`invoice_date`, \"%m\"), DATE
+                order by DATE_FORMAT(`order`.`invoice_date`, \"%m\")";
             }
 
             $dashboard = json_decode($metabaseService->createDashboard($dashboardName, $descriptionDashboard, $collectionId));
@@ -79,10 +81,10 @@
             $defaultOrderType = $metabaseService->getDefaultOrderType();
 
             $card = json_decode($metabaseService->createCard(
-                ["graph.dimensions" => [""],
+                ["graph.dimensions" => ["DATE"],
                     "graph.series_order_dimension" => null,
                     "graph.series_order" => null,
-                    "graph.metrics" => [null],
+                    "graph.metrics" => ["TOTAL"],
                     "column_settings" => $column_settings
                 ],
                 [
@@ -215,7 +217,7 @@
                 ["graph.dimensions" => ["DATE"],
                     "graph.series_order_dimension" => null,
                     "graph.series_order" => null,
-                    "graph.metrics" => ["ref"],
+                    "graph.metrics" => ["TOTAL"],
                     "column_settings" => $column_settings
                 ],
                 [

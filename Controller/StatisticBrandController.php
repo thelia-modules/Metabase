@@ -52,7 +52,8 @@ class StatisticBrandController extends AdminController
             INNER JOIN `product` ON (`order_product`.`product_ref`=`product`.`ref`)
             INNER JOIN `brand_i18n` ON `brand_i18n`.`id`=`product`.`brand_id`
             WHERE 1=0 [[or {{brand}}]] and {{date}} [[and {{orderType}}]]
-            GROUP BY date";
+            group by DATE_FORMAT(`order`.`invoice_date`, \"%m\"), DATE
+            order by DATE_FORMAT(`order`.`invoice_date`, \"%m\")";
 
 
         if ($count){
@@ -69,7 +70,8 @@ class StatisticBrandController extends AdminController
                 INNER JOIN `product` ON (`order_product`.`product_ref`=`product`.`ref`)
                 INNER JOIN `brand_i18n` ON `brand_i18n`.`id`=`product`.`brand_id`
                 WHERE 1=0 [[or {{brand}}]] and {{date}} [[and {{orderType}}]]
-                GROUP BY DATE";
+                group by DATE_FORMAT(`order`.`invoice_date`, \"%m\"), DATE
+                order by DATE_FORMAT(`order`.`invoice_date`, \"%m\")";
         }
 
         $dashboard = json_decode($metabaseService->createDashboard($dashboardName, $descriptionDashboard, $collectionId));
@@ -190,7 +192,7 @@ class StatisticBrandController extends AdminController
             ["graph.dimensions" => ["DATE"],
                 "graph.series_order_dimension" => null,
                 "graph.series_order" => null,
-                "graph.metrics" => ["brand"],
+                "graph.metrics" => ["TOTAL"],
                 "column_settings" => $column_settings
             ],
             [
