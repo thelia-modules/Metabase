@@ -58,7 +58,7 @@ class StatisticProductService extends AbstractMetabaseService
 
         $card = $this->generateCardMetabase(
             $translator->trans('ProductsSalesCard_', [], Metabase::DOMAIN_NAME).'1',
-            $translator->trans('Card of Sales Statistic by Product this year', [], Metabase::DOMAIN_NAME),
+            $translator->trans('Card of Sales Statistic by Product period', [], Metabase::DOMAIN_NAME).' 1',
             'line',
             $collectionId,
             $this->getSqlQueryMain(),
@@ -68,7 +68,7 @@ class StatisticProductService extends AbstractMetabaseService
 
         $card2 = $this->generateCardMetabase(
             $translator->trans('ProductsSalesCard_', [], Metabase::DOMAIN_NAME).'2',
-            $translator->trans('Card of Sales Statistic by Product last year', [], Metabase::DOMAIN_NAME),
+            $translator->trans('Card of Sales Statistic by Product period', [], Metabase::DOMAIN_NAME).' 2',
             'line',
             $collectionId,
             $this->getSqlQueryMain(),
@@ -82,7 +82,7 @@ class StatisticProductService extends AbstractMetabaseService
             $this->buildCustomVisualizationSettings(),
             $this->buildParameters($defaultOrderType, $defaultFields),
             $translator->trans('ProductsCard_', [], Metabase::DOMAIN_NAME).'1',
-            $translator->trans('Card of Count Statistic by Product this year', [], Metabase::DOMAIN_NAME),
+            $translator->trans('Card of Count Statistic by Product period', [], Metabase::DOMAIN_NAME).' 1',
             $this->buildDatasetQuery($this->getSqlQuerySecondary(), $defaultOrderType, $fields, $defaultFields),
             'line',
             $collectionId,
@@ -92,7 +92,7 @@ class StatisticProductService extends AbstractMetabaseService
             $this->buildCustomVisualizationSettings(),
             $this->buildParameters($defaultOrderType, $defaultFields2),
             $translator->trans('ProductsCard_', [], Metabase::DOMAIN_NAME).'2',
-            $translator->trans('Card of Count Statistic by Product last year', [], Metabase::DOMAIN_NAME),
+            $translator->trans('Card of Count Statistic by Product period', [], Metabase::DOMAIN_NAME).' 2',
             $this->buildDatasetQuery($this->getSqlQuerySecondary(), $defaultOrderType, $fields, $defaultFields2),
             'line',
             $collectionId,
@@ -104,11 +104,8 @@ class StatisticProductService extends AbstractMetabaseService
         $dashboardCard = $this->formatDashboardCard($card->id, $series, 0, 0, 24, 8, $card->id, $card2->id);
         $dashboardCard2 = $this->formatDashboardCard($card->id, $series2, 0, 0, 24, 8, $card3->id, $card4->id);
 
-        $this->generateDashboardCard($dashboard->id, [$dashboardCard]);
-        $this->generateDashboardCard($dashboard2->id, [$dashboardCard2]);
-
-        $this->embedDashboard($dashboard->id, ['date_1' => 'enabled', 'date_2' => 'enabled', 'product_reference' => 'enabled', 'product_title' => 'enabled', 'orderType' => 'enabled']);
-        $this->embedDashboard($dashboard2->id, ['date_1' => 'enabled', 'date_2' => 'enabled', 'product_reference' => 'enabled', 'product_title' => 'enabled', 'orderType' => 'enabled']);
+        $this->embedDashboard($dashboard->id, ['date_1' => 'enabled', 'date_2' => 'enabled', 'product_reference' => 'enabled', 'product_title' => 'enabled', 'orderType' => 'enabled'], [$dashboardCard]);
+        $this->embedDashboard($dashboard2->id, ['date_1' => 'enabled', 'date_2' => 'enabled', 'product_reference' => 'enabled', 'product_title' => 'enabled', 'orderType' => 'enabled'], [$dashboardCard2]);
 
         $this->publishDashboard($dashboard->id);
         $this->publishDashboard($dashboard2->id);

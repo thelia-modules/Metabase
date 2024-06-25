@@ -137,29 +137,17 @@ abstract class AbstractMetabaseService implements MetabaseInterface
     /**
      * @throws TransportExceptionInterface
      * @throws ServerExceptionInterface
-     * @throws MetabaseException
-     * @throws RedirectionExceptionInterface
-     * @throws ClientExceptionInterface
-     * @throws \JsonException
-     */
-    public function generateDashboardCard(int $dashboardId, array $dashboardCards): void
-    {
-        $this->metabaseAPIService->addCardsToDashboard($dashboardId, $dashboardCards);
-    }
-
-    /**
-     * @throws TransportExceptionInterface
-     * @throws ServerExceptionInterface
      * @throws RedirectionExceptionInterface
      * @throws MetabaseException
      * @throws ClientExceptionInterface
      * @throws \JsonException
      */
-    public function embedDashboard(int $dashboardId, array $parameters, array $defaultFields = [])
+    public function embedDashboard(int $dashboardId, array $parameters, array $dashcards, array $defaultFields = [])
     {
         return $this->metabaseAPIService->embedDashboard(
             $dashboardId,
             $parameters,
+            $dashcards,
             $this->getDashboardParameters($defaultFields)
         );
     }

@@ -91,11 +91,8 @@ class SalesMetabaseService extends AbstractMetabaseService
         $series = $this->formatSeries($card2->id);
 
         $dashboardCard = $this->formatDashboardCard($card->id, $series, 0, 0, 24, 5, $card->id, $card2->id, $card3->id, $card4->id);
-        // $dashboardCard2 = $this->formatDashboardCard($card2->id, [], 0, 0, 24, 5, $card->id, $card2->id, $card3->id, $card4->id);
-        $dashboardCard3 = $this->formatDashboardCard($card3->id, [], 0, 0, 12, 5, $card->id, $card2->id, $card3->id, $card4->id);
-        $dashboardCard4 = $this->formatDashboardCard($card4->id, [], 0, 0, 12, 5, $card->id, $card2->id, $card3->id, $card4->id);
-
-        $this->generateDashboardCard($dashboard->id, [$dashboardCard, $dashboardCard3, $dashboardCard4]);
+        $dashboardCard3 = $this->formatDashboardCard($card3->id, [], 6, 0, 12, 3, $card->id, $card2->id, $card3->id, $card4->id);
+        $dashboardCard4 = $this->formatDashboardCard($card4->id, [], 6, 13, 12, 3, $card->id, $card2->id, $card3->id, $card4->id);
 
         $this->embedDashboard(
             $dashboard->id,
@@ -104,7 +101,7 @@ class SalesMetabaseService extends AbstractMetabaseService
                 'date_2' => 'enabled',
                 'orderType' => 'enabled',
             ],
-            []
+            [$dashboardCard, $dashboardCard3, $dashboardCard4]
         );
 
         $this->publishDashboard($dashboard->id);

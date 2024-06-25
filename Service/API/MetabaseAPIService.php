@@ -183,38 +183,7 @@ class MetabaseAPIService
      * @throws MetabaseException
      * @throws \JsonException
      */
-    public function addCardsToDashboard(
-        int $dashboardId,
-        array $cards
-    ) {
-        $client = HttpClient::create();
-
-        $metabaseResponse = $client->request(
-            'PUT',
-            Metabase::getConfigValue(Metabase::METABASE_URL_CONFIG_KEY).'/api/dashboard/'.$dashboardId.'/cards',
-            [
-                'headers' => [
-                    'X-Metabase-Session' => $this->getSessionToken(),
-                    'Content-Type: application/json',
-                ],
-                'json' => [
-                    'cards' => $cards,
-                ],
-            ]
-        );
-
-        return json_decode($metabaseResponse->getContent(), false, 512, JSON_THROW_ON_ERROR);
-    }
-
-    /**
-     * @throws RedirectionExceptionInterface
-     * @throws ClientExceptionInterface
-     * @throws TransportExceptionInterface
-     * @throws ServerExceptionInterface
-     * @throws MetabaseException
-     * @throws \JsonException
-     */
-    public function embedDashboard(int $dashboardId, array $embeddingParams, array $parameters)
+    public function embedDashboard(int $dashboardId, array $embeddingParams, array $dashcards, array $parameters)
     {
         $client = HttpClient::create();
         $metabaseResponse = $client->request(
@@ -230,6 +199,7 @@ class MetabaseAPIService
                     'embedding_params' => $embeddingParams,
                     'parameters' => $parameters,
                     'width' => 'full',
+                    'dashcards' => $dashcards,
                 ],
             ]
         );

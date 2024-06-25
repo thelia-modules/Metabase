@@ -49,7 +49,7 @@ class ImportMetabase extends BaseForm
                     'data' => Metabase::getConfigValue(Metabase::METABASE_ENGINE_CONFIG_KEY),
                     'label_attr' => [
                         'for' => Metabase::METABASE_ENGINE_CONFIG_KEY,
-                        'help' => $translator->trans('mysql', [], Metabase::DOMAIN_NAME),
+                        'help' => 'mysql',
                     ],
                 ]
             )
@@ -63,7 +63,7 @@ class ImportMetabase extends BaseForm
                     'data' => Metabase::getConfigValue(Metabase::METABASE_HOST_CONFIG_KEY),
                     'label_attr' => [
                         'for' => Metabase::METABASE_HOST_CONFIG_KEY,
-                        'help' => $translator->trans('localhost', [], Metabase::DOMAIN_NAME),
+                        'help' => 'localhost',
                     ],
                 ]
             )
@@ -77,7 +77,7 @@ class ImportMetabase extends BaseForm
                     'data' => Metabase::getConfigValue(Metabase::METABASE_PORT_CONFIG_KEY),
                     'label_attr' => [
                         'for' => Metabase::METABASE_PORT_CONFIG_KEY,
-                        'help' => $translator->trans('3306', [], Metabase::DOMAIN_NAME),
+                        'help' => '3306',
                     ],
                 ]
             )

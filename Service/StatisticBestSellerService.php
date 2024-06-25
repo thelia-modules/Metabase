@@ -42,15 +42,14 @@ class StatisticBestSellerService extends AbstractMetabaseService
 
         $dashboardCard = $this->formatDashboardCard($card->id, [], 0, 0, 24, 8, $card->id);
 
-        $this->generateDashboardCard($dashboard->id, [$dashboardCard]);
-
         $this->embedDashboard(
             $dashboard->id,
             [
                 'start' => 'enabled',
                 'end' => 'enabled',
                 'orderType' => 'enabled',
-            ]
+            ],
+            [$dashboardCard]
         );
 
         $this->publishDashboard($dashboard->id);

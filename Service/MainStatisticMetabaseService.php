@@ -66,12 +66,9 @@ class MainStatisticMetabaseService extends AbstractMetabaseService
         );
 
         $dashboardCard = $this->formatDashboardCard($card->id, [], 0, 0, 24, 5, $card->id, $card2->id);
-
         $dashboardCard2 = $this->formatDashboardCard($card2->id, [], 6, 0, 24, 3, $card->id, $card2->id);
 
-        $this->generateDashboardCard($dashboard->id, [$dashboardCard, $dashboardCard2]);
-
-        $this->embedDashboard($dashboard->id, ['date' => 'enabled'], $defaultFields);
+        $this->embedDashboard($dashboard->id, ['date' => 'enabled'], [$dashboardCard, $dashboardCard2], $defaultFields);
 
         $this->publishDashboard($dashboard->id);
     }
