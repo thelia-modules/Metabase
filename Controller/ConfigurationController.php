@@ -2,32 +2,46 @@
 
 namespace Metabase\Controller;
 
+use Metabase\Exception\MetabaseException;
 use Metabase\Form\ConfigureMetabase;
 use Metabase\Metabase;
 use Metabase\Service\MetabaseService;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Contracts\HttpClient\Exception\ClientExceptionInterface;
+use Symfony\Contracts\HttpClient\Exception\RedirectionExceptionInterface;
+use Symfony\Contracts\HttpClient\Exception\ServerExceptionInterface;
+use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
 use Thelia\Controller\Admin\AdminController;
 use Thelia\Core\HttpFoundation\Request;
+use Thelia\Core\HttpFoundation\Response;
 use Thelia\Core\Security\AccessManager;
 use Thelia\Core\Security\Resource\AdminResources;
 use Thelia\Core\Translation\Translator;
 use Thelia\Tools\URL;
 
+#[Route('/admin/module/Metabase/configure', name: 'admin_metabase_configure_')]
 class ConfigurationController extends AdminController
 {
-    public function renderConfigPageAction()
+    public function renderConfigPageAction(): Response|RedirectResponse
     {
         return $this->render('module-configure', ['module_code' => 'Metabase']);
     }
 
-    public function getDashboards(MetabaseService $metabaseService)
+    /**
+     * @throws TransportExceptionInterface
+     * @throws ServerExceptionInterface
+     * @throws RedirectionExceptionInterface
+     * @throws MetabaseException
+     * @throws ClientExceptionInterface
+     * @throws \JsonException
+     */
+    public function getDashboards(MetabaseService $metabaseService): Response
     {
         return $this->jsonResponse($metabaseService->getDashboards());
     }
 
-    /**
-     * @Route("/admin/module/metabase/configure", name="metabase.configuration.save", methods="post")
-     */
+    #[Route('', name: 'save', methods: ['POST'])]
     public function saveConfig(Request $request)
     {
         if (null !== $response = $this->checkAuth([AdminResources::MODULE], ['Metabase'], AccessManager::UPDATE)) {
@@ -41,10 +55,10 @@ class ConfigurationController extends AdminController
         try {
             $vform = $this->validateForm($form);
 
-            Metabase::setConfigValue(Metabase::CONFIG_KEY_URL, $vform->get(Metabase::CONFIG_KEY_URL)->getData());
-            Metabase::setConfigValue(Metabase::CONFIG_KEY_TOKEN, $vform->get(Metabase::CONFIG_KEY_TOKEN)->getData());
-            Metabase::setConfigValue(Metabase::CONFIG_USERNAME, $vform->get(Metabase::CONFIG_USERNAME)->getData());
-            Metabase::setConfigValue(Metabase::CONFIG_PASS, $vform->get(Metabase::CONFIG_PASS)->getData());
+            Metabase::setConfigValue(Metabase::METABASE_URL_CONFIG_KEY, $vform->get(Metabase::METABASE_URL_CONFIG_KEY)->getData());
+            Metabase::setConfigValue(Metabase::METABASE_EMBEDDING_KEY_CONFIG_KEY, $vform->get(Metabase::METABASE_EMBEDDING_KEY_CONFIG_KEY)->getData());
+            Metabase::setConfigValue(Metabase::METABASE_USERNAME_CONFIG_KEY, $vform->get(Metabase::METABASE_USERNAME_CONFIG_KEY)->getData());
+            Metabase::setConfigValue(Metabase::METABASE_PASSWORD_CONFIG_KEY, $vform->get(Metabase::METABASE_PASSWORD_CONFIG_KEY)->getData());
 
             // Redirect to the success URL,
             if ('stay' !== $request->get('save_mode')) {
@@ -53,7 +67,7 @@ class ConfigurationController extends AdminController
         } catch (\Exception $e) {
             $this->setupFormErrorContext(
                 Translator::getInstance()->trans('Metabase update config'),
-                $message = $e->getMessage(),
+                $e->getMessage(),
                 $form,
                 $e
             );

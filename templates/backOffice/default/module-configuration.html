@@ -29,14 +29,14 @@
                             <div class="title">
                                 {intl l="Metabase service configuration" d='metabase.bo.default'}
                             </div>
-                            {form name="configure_metabase_form"}
+                            {form name="metabase_form_configure_metabase"}
                             {if $form_error}<div class="alert alert-danger">{$form_error_message}</div>{/if}
-                                <form action="{url path="/admin/module/metabase/configure"}" method="post">
+                                <form action="{url path="/admin/module/Metabase/configure"}" method="post">
                                     {form_hidden_fields form=$form}
 
                                     {include file = "includes/inner-form-toolbar.html"
                                     hide_flags = true
-                                    page_url   = "{url path='/admin/module/metabase'}"
+                                    page_url   = "{url path='/admin/module/Metabase'}"
                                     close_url  = "{url path='/admin/modules'}"
                                     }
 
@@ -56,7 +56,7 @@
                                             <div class="row" style="margin-top: 20px;">
                                                 <div class="col-md-6">
                                                     {render_form_field form=$form field="metabase_url"}
-                                                    {render_form_field form=$form field="metabase_token"}
+                                                    {render_form_field form=$form field="metabase_embedding_key"}
                                                     {render_form_field form=$form field="metabase_username"}
                                                     {render_form_field form=$form field="metabase_password"}
                                                 </div>
@@ -72,8 +72,8 @@
                                 {intl l="Import Metabase" d='metabase.bo.default'}
                             </div>
 
-                            {form name="import_metabase_form"}
-                                <form action="{url path="/admin/module/metabase/importbdd"}" method="post">
+                            {form name="metabase_form_import_metabase"}
+                                <form action="{url path="/admin/module/Metabase/importbdd"}" method="post">
                                     {form_hidden_fields form=$form}
 
                                     {render_form_field field="success_url" value={url path='/admin/module/Metabase'}}
@@ -126,8 +126,8 @@
                                 {intl l="Generate Metabase" d='metabase.bo.default'}
                             </div>
 
-                            {form name="generate_metabase_form"}
-                                <form action="{url path="/admin/module/metabase/check"}" method="post">
+                            {form name="metabase_form_generate_metabase"}
+                                <form action="{url path="/admin/module/Metabase/check"}" method="post">
                                     {form_hidden_fields form=$form}
 
                                     {render_form_field field="success_url" value={url path='/admin/module/Metabase'}}
@@ -162,7 +162,7 @@
                                                     {render_form_field form=$form field="order_type"}
                                                 </div>
                                                 <button type="submit" class="btn btn-info" >{intl l="Check Metabase Status" d="metabase.bo.default"}</button>
-                                                <a href="/admin/module/metabase/generate" class="btn btn-success {if !$smarty.get.ready|default:null}disabled{/if}">{intl l="Generate Metabase Model" d="metabase.bo.default"}</a>
+                                                <a href="/admin/module/Metabase/generate" class="btn btn-success {if !$smarty.get.ready|default:null}disabled{/if}">{intl l="Generate Metabase Model" d="metabase.bo.default"}</a>
                                             </div>
                                         </div>
                                     </div>
@@ -176,8 +176,8 @@
                                 {intl l="Syncing Metabase" d='metabase.bo.default'}
                             </div>
 
-                            {form name="syncing_metabase_form"}
-                                <form action="{url path="/admin/module/metabase/syncing"}" method="post">
+                            {form name="metabase_form_syncing_metabase"}
+                                <form action="{url path="/admin/module/Metabase/syncing"}" method="post">
                                     {form_hidden_fields form=$form}
 
                                     {render_form_field field="success_url" value={url path='/admin/module/Metabase'}}

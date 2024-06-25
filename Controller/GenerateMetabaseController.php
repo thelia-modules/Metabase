@@ -2,26 +2,49 @@
 
 namespace Metabase\Controller;
 
+use Metabase\Exception\MetabaseException;
 use Metabase\Form\GenerateMetabase;
 use Metabase\Form\ImportMetabase;
 use Metabase\Form\SyncingMetabase;
 use Metabase\Metabase;
-use Metabase\Service\MetabaseService;
-use Thelia\Controller\Admin\AdminController;
+use Metabase\Service\API\MetabaseAPIService;
+use Metabase\Service\MainStatisticMetabaseService;
+use Metabase\Service\SalesMetabaseService;
+use Metabase\Service\StatisticBestSellerService;
+use Metabase\Service\StatisticBrandService;
+use Metabase\Service\StatisticCategoryService;
+use Metabase\Service\StatisticProductService;
 use Symfony\Component\Routing\Annotation\Route;
-use Thelia\Core\HttpFoundation\Request;
+use Symfony\Contracts\HttpClient\Exception\ClientExceptionInterface;
+use Symfony\Contracts\HttpClient\Exception\RedirectionExceptionInterface;
+use Symfony\Contracts\HttpClient\Exception\ServerExceptionInterface;
+use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
+use Thelia\Controller\Admin\AdminController;
 use Thelia\Core\Security\AccessManager;
 use Thelia\Core\Security\Resource\AdminResources;
+use Thelia\Core\Template\ParserContext;
 use Thelia\Core\Translation\Translator;
+use Thelia\Form\Exception\FormValidationException;
 use Thelia\Tools\URL;
 
+#[Route('/admin/module/Metabase', name: 'admin_metabase_bdd_')]
 class GenerateMetabaseController extends AdminController
 {
-    /**
-     * @Route("/admin/module/metabase/importbdd", name="metabase.importbdd", methods="post")
-     */
-    public function ImportBddMetabase(Request $request, MetabaseService $metabaseService){
+    public function __construct(
+        protected MetabaseAPIService $metabaseAPIService,
+        protected ParserContext $parserContext
+    ) {
+    }
 
+    /**
+     * @throws TransportExceptionInterface
+     * @throws ServerExceptionInterface
+     * @throws RedirectionExceptionInterface
+     * @throws ClientExceptionInterface
+     */
+    #[Route('/importbdd', name: 'importbdd', methods: ['POST'])]
+    public function ImportBddMetabase()
+    {
         if (null !== $response = $this->checkAuth([AdminResources::MODULE], ['Metabase'], AccessManager::UPDATE)) {
             return $response;
         }
@@ -33,43 +56,49 @@ class GenerateMetabaseController extends AdminController
         try {
             $data = $this->validateForm($form)->getData();
 
-            $jsonBdd = $this->addBddMetabase(
-                $metabaseService,
-                $data["dbName"],
-                $data["dbName"],
-                $data["engine"],
-                $data["host"],
-                $data["port"],
-                $data["user"],
-                $data["password"] ?? "",
+            $bdd = $this->metabaseAPIService->importBDD(
+                $data['dbName'],
+                $data['dbName'],
+                $data['engine'],
+                $data['host'],
+                $data['port'],
+                $data['user'],
+                $data['password'] ?? '',
             );
 
-            $bdd = json_decode($jsonBdd);
+            Metabase::setConfigValue(Metabase::METABASE_NAME_CONFIG_KEY, $data['metabaseName']);
+            Metabase::setConfigValue(Metabase::METABASE_DB_NAME_CONFIG_KEY, $data['dbName']);
+            Metabase::setConfigValue(Metabase::METABASE_ENGINE_CONFIG_KEY, $data['engine']);
+            Metabase::setConfigValue(Metabase::METABASE_HOST_CONFIG_KEY, $data['host']);
+            Metabase::setConfigValue(Metabase::METABASE_PORT_CONFIG_KEY, $data['port']);
+            Metabase::setConfigValue(Metabase::METABASE_DB_USERNAME_CONFIG_KEY, $data['user']);
+            Metabase::setConfigValue(Metabase::METABASE_DB_ID_CONFIG_KEY, $bdd->id);
 
-            Metabase::setConfigValue(Metabase::CONFIG_METABASE_NAME, $data["metabaseName"]);
-            Metabase::setConfigValue(Metabase::CONFIG_METABASE_DB_NAME, $data["dbName"]);
-            Metabase::setConfigValue(Metabase::CONFIG_METABASE_ENGINE, $data["engine"]);
-            Metabase::setConfigValue(Metabase::CONFIG_METABASE_HOST, $data["host"]);
-            Metabase::setConfigValue(Metabase::CONFIG_METABASE_PORT, $data["port"]);
-            Metabase::setConfigValue(Metabase::CONFIG_METABASE_DB_USERNAME, $data["user"]);
-            Metabase::setConfigValue(Metabase::CONFIG_METABASE_DB_ID, $bdd->id);
-
+            return $this->generateRedirect(URL::getInstance()->absoluteUrl($url, ['tab' => 'generate', 'wait' => 1]));
+        } catch (FormValidationException $e) {
+            $error_message = $this->createStandardFormValidationErrorMessage($e);
         } catch (\Exception $e) {
-            $this->setupFormErrorContext(
-                Translator::getInstance()->trans('Metabase generation work in progress '),
-                $message = $e->getMessage(),
-                $form,
-                $e
-            );
+            $error_message = $e->getMessage();
         }
 
-        return $this->generateRedirect(URL::getInstance()->absoluteUrl($url, ['tab' => 'generate', 'wait' => 1]));
+        $form->setErrorMessage($error_message);
+
+        $this->parserContext
+            ->addForm($form)
+            ->setGeneralError($error_message);
+
+        return $this->generateRedirect(URL::getInstance()->absoluteUrl($url, ['tab' => 'import', 'wait' => 1]));
     }
 
     /**
-     * @Route("/admin/module/metabase/check", name="metabase.check")
+     * @throws TransportExceptionInterface
+     * @throws ServerExceptionInterface
+     * @throws RedirectionExceptionInterface
+     * @throws ClientExceptionInterface
      */
-    public function checkMetabase(Request $request, MetabaseService $metabaseService){
+    #[Route('/check', name: 'check', methods: ['POST'])]
+    public function checkMetabase()
+    {
         if (null !== $response = $this->checkAuth([AdminResources::MODULE], ['Metabase'], AccessManager::UPDATE)) {
             return $response;
         }
@@ -79,37 +108,47 @@ class GenerateMetabaseController extends AdminController
         $url = '/admin/module/Metabase';
         try {
             $data = $this->validateForm($form)->getData();
-            Metabase::setConfigValue(Metabase::CONFIG_METABASE_ORDER_TYPE, $data["order_type"]);
+            Metabase::setConfigValue(Metabase::METABASE_ORDER_TYPE_CONFIG_KEY, $data['order_type']);
 
-            $state = $metabaseService->checkMetabaseState(
-                Metabase::getConfigValue(Metabase::CONFIG_METABASE_DB_ID)
-            );
+            $state = $this->metabaseAPIService->checkMetabaseState();
 
-            if (json_decode($state)->initial_sync_status === "incomplete") {
+            if ('incomplete' === $state->initial_sync_status) {
                 return $this->generateRedirect(URL::getInstance()->absoluteUrl($url, ['tab' => 'generate', 'wait' => 1]));
             }
 
             return $this->generateRedirect(URL::getInstance()->absoluteUrl($url, ['tab' => 'generate', 'ready' => 1]));
-        } catch (\Exception $exception){
-            $this->errorPage($exception->getMessage());
+        } catch (FormValidationException $e) {
+            $error_message = $this->createStandardFormValidationErrorMessage($e);
+        } catch (\Exception $e) {
+            $error_message = $e->getMessage();
         }
 
-        return $this->generateRedirect(URL::getInstance()->absoluteUrl($url, ['tab' => 'generate', 'error' => $exception->getMessage()]));
+        $form->setErrorMessage($error_message);
+
+        $this->parserContext
+            ->addForm($form)
+            ->setGeneralError($error_message);
+
+        return $this->generateErrorRedirect($form);
     }
 
     /**
-     * @Route("/admin/module/metabase/generate", name="metabase.generate")
+     * @throws RedirectionExceptionInterface
+     * @throws ClientExceptionInterface
+     * @throws \JsonException
+     * @throws TransportExceptionInterface
+     * @throws ServerExceptionInterface
+     * @throws MetabaseException
      */
+    #[Route('/generate', name: 'generate')]
     public function generateMetabase(
-        Request $request,
-        MetabaseService $metabaseService,
-        MainStatisticMetabaseController $mainStatisticMetabaseController,
-        SalesMetabaseController $salesMetabaseController,
-        StatisticProductController $statisticProductsController,
-        StatisticCategoryController $statisticCategoryController,
-        StatisticBrandController $statisticBrandController,
-        StatisticBestSellerController $bestSellerController
-    ){
+        MainStatisticMetabaseService $mainStatisticMetabaseService,
+        SalesMetabaseService $salesMetabaseService,
+        StatisticProductService $statisticProductsService,
+        StatisticCategoryService $statisticCategoryService,
+        StatisticBrandService $statisticBrandService,
+        StatisticBestSellerService $bestSellerService
+    ) {
         if (null !== $response = $this->checkAuth([AdminResources::MODULE], ['Metabase'], AccessManager::UPDATE)) {
             return $response;
         }
@@ -117,36 +156,35 @@ class GenerateMetabaseController extends AdminController
         $url = '/admin/module/Metabase';
 
         $translator = Translator::getInstance();
-        $rootCollectionName = Metabase::getConfigValue(Metabase::CONFIG_METABASE_NAME);
-        $mainCollectionName = $translator->trans("MainCollection", [], Metabase::DOMAIN_NAME);
-        $statCollectionName = $translator->trans("StatCollection", [], Metabase::DOMAIN_NAME);
+        $rootCollectionName = Metabase::getConfigValue(Metabase::METABASE_NAME_CONFIG_KEY);
+        $mainCollectionName = $translator->trans('MainCollection', [], Metabase::DOMAIN_NAME);
+        $statCollectionName = $translator->trans('StatCollection', [], Metabase::DOMAIN_NAME);
 
-        $rootCollection = json_decode($this->generateCollection($metabaseService, Metabase::getConfigValue(Metabase::CONFIG_METABASE_DB_ID), $rootCollectionName));
-        $mainCollection = json_decode($this->generateCollection($metabaseService, Metabase::getConfigValue(Metabase::CONFIG_METABASE_DB_ID), $mainCollectionName, $rootCollection->id));
-        $statisticCollection = json_decode($this->generateCollection($metabaseService, Metabase::getConfigValue(Metabase::CONFIG_METABASE_DB_ID), $statCollectionName, $rootCollection->id));
+        $rootCollection = $this->metabaseAPIService->createCollection($rootCollectionName);
+        $mainCollection = $this->metabaseAPIService->createCollection($mainCollectionName, $rootCollection->id);
+        $statisticCollection = $this->metabaseAPIService->createCollection($statCollectionName, $rootCollection->id);
 
-        $fields = json_decode($metabaseService->getAllField(Metabase::getConfigValue(Metabase::CONFIG_METABASE_DB_ID)));
+        $fields = $this->metabaseAPIService->getAllField();
 
-        $mainStatisticMetabaseController->generateMainStatisticMetabase($metabaseService, Metabase::getConfigValue(Metabase::CONFIG_METABASE_DB_ID), $mainCollection->id, $fields);
-        $salesMetabaseController->generateSaleMetabase($metabaseService, Metabase::getConfigValue(Metabase::CONFIG_METABASE_DB_ID), $mainCollection->id, $fields);
-        $bestSellerController->generateBestSellerStatisticsMetabase($metabaseService, Metabase::getConfigValue(Metabase::CONFIG_METABASE_DB_ID), $mainCollection->id, $fields);
+        $mainStatisticMetabaseService->generateStatisticMetabase($mainCollection->id, $fields);
+        $salesMetabaseService->generateStatisticMetabase($mainCollection->id, $fields);
+        $bestSellerService->generateStatisticMetabase($mainCollection->id, $fields);
 
-        $statisticProductsController->generateProductStatisticsMetabase($metabaseService, Metabase::getConfigValue(Metabase::CONFIG_METABASE_DB_ID), $statisticCollection->id, $fields);
-        $statisticProductsController->generateProductStatisticsMetabase($metabaseService, Metabase::getConfigValue(Metabase::CONFIG_METABASE_DB_ID), $statisticCollection->id, $fields, true);
+        $statisticProductsService->generateStatisticMetabase($statisticCollection->id, $fields);
+        $statisticCategoryService->generateStatisticMetabase($statisticCollection->id, $fields);
+        $statisticBrandService->generateStatisticMetabase($statisticCollection->id, $fields);
 
-        $statisticCategoryController->generateCategoryStatisticsMetabase($metabaseService, Metabase::getConfigValue(Metabase::CONFIG_METABASE_DB_ID), $statisticCollection->id, $fields);
-        $statisticCategoryController->generateCategoryStatisticsMetabase($metabaseService, Metabase::getConfigValue(Metabase::CONFIG_METABASE_DB_ID), $statisticCollection->id, $fields, true);
-
-        $statisticBrandController->generateBrandStatisticsMetabase($metabaseService, Metabase::getConfigValue(Metabase::CONFIG_METABASE_DB_ID), $statisticCollection->id, $fields);
-        $statisticBrandController->generateBrandStatisticsMetabase($metabaseService, Metabase::getConfigValue(Metabase::CONFIG_METABASE_DB_ID), $statisticCollection->id, $fields,true);
-
-        return $this->generateRedirect(URL::getInstance()->absoluteUrl($url, ['tab' => 'generate', 'metabasesuccess' => 1]));
+        return $this->generateRedirect(URL::getInstance()->absoluteUrl($url, ['tab' => 'generate', 'metabase_success' => 1]));
     }
 
     /**
-     * @Route("/admin/module/metabase/syncing", name="metabase.syncing")
+     * @throws TransportExceptionInterface
+     * @throws ServerExceptionInterface
+     * @throws RedirectionExceptionInterface
+     * @throws ClientExceptionInterface
      */
-    public function updateSyncingParameterMetabase(MetabaseService $metabaseService)
+    #[Route('/syncing', name: 'syncing', methods: ['POST'])]
+    public function updateSyncingParameterMetabase()
     {
         if (null !== $response = $this->checkAuth([AdminResources::MODULE], ['Metabase'], AccessManager::UPDATE)) {
             return $response;
@@ -159,50 +197,44 @@ class GenerateMetabaseController extends AdminController
         try {
             $data = $this->validateForm($form)->getData();
 
-            $verifiedData = $metabaseService->verifyFormSyncing($data);
+            $verifiedData = $this->metabaseAPIService->verifyFormSyncing($data);
 
-            Metabase::setConfigValue(Metabase::METABASE_SYNCING_OPTION, $data["syncingOption"]);
-            Metabase::setConfigValue(Metabase::METABASE_SYNCING_SCHEDULE, $data["syncingSchedule"]);
-            Metabase::setConfigValue(Metabase::METABASE_SYNCING_TIME, $data["syncingTime"]);
-            Metabase::setConfigValue(Metabase::METABASE_SCANNING_SCHEDULE, $data["scanningSchedule"]);
-            Metabase::setConfigValue(Metabase::METABASE_SCANNING_TIME, $data["scanningTime"]);
-            Metabase::setConfigValue(Metabase::METABASE_SCANNING_FRAME, $data["scanningFrame"]);
-            Metabase::setConfigValue(Metabase::METABASE_SCANNING_DAY, $data["scanningDay"]);
-            Metabase::setConfigValue(Metabase::METABASE_REFINGERPRINT, $data["refingerprint"]);
+            Metabase::setConfigValue(Metabase::METABASE_SYNCING_OPTION, $data['syncingOption']);
+            Metabase::setConfigValue(Metabase::METABASE_SYNCING_SCHEDULE, $data['syncingSchedule']);
+            Metabase::setConfigValue(Metabase::METABASE_SYNCING_TIME, $data['syncingTime']);
+            Metabase::setConfigValue(Metabase::METABASE_SCANNING_SCHEDULE, $data['scanningSchedule']);
+            Metabase::setConfigValue(Metabase::METABASE_SCANNING_TIME, $data['scanningTime']);
+            Metabase::setConfigValue(Metabase::METABASE_SCANNING_FRAME, $data['scanningFrame']);
+            Metabase::setConfigValue(Metabase::METABASE_SCANNING_DAY, $data['scanningDay']);
+            Metabase::setConfigValue(Metabase::METABASE_REFINGERPRINT, $data['refingerprint']);
 
-            $metabaseService->updateSyncingParameters(
-                Metabase::getConfigValue(Metabase::CONFIG_METABASE_DB_ID),
-                $verifiedData["is_full_sync"],
-                $verifiedData["is_on_demand"],
-                $verifiedData["refingerprint"],
-                $verifiedData["syncing_schedule"],
-                $verifiedData["scanning_schedule"],
-                $verifiedData["sync_hours"],
-                $verifiedData["sync_minutes"],
-                $verifiedData["scan_hours"],
-                $verifiedData["scan_frame"],
-                $verifiedData["scan_day"],
+            $this->metabaseAPIService->updateSyncingParameters(
+                Metabase::getConfigValue(Metabase::METABASE_DB_ID_CONFIG_KEY),
+                $verifiedData['is_full_sync'],
+                $verifiedData['is_on_demand'],
+                $verifiedData['refingerprint'],
+                $verifiedData['syncing_schedule'],
+                $verifiedData['scanning_schedule'],
+                $verifiedData['sync_hours'],
+                $verifiedData['sync_minutes'],
+                $verifiedData['scan_hours'],
+                $verifiedData['scan_frame'],
+                $verifiedData['scan_day'],
             );
 
+            return $this->generateRedirect(URL::getInstance()->absoluteUrl($url, ['tab' => 'syncing', 'syncing' => 1]));
+        } catch (FormValidationException $e) {
+            $error_message = $this->createStandardFormValidationErrorMessage($e);
         } catch (\Exception $e) {
-            $this->setupFormErrorContext(
-                Translator::getInstance()->trans('Metabase sync parameters updated'),
-                $message = $e->getMessage(),
-                $form,
-                $e
-            );
+            $error_message = $e->getMessage();
         }
 
-        return $this->generateRedirect(URL::getInstance()->absoluteUrl($url, ['tab' => 'syncing', 'syncing' => 1]));
-    }
+        $form->setErrorMessage($error_message);
 
-    private function addBddMetabase(MetabaseService $metabaseService, String $metabaseName, String $dbName, String $engine, String $host, String $port, String $user, String $password="")
-    {
-        return $metabaseService->importBDD($metabaseName, $dbName, $engine, $host, $port, $user, $password);
-    }
+        $this->parserContext
+            ->addForm($form)
+            ->setGeneralError($error_message);
 
-    private function generateCollection(MetabaseService $metabaseService, int $databaseId, String $name, int $parentId = null)
-    {
-        return $metabaseService->createCollection($databaseId, $name, $parentId);
+        return $this->generateErrorRedirect($form);
     }
 }

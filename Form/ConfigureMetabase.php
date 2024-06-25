@@ -12,56 +12,57 @@ use Thelia\Form\BaseForm;
 
 class ConfigureMetabase extends BaseForm
 {
-    protected function buildForm()
+    protected function buildForm(): void
     {
         $translator = Translator::getInstance();
         $this->formBuilder
             ->add(
-                Metabase::CONFIG_KEY_URL,
+                Metabase::METABASE_URL_CONFIG_KEY,
                 UrlType::class,
                 [
                     'constraints' => [new NotBlank()],
-                    'data' => Metabase::getConfigValue(Metabase::CONFIG_KEY_URL),
+                    'data' => Metabase::getConfigValue(Metabase::METABASE_URL_CONFIG_KEY),
                     'label' => $translator->trans('Metabase url', [], Metabase::DOMAIN_NAME),
-                    'label_attr' => ['for' => Metabase::CONFIG_KEY_URL],
+                    'label_attr' => [
+                        'for' => Metabase::METABASE_URL_CONFIG_KEY,
+                        'help' => $translator->trans('example : http://localhost:3000', [], Metabase::DOMAIN_NAME),
+                    ],
                 ]
             )
             ->add(
-                Metabase::CONFIG_KEY_TOKEN,
+                Metabase::METABASE_EMBEDDING_KEY_CONFIG_KEY,
                 TextType::class,
                 [
                     'constraints' => [new NotBlank()],
                     'required' => true,
-                    'data' => Metabase::getConfigValue(Metabase::CONFIG_KEY_TOKEN),
+                    'data' => Metabase::getConfigValue(Metabase::METABASE_EMBEDDING_KEY_CONFIG_KEY),
                     'label' => $translator->trans('Metabase token (integration token)', [], Metabase::DOMAIN_NAME),
-                    'label_attr' => ['for' => Metabase::CONFIG_KEY_TOKEN],
+                    'label_attr' => [
+                        'for' => Metabase::METABASE_EMBEDDING_KEY_CONFIG_KEY,
+                        'hep' => $translator->trans('Activate Embedding here : https://{your_metabase}/admin/settings/embedding-in-other-applications', [], Metabase::DOMAIN_NAME),
+                    ],
                 ]
             )
             ->add(
-                Metabase::CONFIG_USERNAME,
+                Metabase::METABASE_USERNAME_CONFIG_KEY,
                 EmailType::class,
                 [
                     'constraints' => [new NotBlank()],
-                    'data' => Metabase::getConfigValue(Metabase::CONFIG_USERNAME),
+                    'data' => Metabase::getConfigValue(Metabase::METABASE_USERNAME_CONFIG_KEY),
                     'label' => $translator->trans('Metabase username (mail)', [], Metabase::DOMAIN_NAME),
-                    'label_attr' => ['for' => Metabase::CONFIG_USERNAME],
+                    'label_attr' => ['for' => Metabase::METABASE_USERNAME_CONFIG_KEY],
                 ]
             )
             ->add(
-                Metabase::CONFIG_PASS,
+                Metabase::METABASE_PASSWORD_CONFIG_KEY,
                 TextType::class,
                 [
                     'constraints' => [new NotBlank()],
-                    'data' => Metabase::getConfigValue(Metabase::CONFIG_PASS),
+                    'data' => Metabase::getConfigValue(Metabase::METABASE_PASSWORD_CONFIG_KEY),
                     'label' => $translator->trans('Metabase password', [], Metabase::DOMAIN_NAME),
-                    'label_attr' => ['for' => Metabase::CONFIG_PASS],
+                    'label_attr' => ['for' => Metabase::METABASE_PASSWORD_CONFIG_KEY],
                 ]
             )
         ;
-    }
-
-    public static function getName(): string
-    {
-        return 'configure_metabase_form';
     }
 }

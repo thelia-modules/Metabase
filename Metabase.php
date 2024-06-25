@@ -8,39 +8,48 @@ use Thelia\Module\BaseModule;
 class Metabase extends BaseModule
 {
     /** @var string */
-    const DOMAIN_NAME = 'metabase';
+    public const DOMAIN_NAME = 'metabase';
 
     // Messages
-    const SUCCESS_MESSAGE = 'The settings have been successfully updated';
-    const WAIT_MESSAGE = 'Metabase is syncing your database table. It will take few more minutes';
-    const READY_MESSAGE = 'Metabase is ready to use you can generate your Metabase Model';
-    const METABASE_SUCCESS_MESSAGE = 'Metabase successfully generate model';
-    const METABASE_SYNCING_MESSAGE = 'Metabase database parameters has been successfully updated';
-    const ERROR_CONFIG_MESSAGE = 'First, you have to set the module up';
-    const ERROR_TOKEN_MESSAGE = 'Error during session token collecting';
+    public const SUCCESS_MESSAGE = 'The settings have been successfully updated';
+    public const WAIT_MESSAGE = 'Metabase is syncing your database table. It will take few more minutes';
+    public const READY_MESSAGE = 'Metabase is ready to use you can generate your Metabase Model';
+    public const METABASE_SUCCESS_MESSAGE = 'Metabase successfully generate model';
+    public const METABASE_SYNCING_MESSAGE = 'Metabase database parameters has been successfully updated';
+    public const ERROR_CONFIG_MESSAGE = 'First, you have to set the module up';
+    public const ERROR_TOKEN_MESSAGE = 'Error during session token collecting';
 
-    // Configuration parameters
-    const CONFIG_KEY_URL = 'metabase_url';
-    const CONFIG_SESSION_TOKEN = 'session_token';
-    const CONFIG_KEY_TOKEN = 'metabase_token';
-    const CONFIG_USERNAME = 'metabase_username';
-    const CONFIG_PASS = 'metabase_password';
-    const CONFIG_METABASE_NAME = 'metabase_name';
-    const CONFIG_METABASE_DB_NAME = 'metabase_bd_name';
-    const CONFIG_METABASE_ENGINE = 'metabase_engine';
-    const CONFIG_METABASE_HOST = 'metabase_host';
-    const CONFIG_METABASE_PORT = 'metabase_port';
-    const CONFIG_METABASE_DB_ID = 'metabase_db_id';
-    const CONFIG_METABASE_DB_USERNAME = 'metabase_db-username';
-    const CONFIG_METABASE_ORDER_TYPE = 'metabase_order_type';
-    const METABASE_SYNCING_OPTION = 'metabase_syncing_option';
-    const METABASE_SYNCING_SCHEDULE = 'metabase_syncing_schedule';
-    const METABASE_SYNCING_TIME = 'metabase_syncing_time';
-    const METABASE_SCANNING_SCHEDULE = 'metabase_scanning_schedule';
-    const METABASE_SCANNING_TIME = 'metabase_scanning_time';
-    const METABASE_SCANNING_FRAME = "metabase_scanning_frame";
-    const METABASE_SCANNING_DAY = "metabase_scanning_day";
-    const METABASE_REFINGERPRINT = 'metabase_refingerprint';
+    // Configuration metabase
+    public const METABASE_URL_CONFIG_KEY = 'metabase_url';
+    public const METABASE_EMBEDDING_KEY_CONFIG_KEY = 'metabase_embedding_key';
+    public const METABASE_USERNAME_CONFIG_KEY = 'metabase_username';
+    public const METABASE_PASSWORD_CONFIG_KEY = 'metabase_password';
+
+    // Configuration database
+    public const METABASE_NAME_CONFIG_KEY = 'metabase_name';
+    public const METABASE_DB_NAME_CONFIG_KEY = 'metabase_bd_name';
+    public const METABASE_ENGINE_CONFIG_KEY = 'metabase_engine';
+    public const METABASE_HOST_CONFIG_KEY = 'metabase_host';
+    public const METABASE_PORT_CONFIG_KEY = 'metabase_port';
+    public const METABASE_DB_USERNAME_CONFIG_KEY = 'metabase_db-username';
+    public const METABASE_DB_ID_CONFIG_KEY = 'metabase_db_id';
+
+    // Metabase Token
+    public const METABASE_TOKEN_SESSION_CONFIG_KEY = 'metabase_token_session';
+    public const METABASE_TOKEN_EXPIRATION_DATE_CONFIG_KEY = 'metabase_token_expiration_date';
+
+    // Metabase Order Type
+    public const METABASE_ORDER_TYPE_CONFIG_KEY = 'metabase_order_type';
+
+    // Metabase config syncing
+    public const METABASE_SYNCING_OPTION = 'metabase_syncing_option';
+    public const METABASE_SYNCING_SCHEDULE = 'metabase_syncing_schedule';
+    public const METABASE_SYNCING_TIME = 'metabase_syncing_time';
+    public const METABASE_SCANNING_SCHEDULE = 'metabase_scanning_schedule';
+    public const METABASE_SCANNING_TIME = 'metabase_scanning_time';
+    public const METABASE_SCANNING_FRAME = 'metabase_scanning_frame';
+    public const METABASE_SCANNING_DAY = 'metabase_scanning_day';
+    public const METABASE_REFINGERPRINT = 'metabase_refingerprint';
 
     /**
      * Autowiring.

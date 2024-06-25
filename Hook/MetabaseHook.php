@@ -14,44 +14,47 @@ namespace Metabase\Hook;
 
 use Metabase\Exception\MetabaseException;
 use Metabase\Metabase;
-use Metabase\Service\MetabaseService;
+use Metabase\Service\API\MetabaseAPIService;
+use Metabase\Service\Embed\MetabaseEmbed;
+use Symfony\Contracts\HttpClient\Exception\ClientExceptionInterface;
+use Symfony\Contracts\HttpClient\Exception\RedirectionExceptionInterface;
+use Symfony\Contracts\HttpClient\Exception\ServerExceptionInterface;
+use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
 use Thelia\Core\Event\Hook\HookRenderEvent;
 use Thelia\Core\Hook\BaseHook;
 use Thelia\Core\Translation\Translator;
-use Thelia\Model\ModuleConfig;
-use Thelia\Model\ModuleConfigQuery;
 
 class MetabaseHook extends BaseHook
 {
-    private $metabaseService;
-
-    public function __construct(MetabaseService $metabaseService)
+    public function __construct(protected MetabaseAPIService $metabaseAPIService)
     {
         parent::__construct();
-        $this->metabaseService = $metabaseService;
     }
 
-    public function metabaseHome(HookRenderEvent $event)
+    /**
+     * @throws TransportExceptionInterface
+     * @throws ServerExceptionInterface
+     * @throws RedirectionExceptionInterface
+     * @throws ClientExceptionInterface
+     * @throws \JsonException
+     */
+    public function metabaseHome(HookRenderEvent $event): void
     {
         $translator = Translator::getInstance();
-        // The url of the metabase installation
-        $metabaseUrl = Metabase::getConfigValue(Metabase::CONFIG_KEY_URL);
-        // The secret embed key from the admin settings screen
-        $metabaseKey = Metabase::getConfigValue(Metabase::CONFIG_KEY_TOKEN);
+        $metabaseUrl = Metabase::getConfigValue(Metabase::METABASE_URL_CONFIG_KEY);
 
         $dashboards = [];
         $dashboardsName = [];
         $errorMessage = null;
 
-        $metabase = new \Metabase\Embed($metabaseUrl, $metabaseKey, false, "100%", "600");
+        $metabase = new MetabaseEmbed($metabaseUrl, false, '100%', '600');
 
         try {
-            $apiResult = json_decode($this->metabaseService->getDashboards(), true);
+            $apiResult = $this->metabaseAPIService->getPublicDashboards();
 
-            for ($i = 0; $i < sizeof($apiResult); ++$i) {
-
-                $dashboards[$apiResult[$i]['id']] = $metabase->dashboardIFrame($apiResult[$i]['id']);
-                $dashboardsName[$apiResult[$i]['id']] = $apiResult[$i]['name'];
+            foreach ($apiResult as $iValue) {
+                $dashboards[$iValue['id']] = $metabase->dashboardIFrame($iValue['public_uuid']);
+                $dashboardsName[$iValue['id']] = $iValue['name'];
             }
 
         } catch (MetabaseException $exception) {
@@ -61,31 +64,25 @@ class MetabaseHook extends BaseHook
         ksort($dashboards);
         ksort($dashboardsName);
 
-            $event->add(
+        $event->add(
             $this->render(
                 'metabase-module.html',
                 [
                     'dashboards' => array_values($dashboards),
                     'dashboardsName' => array_values($dashboardsName),
-                    'othersStatistics' => $translator->trans("All Statistics", [], Metabase::DOMAIN_NAME),
+                    'othersStatistics' => $translator->trans('All Statistics', [], Metabase::DOMAIN_NAME),
                     'errorMessage' => $errorMessage,
                 ]
             )
         );
     }
 
-    public function metabaseConfig(HookRenderEvent $event)
+    public function metabaseConfig(HookRenderEvent $event): void
     {
-        if (null !== $params = ModuleConfigQuery::create()->findByModuleId(Metabase::getModuleId())) {
-            /** @var ModuleConfig $param */
-            foreach ($params as $param) {
-                $vars[$param->getName()] = $param->getValue();
-            }
-        }
         $event->add($this->render('module-configuration.html'));
     }
 
-    public function metabaseHomeJs(HookRenderEvent $event)
+    public function metabaseHomeJs(HookRenderEvent $event): void
     {
         $event->add($this->render(
             'metabase-module-js.html'
