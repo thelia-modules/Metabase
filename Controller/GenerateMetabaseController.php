@@ -27,7 +27,7 @@ use Thelia\Core\Translation\Translator;
 use Thelia\Form\Exception\FormValidationException;
 use Thelia\Tools\URL;
 
-#[Route('/admin/module/Metabase', name: 'admin_metabase_bdd_')]
+#[Route('/admin/module/Metabase', name: 'admin_metabase_generate_')]
 class GenerateMetabaseController extends AdminController
 {
     public function __construct(
@@ -42,8 +42,8 @@ class GenerateMetabaseController extends AdminController
      * @throws RedirectionExceptionInterface
      * @throws ClientExceptionInterface
      */
-    #[Route('/importbdd', name: 'importbdd', methods: ['POST'])]
-    public function ImportBddMetabase()
+    #[Route('/import_database', name: 'import_database', methods: ['POST'])]
+    public function ImportDatabaseMetabase()
     {
         if (null !== $response = $this->checkAuth([AdminResources::MODULE], ['Metabase'], AccessManager::UPDATE)) {
             return $response;
@@ -51,12 +51,10 @@ class GenerateMetabaseController extends AdminController
 
         $form = $this->createForm(ImportMetabase::getName());
 
-        $url = '/admin/module/Metabase';
-
         try {
             $data = $this->validateForm($form)->getData();
 
-            $bdd = $this->metabaseAPIService->importBDD(
+            $database = $this->metabaseAPIService->importDatabase(
                 $data['dbName'],
                 $data['dbName'],
                 $data['engine'],
@@ -72,9 +70,9 @@ class GenerateMetabaseController extends AdminController
             Metabase::setConfigValue(Metabase::METABASE_HOST_CONFIG_KEY, $data['host']);
             Metabase::setConfigValue(Metabase::METABASE_PORT_CONFIG_KEY, $data['port']);
             Metabase::setConfigValue(Metabase::METABASE_DB_USERNAME_CONFIG_KEY, $data['user']);
-            Metabase::setConfigValue(Metabase::METABASE_DB_ID_CONFIG_KEY, $bdd->id);
+            Metabase::setConfigValue(Metabase::METABASE_DB_ID_CONFIG_KEY, $database->id);
 
-            return $this->generateRedirect(URL::getInstance()->absoluteUrl($url, ['tab' => 'generate', 'wait' => 1]));
+            return $this->generateSuccessRedirect($form);
         } catch (FormValidationException $e) {
             $error_message = $this->createStandardFormValidationErrorMessage($e);
         } catch (\Exception $e) {
@@ -87,7 +85,7 @@ class GenerateMetabaseController extends AdminController
             ->addForm($form)
             ->setGeneralError($error_message);
 
-        return $this->generateRedirect(URL::getInstance()->absoluteUrl($url, ['tab' => 'import', 'wait' => 1]));
+        return $this->generateErrorRedirect($form);
     }
 
     /**
@@ -105,18 +103,17 @@ class GenerateMetabaseController extends AdminController
 
         $form = $this->createForm(GenerateMetabase::getName());
 
-        $url = '/admin/module/Metabase';
         try {
             $data = $this->validateForm($form)->getData();
             Metabase::setConfigValue(Metabase::METABASE_ORDER_TYPE_CONFIG_KEY, $data['order_type']);
 
             $state = $this->metabaseAPIService->checkMetabaseState();
 
-            if ('incomplete' === $state->initial_sync_status) {
-                return $this->generateRedirect(URL::getInstance()->absoluteUrl($url, ['tab' => 'generate', 'wait' => 1]));
+            if ('complete' === $state->initial_sync_status) {
+                return $this->generateRedirect(URL::getInstance()->absoluteUrl('/admin/module/Metabase/generate'));
             }
 
-            return $this->generateRedirect(URL::getInstance()->absoluteUrl($url, ['tab' => 'generate', 'ready' => 1]));
+            return $this->generateSuccessRedirect($form);
         } catch (FormValidationException $e) {
             $error_message = $this->createStandardFormValidationErrorMessage($e);
         } catch (\Exception $e) {
@@ -153,8 +150,6 @@ class GenerateMetabaseController extends AdminController
             return $response;
         }
 
-        $url = '/admin/module/Metabase';
-
         $translator = Translator::getInstance();
         $rootCollectionName = Metabase::getConfigValue(Metabase::METABASE_NAME_CONFIG_KEY);
         $mainCollectionName = $translator->trans('MainCollection', [], Metabase::DOMAIN_NAME);
@@ -174,7 +169,7 @@ class GenerateMetabaseController extends AdminController
         $statisticCategoryService->generateStatisticMetabase($statisticCollection->id, $fields);
         $statisticBrandService->generateStatisticMetabase($statisticCollection->id, $fields);
 
-        return $this->generateRedirect(URL::getInstance()->absoluteUrl($url, ['tab' => 'generate', 'metabase_success' => 1]));
+        return $this->generateRedirect(URL::getInstance()->absoluteUrl('/admin/module/Metabase', ['tab' => 'generate', 'success' => 1]));
     }
 
     /**
@@ -191,8 +186,6 @@ class GenerateMetabaseController extends AdminController
         }
 
         $form = $this->createForm(SyncingMetabase::getName());
-
-        $url = '/admin/module/Metabase';
 
         try {
             $data = $this->validateForm($form)->getData();
@@ -222,7 +215,7 @@ class GenerateMetabaseController extends AdminController
                 $verifiedData['scan_day'],
             );
 
-            return $this->generateRedirect(URL::getInstance()->absoluteUrl($url, ['tab' => 'syncing', 'syncing' => 1]));
+            return $this->generateRedirect(URL::getInstance()->absoluteUrl('/admin/module/Metabase', ['tab' => 'syncing', 'syncing' => 1]));
         } catch (FormValidationException $e) {
             $error_message = $this->createStandardFormValidationErrorMessage($e);
         } catch (\Exception $e) {

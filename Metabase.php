@@ -10,15 +10,6 @@ class Metabase extends BaseModule
     /** @var string */
     public const DOMAIN_NAME = 'metabase';
 
-    // Messages
-    public const SUCCESS_MESSAGE = 'The settings have been successfully updated';
-    public const WAIT_MESSAGE = 'Metabase is syncing your database table. It will take few more minutes';
-    public const READY_MESSAGE = 'Metabase is ready to use you can generate your Metabase Model';
-    public const METABASE_SUCCESS_MESSAGE = 'Metabase successfully generate model';
-    public const METABASE_SYNCING_MESSAGE = 'Metabase database parameters has been successfully updated';
-    public const ERROR_CONFIG_MESSAGE = 'First, you have to set the module up';
-    public const ERROR_TOKEN_MESSAGE = 'Error during session token collecting';
-
     // Configuration metabase
     public const METABASE_URL_CONFIG_KEY = 'metabase_url';
     public const METABASE_EMBEDDING_KEY_CONFIG_KEY = 'metabase_embedding_key';

@@ -241,7 +241,7 @@ class MetabaseAPIService
      * @throws TransportExceptionInterface
      * @throws MetabaseException
      */
-    public function importBDD(string $metabaseName, string $dbName, string $engine, string $host, string $port, string $user, string $password)
+    public function importDatabase(string $metabaseName, string $dbName, string $engine, string $host, string $port, string $user, string $password)
     {
         $client = HttpClient::create();
         $metabaseResponse = $client->request(

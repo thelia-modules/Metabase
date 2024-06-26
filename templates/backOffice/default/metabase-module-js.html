@@ -1,11 +1,11 @@
 <script>
 
 (function() {
-    var $module = $('#metabase-module');
+    let $module = $('#metabase-module');
 
     function displayTemplate (href) {
-        var $tab = $module.find(href);
-        var template = $tab.find('template').html();
+        let $tab = $module.find(href);
+        let template = $tab.find('template').html();
         $tab.html(template);
     }
     $module.find('#tabbed-menu li a').on('shown.bs.tab', function (e) {
@@ -14,5 +14,15 @@
 
     displayTemplate($module.find('#tabbed-menu li:first a')[0].attributes.href.value);
 })()
+
+document.addEventListener('DOMContentLoaded', (event) => {
+    const listItems = document.querySelectorAll('#tabbed-menu li');
+
+    listItems.forEach(item => {
+        item.addEventListener('click', () => {
+            listItems.forEach(li => li.classList.remove('active'));
+        });
+    });
+});
 
 </script>

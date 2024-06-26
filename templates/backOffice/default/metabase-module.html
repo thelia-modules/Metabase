@@ -31,11 +31,11 @@
                             {$othersStatistics} <i class="fas fa-chevron-down menu-collapse"></i>
                         </button>
 
-                        <div id="tabbed-menu" class="dropdown-menu" aria-labelledby="othersStatistic">
+                        <ul id="tabbed-menu" class="dropdown-menu" aria-labelledby="othersStatistic">
                             {foreach $dashboards as $dashboard}
-                                <li class="dropdown-item"><a data-toggle="tab" href="#table-{$dashboard@key}">{intl l="{$dashboardsName[$dashboard@key]}"}</a></li>
+                                <li class="dropdown-item {if $tab eq "table-{$dashboard@key}"}active{/if}"><a data-toggle="tab" href="#table-{$dashboard@key}">{intl l="{$dashboardsName[$dashboard@key]}"}</a></li>
                             {/foreach}
-                        </div>
+                        </ul>
                     </div>
 
                     <div class="tab-content">
