@@ -127,6 +127,10 @@
                                         <div class="alert alert-danger">{$form_error_message}</div>
                                     {/if}
 
+                                    {if $smarty.get.error_message|default:null}
+                                        <div class="alert alert-danger">{$smarty.get.error_message}</div>
+                                    {/if}
+
                                     {if $smarty.get.wait|default:null}
                                         <div class="alert alert-warning">{intl l='Metabase is syncing your database table. It will take few more minutes' d='metabase.bo.default'}</div>
                                     {/if}

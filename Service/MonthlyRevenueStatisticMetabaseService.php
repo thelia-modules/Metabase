@@ -11,7 +11,7 @@ use Symfony\Contracts\HttpClient\Exception\ServerExceptionInterface;
 use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
 use Thelia\Core\Translation\Translator;
 
-class MainStatisticMetabaseService extends AbstractMetabaseService
+class MonthlyRevenueStatisticMetabaseService extends AbstractMetabaseService
 {
     /**
      * Create a table with sales revenue of store
@@ -40,14 +40,14 @@ class MainStatisticMetabaseService extends AbstractMetabaseService
         ;
 
         $dashboard = $this->generateDashboardMetabase(
-            $translator->trans('MainDashboard', [], Metabase::DOMAIN_NAME),
-            $translator->trans('main dashboard', [], Metabase::DOMAIN_NAME),
+            $translator?->trans('MonthlyRevenueDashboard', [], Metabase::DOMAIN_NAME),
+            $translator?->trans('monthly revenue dashboard', [], Metabase::DOMAIN_NAME),
             $collectionId
         );
 
         $card = $this->generateCardMetabase(
-            $translator->trans('MainCard', [], Metabase::DOMAIN_NAME),
-            $translator->trans('main card', [], Metabase::DOMAIN_NAME),
+            $translator?->trans('MonthlyRevenueCard', [], Metabase::DOMAIN_NAME),
+            $translator?->trans('monthly revenue card', [], Metabase::DOMAIN_NAME),
             'line',
             $collectionId,
             $this->getSqlQueryMain(),
@@ -56,8 +56,8 @@ class MainStatisticMetabaseService extends AbstractMetabaseService
         );
 
         $card2 = $this->generateCardMetabase(
-            $translator->trans('MainCardNumber', [], Metabase::DOMAIN_NAME),
-            $translator->trans('main card with number', [], Metabase::DOMAIN_NAME),
+            $translator?->trans('MonthlyRevenueCardNumber', [], Metabase::DOMAIN_NAME),
+            $translator?->trans('monthly revenue with number', [], Metabase::DOMAIN_NAME),
             'scalar',
             $collectionId,
             $this->getSqlQuerySecondary(),
@@ -79,8 +79,11 @@ class MainStatisticMetabaseService extends AbstractMetabaseService
                     SUM((`order_product`.QUANTITY * IF(`order_product`.WAS_IN_PROMO,`order_product`.PROMO_PRICE,`order_product`.PRICE))) + SUM((`order_product`.QUANTITY * IF(`order_product`.WAS_IN_PROMO,`order_product_tax`.PROMO_AMOUNT,`order_product_tax`.AMOUNT))) - SUM(`order`.discount) AS TOTAL 
                     FROM `order` 
                     INNER JOIN `order_product` ON (`order`.`id`=`order_product`.`order_id`) 
-                    LEFT JOIN `order_product_tax` ON (`order_product`.`id`=`order_product_tax`.`order_product_id`) 
-                    WHERE (`order`.`invoice_date`>={{start}} AND `order`.`invoice_date`<={{end}}) AND {{orderType}} 
+                    LEFT JOIN `order_product_tax` ON (`order_product`.`id`=`order_product_tax`.`order_product_id`)
+                    LEFT JOIN `order_status` ON (`order_status`.`id` = `order`.`status_id`)
+                    LEFT JOIN `order_status_i18n` ON (`order_status_i18n`.`id` = `order_status`.`id`)
+                    WHERE (`order`.`invoice_date`>={{start}} AND `order`.`invoice_date`<={{end}}) 
+                    AND ({{orderStatus}})
                     group by DATE_FORMAT(`order`.`invoice_date`, "%m %Y"), DATE
                     order by DATE_FORMAT(`order`.`invoice_date`, "%m %Y")'
         ;
@@ -91,8 +94,11 @@ class MainStatisticMetabaseService extends AbstractMetabaseService
         return 'SELECT SUM((`order_product`.QUANTITY * IF(`order_product`.WAS_IN_PROMO,`order_product`.PROMO_PRICE,`order_product`.PRICE))) + SUM((`order_product`.QUANTITY * IF(`order_product`.WAS_IN_PROMO,`order_product_tax`.PROMO_AMOUNT,`order_product_tax`.AMOUNT))) - SUM(`order`.discount) AS TOTAL 
                     FROM `order`
                     INNER JOIN `order_product` ON (`order`.`id`=`order_product`.`order_id`) 
-                    LEFT JOIN `order_product_tax` ON (`order_product`.`id`=`order_product_tax`.`order_product_id`) 
-                    WHERE (`order`.`invoice_date`>={{start}} AND `order`.`invoice_date`<={{end}}) AND {{orderType}}'
+                    LEFT JOIN `order_product_tax` ON (`order_product`.`id`=`order_product_tax`.`order_product_id`)
+                    LEFT JOIN `order_status` ON (`order_status`.`id` = `order`.`status_id`)
+                    LEFT JOIN `order_status_i18n` ON (`order_status_i18n`.`id` = `order_status`.`id`)
+                    WHERE (`order`.`invoice_date`>={{start}} AND `order`.`invoice_date`<={{end}})
+                    AND ({{orderStatus}})'
         ;
     }
 
@@ -115,7 +121,7 @@ class MainStatisticMetabaseService extends AbstractMetabaseService
         ];
     }
 
-    public function buildParameters(array $defaultOrderType, array $defaultFields = []): array
+    public function buildParameters(array $defaultOrderStatus, array $defaultFields = []): array
     {
         return [
             [
@@ -135,18 +141,18 @@ class MainStatisticMetabaseService extends AbstractMetabaseService
                 'default' => $defaultFields['endDate'],
             ],
             [
-                'id' => $this->getUuidOrderType(),
+                'id' => $this->getUuidOrderStatus(),
                 'type' => 'string/=',
                 'target' => [
                     'dimension',
                     [
                         'template-tag',
-                        'orderType',
+                        'OrderStatus',
                     ],
                 ],
-                'name' => 'Ordertype',
-                'slug' => 'orderType',
-                'default' => $defaultOrderType,
+                'name' => 'OrderStatus',
+                'slug' => 'OrderStatus',
+                'default' => $defaultOrderStatus,
             ],
         ];
     }
@@ -154,9 +160,9 @@ class MainStatisticMetabaseService extends AbstractMetabaseService
     /**
      * @throws MetabaseException
      */
-    public function buildDatasetQuery(string $query, array $defaultOrderType, array $fields, array $defaultFields = []): array
+    public function buildDatasetQuery(string $query, array $defaultOrderStatus, array $fields, array $defaultFields = []): array
     {
-        $fieldOrderType = $this->metabaseAPIService->searchField($fields, 'status_id', 'order');
+        $fieldOrderStatus = $this->metabaseAPIService->searchField($fields, 'title', 'order_status_i18n');
 
         return [
             'database' => (int) Metabase::getConfigValue(Metabase::METABASE_DB_ID_CONFIG_KEY),
@@ -178,18 +184,18 @@ class MainStatisticMetabaseService extends AbstractMetabaseService
                         'default' => $defaultFields['endDate'],
                         'required' => true,
                     ],
-                    'orderType' => [
-                        'id' => $this->getUuidOrderType(),
-                        'name' => 'orderType',
-                        'display-name' => 'Ordertype',
+                    'orderStatus' => [
+                        'id' => $this->getUuidOrderStatus(),
+                        'name' => 'OrderStatus',
+                        'display-name' => 'OrderStatus',
                         'type' => 'dimension',
                         'dimension' => [
                             'field',
-                            $fieldOrderType,
+                            $fieldOrderStatus,
                             null,
                         ],
                         'widget-type' => 'string/=',
-                        'default' => $defaultOrderType,
+                        'default' => $defaultOrderStatus,
                     ],
                 ],
                 'query' => $query,
@@ -246,24 +252,24 @@ class MainStatisticMetabaseService extends AbstractMetabaseService
                 ],
             ],
             [
-                'parameter_id' => $this->getUuidParamOrderType(),
+                'parameter_id' => $this->getUuidParamOrderStatus(),
                 'card_id' => $cardsId[0],
                 'target' => [
                     'dimension',
                     [
                         'template-tag',
-                        'orderType',
+                        'orderStatus',
                     ],
                 ],
             ],
             [
-                'parameter_id' => $this->getUuidParamOrderType(),
+                'parameter_id' => $this->getUuidParamOrderStatus(),
                 'card_id' => $cardsId[1],
                 'target' => [
                     'dimension',
                     [
                         'template-tag',
-                        'orderType',
+                        'orderStatus',
                     ],
                 ],
             ],
@@ -272,9 +278,11 @@ class MainStatisticMetabaseService extends AbstractMetabaseService
 
     public function getDashboardParameters(array $defaultFields): array
     {
+        $translator = Translator::getInstance();
+
         return [
             [
-                'name' => 'Date Start',
+                'name' => $translator?->trans('Date Start', [], Metabase::DOMAIN_NAME),
                 'slug' => 'start',
                 'id' => $this->getUuidParamDate1(),
                 'type' => 'date/single',
@@ -282,7 +290,7 @@ class MainStatisticMetabaseService extends AbstractMetabaseService
                 'default' => $defaultFields['startDate'],
             ],
             [
-                'name' => 'Date End',
+                'name' => $translator?->trans('Date End', [], Metabase::DOMAIN_NAME),
                 'slug' => 'end',
                 'id' => $this->getUuidParamDate2(),
                 'type' => 'date/single',
@@ -290,12 +298,17 @@ class MainStatisticMetabaseService extends AbstractMetabaseService
                 'default' => $defaultFields['endDate'],
             ],
             [
-                'name' => 'orderType',
-                'slug' => 'orderType',
-                'id' => $this->getUuidParamOrderType(),
+                'name' => $translator?->trans('orderStatus', [], Metabase::DOMAIN_NAME),
+                'slug' => 'orderStatus',
+                'id' => $this->getUuidParamOrderStatus(),
                 'type' => 'string/=',
                 'sectionId' => 'string',
-                'default' => $this->metabaseAPIService->getDefaultOrderType(),
+                'default' => $this->getDefaultOrderStatus(),
+                'values_query_type' => 'list',
+                'values_source_config' => [
+                    'values' => $this->getValuesSourceConfigValuesOrderStatus(),
+                ],
+                'values_source_type' => 'static-list',
             ],
         ];
     }

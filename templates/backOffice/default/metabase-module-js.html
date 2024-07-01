@@ -2,27 +2,36 @@
 
 (function() {
     let $module = $('#metabase-module');
+    let $btnGroup = $module.find('.btn-group');
 
     function displayTemplate (href) {
         let $tab = $module.find(href);
         let template = $tab.find('template').html();
         $tab.html(template);
     }
+
     $module.find('#tabbed-menu li a').on('shown.bs.tab', function (e) {
+        let $href = e.target.attributes.href.value;
+
+        if ($href === '#table-0' || $href === '#table-1' || $href === '#table-2') {
+            displayTemplate(e.target.attributes.href.value);
+            $btnGroup.hide();
+        } else {
+            $btnGroup.show();
+
+            let parts = $href.split('-');
+            let number = parseInt(parts[1], 10) + 1;
+
+            document.getElementById("btn_revenue").href=$href;
+            document.getElementById("btn_count").href='#table-' + number;
+        }
+    });
+
+    $btnGroup.find('.btn').on('click', function(e) {
         displayTemplate(e.target.attributes.href.value);
     });
 
     displayTemplate($module.find('#tabbed-menu li:first a')[0].attributes.href.value);
 })()
-
-document.addEventListener('DOMContentLoaded', (event) => {
-    const listItems = document.querySelectorAll('#tabbed-menu li');
-
-    listItems.forEach(item => {
-        item.addEventListener('click', () => {
-            listItems.forEach(li => li.classList.remove('active'));
-        });
-    });
-});
 
 </script>

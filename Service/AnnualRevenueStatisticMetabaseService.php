@@ -11,7 +11,7 @@ use Symfony\Contracts\HttpClient\Exception\ServerExceptionInterface;
 use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
 use Thelia\Core\Translation\Translator;
 
-class SalesMetabaseService extends AbstractMetabaseService
+class AnnualRevenueStatisticMetabaseService extends AbstractMetabaseService
 {
     /**
      * Create a table with sales revenue of store.
@@ -30,60 +30,62 @@ class SalesMetabaseService extends AbstractMetabaseService
 
         $defaultFields1 =
             [
+                'id' => $this->getUuidDate1(),
+                'tag' => 'invoiceDate1',
                 'date' => 'past1years',
-                'fields' => $fields,
             ]
         ;
 
         $defaultFields2 =
             [
+                'id' => $this->getUuidDate2(),
+                'tag' => 'invoiceDate2',
                 'date' => 'thisyear',
-                'fields' => $fields,
             ]
         ;
 
         $dashboard = $this->generateDashboardMetabase(
-            $translator->trans('SalesDashboard', [], Metabase::DOMAIN_NAME),
-            $translator->trans('sales of the store', [], Metabase::DOMAIN_NAME),
+            $translator?->trans('AnnualRevenueDashboard', [], Metabase::DOMAIN_NAME),
+            $translator?->trans('annual revenue dashboard', [], Metabase::DOMAIN_NAME),
             $collectionId
         );
 
         $card = $this->generateCardMetabase(
-            $translator->trans('SalesCard', [], Metabase::DOMAIN_NAME).'1',
-            $translator->trans('card with sales', [], Metabase::DOMAIN_NAME),
+            $translator?->trans('AnnualRevenueCard_', [], Metabase::DOMAIN_NAME).'1',
+            $translator?->trans('annual revenue card', [], Metabase::DOMAIN_NAME).' 1',
             'line',
             $collectionId,
-            $this->getSqlQueryMain(),
+            $this->getSqlQueryMain($defaultFields1['tag']),
             $fields,
             $defaultFields1
         );
 
         $card2 = $this->generateCardMetabase(
-            $translator->trans('SalesCard', [], Metabase::DOMAIN_NAME).'2',
-            $translator->trans('card with sales', [], Metabase::DOMAIN_NAME),
+            $translator?->trans('AnnualRevenueCard_', [], Metabase::DOMAIN_NAME).'2',
+            $translator?->trans('annual revenue card', [], Metabase::DOMAIN_NAME).' 2',
             'line',
             $collectionId,
-            $this->getSqlQueryMain(),
+            $this->getSqlQueryMain($defaultFields2['tag']),
             $fields,
-            $defaultFields1
+            $defaultFields2
         );
 
         $card3 = $this->generateCardMetabase(
-            $translator->trans('Sale Number', [], Metabase::DOMAIN_NAME).'1',
-            $translator->trans('card with the sale number', [], Metabase::DOMAIN_NAME),
+            $translator?->trans('AnnualRevenueCardNumber_', [], Metabase::DOMAIN_NAME).'1',
+            $translator?->trans('annual revenue card number', [], Metabase::DOMAIN_NAME).' 1',
             'scalar',
             $collectionId,
-            $this->getSqlQuerySecondary(),
+            $this->getSqlQuerySecondary($defaultFields1['tag']),
             $fields,
             $defaultFields1
         );
 
         $card4 = $this->generateCardMetabase(
-            $translator->trans('Sale Number', [], Metabase::DOMAIN_NAME).'2',
-            $translator->trans('card with the sale number', [], Metabase::DOMAIN_NAME),
+            $translator?->trans('AnnualRevenueCardNumber_', [], Metabase::DOMAIN_NAME).'2',
+            $translator?->trans('annual revenue card number', [], Metabase::DOMAIN_NAME).' 2',
             'scalar',
             $collectionId,
-            $this->getSqlQuerySecondary(),
+            $this->getSqlQuerySecondary($defaultFields2['tag']),
             $fields,
             $defaultFields2
         );
@@ -97,9 +99,9 @@ class SalesMetabaseService extends AbstractMetabaseService
         $this->embedDashboard(
             $dashboard->id,
             [
-                'date_1' => 'enabled',
-                'date_2' => 'enabled',
-                'orderType' => 'enabled',
+                'invoiceDate1' => 'enabled',
+                'invoiceDate2' => 'enabled',
+                'orderStatus' => 'enabled',
             ],
             [$dashboardCard, $dashboardCard3, $dashboardCard4]
         );
@@ -107,7 +109,7 @@ class SalesMetabaseService extends AbstractMetabaseService
         $this->publishDashboard($dashboard->id);
     }
 
-    private function getSqlQueryMain(): string
+    private function getSqlQueryMain(string $param): string
     {
         return 'SELECT q1.DATE1 as DATE, (q1.CA - q2.DISCOUNT) as TOTAL
                         FROM (
@@ -116,21 +118,25 @@ class SalesMetabaseService extends AbstractMetabaseService
                             FROM `order`
                             INNER JOIN `order_product` ON (`order`.`id`=`order_product`.`order_id`)
                             LEFT JOIN `order_product_tax` ON (`order_product`.`id`=`order_product_tax`.`order_product_id`)
-                            WHERE {{start}} AND {{orderType}}
+                            LEFT JOIN `order_status` ON (`order_status`.`id` = `order`.`status_id`)
+                            LEFT JOIN `order_status_i18n` ON (`order_status_i18n`.`id` = `order_status`.`id`)
+                            WHERE {{'.$param.'}} AND {{orderStatus}}
                             group by DATE_FORMAT(`order`.`invoice_date`, "%m"), DATE1
                             order by DATE_FORMAT(`order`.`invoice_date`, "%m")
                             ) as q1,
                             (
                             SELECT DATE_FORMAT(`order`.`invoice_date`, "%b") as DATE2, SUM(`order`.`discount`) AS DISCOUNT
                             FROM `order`
-                            where {{start}} AND {{orderType}}
+                            LEFT JOIN `order_status` ON (`order_status`.`id` = `order`.`status_id`)
+                            LEFT JOIN `order_status_i18n` ON (`order_status_i18n`.`id` = `order_status`.`id`)
+                            where {{'.$param.'}} AND {{orderStatus}}
                             group by DATE_FORMAT(`order`.`invoice_date`, "%m"), DATE2
                             order by DATE_FORMAT(`order`.`invoice_date`, "%m")
                         ) as q2
                         where q1.DATE1 = q2.DATE2';
     }
 
-    private function getSqlQuerySecondary(): string
+    private function getSqlQuerySecondary(string $param): string
     {
         return 'SELECT (q1.CA - q2.DISCOUNT) as TOTAL
                         FROM (
@@ -138,12 +144,16 @@ class SalesMetabaseService extends AbstractMetabaseService
                             FROM `order`
                             INNER JOIN `order_product` ON (`order`.`id`=`order_product`.`order_id`)
                             LEFT JOIN `order_product_tax` ON (`order_product`.`id`=`order_product_tax`.`order_product_id`)
-                            WHERE {{start}} AND {{orderType}}
+                            LEFT JOIN `order_status` ON (`order_status`.`id` = `order`.`status_id`)
+                            LEFT JOIN `order_status_i18n` ON (`order_status_i18n`.`id` = `order_status`.`id`)
+                            WHERE {{'.$param.'}} AND {{orderStatus}}
                             ) as q1,
                             (
                             SELECT SUM(`order`.`discount`) AS DISCOUNT
                             FROM `order`
-                            where {{start}} AND {{orderType}}
+                            LEFT JOIN `order_status` ON (`order_status`.`id` = `order`.`status_id`)
+                            LEFT JOIN `order_status_i18n` ON (`order_status_i18n`.`id` = `order_status`.`id`)
+                            where {{'.$param.'}} AND {{orderStatus}}
                             ) as q2';
     }
 
@@ -161,30 +171,36 @@ class SalesMetabaseService extends AbstractMetabaseService
         ];
     }
 
-    public function buildParameters(array $defaultOrderType, array $defaultFields = []): array
+    public function buildParameters(array $defaultOrderStatus, array $defaultFields = []): array
     {
         return [
             [
-                'id' => $this->getUuidDate1(),
+                'id' => $defaultFields['id'],
                 'type' => 'date/relative',
-                'target' => ['dimension', ['template-tag', 'start']],
-                'name' => 'Start',
-                'slug' => 'start',
+                'target' => [
+                    'dimension',
+                    [
+                        'template-tag',
+                        'invoiceDate',
+                    ],
+                ],
+                'name' => $defaultFields['tag'],
+                'slug' => $defaultFields['tag'],
                 'default' => $defaultFields['date'],
             ],
             [
-                'id' => $this->getUuidOrderType(),
+                'id' => $this->getUuidOrderStatus(),
                 'type' => 'string/=',
                 'target' => [
                     'dimension',
                     [
                         'template-tag',
-                        'orderType',
+                        'orderStatus',
                     ],
                 ],
-                'name' => 'Ordertype',
-                'slug' => 'orderType',
-                'default' => $defaultOrderType,
+                'name' => 'OrderStatus',
+                'slug' => 'orderStatus',
+                'default' => $defaultOrderStatus,
             ],
         ];
     }
@@ -192,19 +208,19 @@ class SalesMetabaseService extends AbstractMetabaseService
     /**
      * @throws MetabaseException
      */
-    public function buildDatasetQuery(string $query, array $defaultOrderType, array $fields, array $defaultFields = []): array
+    public function buildDatasetQuery(string $query, array $defaultOrderStatus, array $fields, array $defaultFields = []): array
     {
         $fieldDate = $this->metabaseAPIService->searchField($fields, 'invoice_date', 'order');
-        $fieldOrderType = $this->metabaseAPIService->searchField($fields, 'status_id', 'order');
+        $fieldOrderStatus = $this->metabaseAPIService->searchField($fields, 'title', 'order_status_i18n');
 
         return [
             'database' => (int) Metabase::getConfigValue(Metabase::METABASE_DB_ID_CONFIG_KEY),
             'native' => [
                 'template-tags' => [
-                    'start' => [
-                        'id' => $this->getUuidDate1(),
-                        'name' => 'start',
-                        'display-name' => 'Start',
+                    $defaultFields['tag'] => [
+                        'id' => $defaultFields['id'],
+                        'name' => $defaultFields['tag'],
+                        'display-name' => 'invoiceDate',
                         'type' => 'dimension',
                         'dimension' => [
                             'field',
@@ -215,18 +231,18 @@ class SalesMetabaseService extends AbstractMetabaseService
                         'default' => $defaultFields['date'],
                         'required' => true,
                     ],
-                    'orderType' => [
-                        'id' => $this->getUuidOrderType(),
-                        'name' => 'orderType',
-                        'display-name' => 'Ordertype',
+                    'orderStatus' => [
+                        'id' => $this->getUuidOrderStatus(),
+                        'name' => 'orderStatus',
+                        'display-name' => 'OrderStatus',
                         'type' => 'dimension',
                         'dimension' => [
                             'field',
-                            $fieldOrderType,
+                            $fieldOrderStatus,
                             null,
                         ],
                         'widget-type' => 'string/=',
-                        'default' => $defaultOrderType,
+                        'default' => $defaultOrderStatus,
                     ],
                 ],
                 'query' => $query,
@@ -245,7 +261,7 @@ class SalesMetabaseService extends AbstractMetabaseService
                     'dimension',
                     [
                         'template-tag',
-                        'start',
+                        'invoiceDate1',
                     ],
                 ],
             ],
@@ -256,7 +272,7 @@ class SalesMetabaseService extends AbstractMetabaseService
                     'dimension',
                     [
                         'template-tag',
-                        'start',
+                        'invoiceDate2',
                     ],
                 ],
             ],
@@ -267,7 +283,7 @@ class SalesMetabaseService extends AbstractMetabaseService
                     'dimension',
                     [
                         'template-tag',
-                        'start',
+                        'invoiceDate1',
                     ],
                 ],
             ],
@@ -278,51 +294,51 @@ class SalesMetabaseService extends AbstractMetabaseService
                     'dimension',
                     [
                         'template-tag',
-                        'start',
+                        'invoiceDate2',
                     ],
                 ],
             ],
             [
-                'parameter_id' => $this->getUuidParamOrderType(),
+                'parameter_id' => $this->getUuidParamOrderStatus(),
                 'card_id' => $cardsId[0],
                 'target' => [
                     'dimension',
                     [
                         'template-tag',
-                        'orderType',
+                        'orderStatus',
                     ],
                 ],
             ],
             [
-                'parameter_id' => $this->getUuidParamOrderType(),
+                'parameter_id' => $this->getUuidParamOrderStatus(),
                 'card_id' => $cardsId[1],
                 'target' => [
                     'dimension',
                     [
                         'template-tag',
-                        'orderType',
+                        'orderStatus',
                     ],
                 ],
             ],
             [
-                'parameter_id' => $this->getUuidParamOrderType(),
+                'parameter_id' => $this->getUuidParamOrderStatus(),
                 'card_id' => $cardsId[2],
                 'target' => [
                     'dimension',
                     [
                         'template-tag',
-                        'orderType',
+                        'orderStatus',
                     ],
                 ],
             ],
             [
-                'parameter_id' => $this->getUuidParamOrderType(),
+                'parameter_id' => $this->getUuidParamOrderStatus(),
                 'card_id' => $cardsId[3],
                 'target' => [
                     'dimension',
                     [
                         'template-tag',
-                        'orderType',
+                        'orderStatus',
                     ],
                 ],
             ],
@@ -331,30 +347,37 @@ class SalesMetabaseService extends AbstractMetabaseService
 
     public function getDashboardParameters(array $defaultFields): array
     {
+        $translator = Translator::getInstance();
+
         return [
             [
-                'name' => 'Date 1',
-                'slug' => 'date_1',
+                'name' => $translator?->trans('Period', [], Metabase::DOMAIN_NAME).' 1',
+                'slug' => 'invoiceDate1',
                 'id' => $this->getUuidParamDate1(),
-                'type' => 'date/all-options',
-                'sectionId' => 'start',
-                'default' => 'thisyear',
-            ],
-            [
-                'name' => 'Date 2',
-                'slug' => 'date_2',
-                'id' => $this->getUuidParamDate2(),
-                'type' => 'date/all-options',
-                'sectionId' => 'start',
+                'type' => 'date/relative',
+                'sectionId' => 'date',
                 'default' => 'past1years',
             ],
             [
-                'name' => 'orderType',
-                'slug' => 'orderType',
-                'id' => $this->getUuidParamOrderType(),
+                'name' => $translator?->trans('Period', [], Metabase::DOMAIN_NAME).' 2',
+                'slug' => 'invoiceDate2',
+                'id' => $this->getUuidParamDate2(),
+                'type' => 'date/relative',
+                'sectionId' => 'date',
+                'default' => 'thisyear',
+            ],
+            [
+                'name' => $translator?->trans('orderStatus', [], Metabase::DOMAIN_NAME),
+                'slug' => 'orderStatus',
+                'id' => $this->getUuidParamOrderStatus(),
                 'type' => 'string/=',
                 'sectionId' => 'string',
-                'default' => $this->metabaseAPIService->getDefaultOrderType(),
+                'default' => $this->getDefaultOrderStatus(),
+                'values_query_type' => 'list',
+                'values_source_config' => [
+                    'values' => $this->getValuesSourceConfigValuesOrderStatus(),
+                ],
+                'values_source_type' => 'static-list',
             ],
         ];
     }

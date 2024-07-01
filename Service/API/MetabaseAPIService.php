@@ -29,10 +29,12 @@ class MetabaseAPIService
             return Metabase::getConfigValue(Metabase::METABASE_TOKEN_SESSION_CONFIG_KEY);
         }
 
+        $translator = Translator::getInstance();
+
         if (!Metabase::getConfigValue(Metabase::METABASE_USERNAME_CONFIG_KEY)
             || !Metabase::getConfigValue(Metabase::METABASE_PASSWORD_CONFIG_KEY)
             || !Metabase::getConfigValue(Metabase::METABASE_URL_CONFIG_KEY)) {
-            throw new MetabaseException(Metabase::ERROR_CONFIG_MESSAGE);
+            throw new MetabaseException($translator?->trans('First, you have to set the module up', [], Metabase::DOMAIN_NAME));
         }
 
         $client = HttpClient::create();
@@ -51,7 +53,7 @@ class MetabaseAPIService
         );
 
         if (200 !== $sessionResponse->getStatusCode()) {
-            throw new MetabaseException(Metabase::ERROR_TOKEN_MESSAGE);
+            throw new MetabaseException($translator?->trans('Error during session token collecting', [], Metabase::DOMAIN_NAME));
         }
 
         $sessionToken = json_decode($sessionResponse->getContent(), true, 512, JSON_THROW_ON_ERROR)['id'];
@@ -92,6 +94,30 @@ class MetabaseAPIService
         $metabaseResponse = $client->request(
             'GET',
             Metabase::getConfigValue(Metabase::METABASE_URL_CONFIG_KEY).'/api/dashboard/public',
+            [
+                'headers' => [
+                    'X-Metabase-Session' => $this->getSessionToken(),
+                ],
+            ]
+        );
+
+        return json_decode($metabaseResponse->getContent(), true, 512, JSON_THROW_ON_ERROR);
+    }
+
+    /**
+     * @throws RedirectionExceptionInterface
+     * @throws ClientExceptionInterface
+     * @throws \JsonException
+     * @throws TransportExceptionInterface
+     * @throws ServerExceptionInterface
+     * @throws MetabaseException
+     */
+    public function getCollectionsItems(int $id)
+    {
+        $client = HttpClient::create();
+        $metabaseResponse = $client->request(
+            'GET',
+            Metabase::getConfigValue(Metabase::METABASE_URL_CONFIG_KEY).'/api/collection/'.$id.'/items',
             [
                 'headers' => [
                     'X-Metabase-Session' => $this->getSessionToken(),
@@ -456,23 +482,7 @@ class MetabaseAPIService
             }
         }
 
-        throw new MetabaseException('field '.$fieldName.' not found in table '.$tableName);
-    }
-
-    public function getDefaultOrderType(): array
-    {
-        $defaultValues = [];
-        $default = str_split(Metabase::getConfigValue(Metabase::METABASE_ORDER_TYPE_CONFIG_KEY));
-
-        $i = 0;
-        foreach ($default as $s) {
-            if (1 !== $i % 2) {
-                $defaultValues[] = (int) $s;
-            }
-            ++$i;
-        }
-
-        return $defaultValues;
+        throw new MetabaseException('Field "'.$fieldName.'" not found in table "'.$tableName.'"');
     }
 
     public function verifyFormSyncing(array $data): array
@@ -480,15 +490,15 @@ class MetabaseAPIService
         $verifiedData = [];
 
         if (null === $data['syncingOption']) {
-            throw new \RuntimeException(Translator::getInstance()->trans('Choose a Syncing Option'));
+            throw new \RuntimeException(Translator::getInstance()?->trans('Choose a Syncing Option'));
         }
 
         if (null === $data['syncingSchedule']) {
-            throw new \RuntimeException(Translator::getInstance()->trans('Choose a Syncing Schedule'));
+            throw new \RuntimeException(Translator::getInstance()?->trans('Choose a Syncing Schedule'));
         }
 
         if ('sync_only' !== $data['syncingOption'] && null === $data['scanningSchedule']) {
-            throw new \RuntimeException(Translator::getInstance()->trans('Choose a Scanning Schedule'));
+            throw new \RuntimeException(Translator::getInstance()?->trans('Choose a Scanning Schedule'));
         }
 
         $verifiedData['is_full_sync'] = false;
@@ -510,20 +520,20 @@ class MetabaseAPIService
 
         if ('hourly' === $data['syncingSchedule']) {
             if ($data['syncingTime'] < 0 || $data['syncingTime'] > 60) {
-                throw new \RuntimeException(Translator::getInstance()->trans('Syncing time must be in range [0-60]'));
+                throw new \RuntimeException(Translator::getInstance()?->trans('Syncing time must be in range [0-60]'));
             }
             $verifiedData['sync_minutes'] = $data['syncingTime'];
         }
 
         if ('daily' === $data['syncingSchedule']) {
             if ($data['syncingTime'] < 0 || $data['syncingTime'] > 24) {
-                throw new \RuntimeException(Translator::getInstance()->trans('Syncing time must be in range [0-24]'));
+                throw new \RuntimeException(Translator::getInstance()?->trans('Syncing time must be in range [0-24]'));
             }
             $verifiedData['sync_hours'] = $data['syncingTime'];
         }
 
         if ($data['scanningTime'] < 0 || $data['scanningTime'] > 24) {
-            throw new \RuntimeException(Translator::getInstance()->trans('Scanning time must be in range [0-24]'));
+            throw new \RuntimeException(Translator::getInstance()?->trans('Scanning time must be in range [0-24]'));
         }
         $verifiedData['scan_hours'] = $data['scanningTime'];
         $verifiedData['scan_frame'] = null;
@@ -536,7 +546,7 @@ class MetabaseAPIService
             $verifiedData['scan_frame'] = $data['scanningFrame'];
 
             if (null === $data['scanningFrame'] && null === $data['scanningDay']) {
-                throw new \RuntimeException(Translator::getInstance()->trans("You can't select Calendar day for Weekly scan"));
+                throw new \RuntimeException(Translator::getInstance()?->trans("You can't select Calendar day for Weekly scan"));
             }
             if ('mid' !== $data['scanningFrame']) {
                 $verifiedData['scan_day'] = $data['scanningDay'];

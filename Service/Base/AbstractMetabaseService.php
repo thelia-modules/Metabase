@@ -3,29 +3,32 @@
 namespace Metabase\Service\Base;
 
 use Metabase\Exception\MetabaseException;
+use Metabase\Metabase;
 use Metabase\Service\API\MetabaseAPIService;
 use Symfony\Contracts\HttpClient\Exception\ClientExceptionInterface;
 use Symfony\Contracts\HttpClient\Exception\RedirectionExceptionInterface;
 use Symfony\Contracts\HttpClient\Exception\ServerExceptionInterface;
 use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
+use Thelia\Model\LangQuery;
+use Thelia\Model\OrderStatusQuery;
 
 abstract class AbstractMetabaseService implements MetabaseInterface
 {
     private string $uuidDate1;
     private string $uuidDate2;
-    private string $uuidOrderType;
+    private string $uuidOrderStatus;
     private string $uuidParamDate1;
     private string $uuidParamDate2;
-    private string $uuidParamOrderType;
+    private string $uuidParamOrderStatus;
 
     public function __construct(protected MetabaseAPIService $metabaseAPIService)
     {
         $this->uuidDate1 = uniqid('', true);
         $this->uuidDate2 = uniqid('', true);
-        $this->uuidOrderType = uniqid('', true);
+        $this->uuidOrderStatus = uniqid('', true);
         $this->uuidParamDate1 = uniqid('', true);
         $this->uuidParamDate2 = uniqid('', true);
-        $this->uuidParamOrderType = uniqid('', true);
+        $this->uuidParamOrderStatus = uniqid('', true);
     }
 
     /**
@@ -61,14 +64,14 @@ abstract class AbstractMetabaseService implements MetabaseInterface
         array $fields,
         array $defaultFields = []
     ) {
-        $defaultOrderType = $this->metabaseAPIService->getDefaultOrderType();
+        $defaultOrderStatus = $this->getDefaultOrderStatus();
 
         return $this->metabaseAPIService->createCard(
             $this->buildVisualizationSettings(),
-            $this->buildParameters($defaultOrderType, $defaultFields),
+            $this->buildParameters($defaultOrderStatus, $defaultFields),
             $name,
             $description,
-            $this->buildDatasetQuery($query, $defaultOrderType, $fields, $defaultFields),
+            $this->buildDatasetQuery($query, $defaultOrderStatus, $fields, $defaultFields),
             $display,
             $collectionId
         );
@@ -165,6 +168,45 @@ abstract class AbstractMetabaseService implements MetabaseInterface
         return $this->metabaseAPIService->publishDashboard($dashboardId);
     }
 
+    public function getDefaultOrderStatus(): array
+    {
+        $defaultValues = [];
+        $default = explode(',', Metabase::getConfigValue(Metabase::METABASE_ORDER_TYPE_CONFIG_KEY));
+
+        $locale = LangQuery::create()->findOneByByDefault(1)?->getLocale();
+
+        foreach ($default as $s) {
+            $orderStatus = OrderStatusQuery::create()
+                ->useOrderStatusI18nQuery()
+                ->filterByLocale($locale)
+                ->endUse()
+                ->findOneById($s);
+
+            $defaultValues[] = $orderStatus?->setLocale($locale)->getTitle();
+        }
+
+        return $defaultValues;
+    }
+
+    public function getValuesSourceConfigValuesOrderStatus(): array
+    {
+        $statuses = [];
+
+        $locale = LangQuery::create()->findOneByByDefault(1)?->getLocale();
+
+        $orderStatus = OrderStatusQuery::create()
+            ->useOrderStatusI18nQuery()
+            ->filterByLocale($locale)
+            ->endUse()
+            ->find();
+
+        foreach ($orderStatus as $status) {
+            $statuses[] = $status->setLocale($locale)->getTitle();
+        }
+
+        return $statuses;
+    }
+
     public function getUuidDate1(): string
     {
         return $this->uuidDate1;
@@ -175,9 +217,9 @@ abstract class AbstractMetabaseService implements MetabaseInterface
         return $this->uuidDate2;
     }
 
-    public function getUuidOrderType(): string
+    public function getUuidOrderStatus(): string
     {
-        return $this->uuidOrderType;
+        return $this->uuidOrderStatus;
     }
 
     public function getUuidParamDate1(): string
@@ -190,8 +232,8 @@ abstract class AbstractMetabaseService implements MetabaseInterface
         return $this->uuidParamDate2;
     }
 
-    public function getUuidParamOrderType(): string
+    public function getUuidParamOrderStatus(): string
     {
-        return $this->uuidParamOrderType;
+        return $this->uuidParamOrderStatus;
     }
 }

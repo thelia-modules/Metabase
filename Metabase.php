@@ -31,6 +31,8 @@ class Metabase extends BaseModule
 
     // Metabase Order Type
     public const METABASE_ORDER_TYPE_CONFIG_KEY = 'metabase_order_type';
+    // Collection Root Metabase
+    public const METABASE_COLLECTION_ROOT_ID_CONFIG_KEY = 'metabase_collection_root_id';
 
     // Metabase config syncing
     public const METABASE_SYNCING_OPTION = 'metabase_syncing_option';
@@ -49,7 +51,7 @@ class Metabase extends BaseModule
     {
         $servicesConfigurator->load(self::getModuleCode().'\\', __DIR__)
             ->exclude([THELIA_MODULE_DIR.ucfirst(self::getModuleCode()).'/I18n/*'])
-            ->autowire(true)
-            ->autoconfigure(true);
+            ->autowire()
+            ->autoconfigure();
     }
 }

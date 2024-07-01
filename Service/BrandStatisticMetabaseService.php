@@ -12,7 +12,7 @@ use Symfony\Contracts\HttpClient\Exception\ServerExceptionInterface;
 use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
 use Thelia\Core\Translation\Translator;
 
-class StatisticBrandService extends AbstractMetabaseService
+class BrandStatisticMetabaseService extends AbstractMetabaseService
 {
     private string $uuidBrand;
     private string $uuidParamBrand;
@@ -37,8 +37,21 @@ class StatisticBrandService extends AbstractMetabaseService
     {
         $translator = Translator::getInstance();
 
-        $defaultFields = ['date' => 'past1years'];
-        $defaultFields2 = ['date' => 'thisyear'];
+        $defaultFields1 =
+            [
+                'id' => $this->getUuidDate1(),
+                'tag' => 'invoiceDate1',
+                'date' => 'past1years',
+            ]
+        ;
+
+        $defaultFields2 =
+            [
+                'id' => $this->getUuidDate2(),
+                'tag' => 'invoiceDate2',
+                'date' => 'thisyear',
+            ]
+        ;
 
         $dashboard = $this->generateDashboardMetabase(
             $translator->trans('Dashboard Sales Brand', [], Metabase::DOMAIN_NAME),
@@ -57,9 +70,9 @@ class StatisticBrandService extends AbstractMetabaseService
             $translator->trans('Card of Sales Statistic by Brand period', [], Metabase::DOMAIN_NAME).' 1',
             'line',
             $collectionId,
-            $this->getSqlQueryMain(),
+            $this->getSqlQueryMain($defaultFields1['tag']),
             $fields,
-            $defaultFields
+            $defaultFields1
         );
 
         $card2 = $this->generateCardMetabase(
@@ -67,69 +80,73 @@ class StatisticBrandService extends AbstractMetabaseService
             $translator->trans('Card of Sales Statistic by Brand period', [], Metabase::DOMAIN_NAME).' 2',
             'line',
             $collectionId,
-            $this->getSqlQueryMain(),
+            $this->getSqlQueryMain($defaultFields2['tag']),
             $fields,
             $defaultFields2
         );
 
-        $defaultOrderType = $this->metabaseAPIService->getDefaultOrderType();
+        $defaultOrderStatus = $this->getDefaultOrderStatus();
 
         $card3 = $this->generateCustomCardMetabase(
             $this->buildCustomVisualizationSettings(),
-            $this->buildParameters($defaultOrderType, $defaultFields),
+            $this->buildParameters($defaultOrderStatus, $defaultFields1),
             $translator->trans('BrandsCard_', [], Metabase::DOMAIN_NAME).'1',
             $translator->trans('Card of Count Statistic by Brand period', [], Metabase::DOMAIN_NAME).' 1',
-            $this->buildDatasetQuery($this->getSqlQuerySecondary(), $defaultOrderType, $fields, $defaultFields),
+            $this->buildDatasetQuery($this->getSqlQuerySecondary($defaultFields1['tag']), $defaultOrderStatus, $fields, $defaultFields1),
             'line',
             $collectionId,
         );
 
         $card4 = $this->generateCustomCardMetabase(
             $this->buildCustomVisualizationSettings(),
-            $this->buildParameters($defaultOrderType, $defaultFields2),
+            $this->buildParameters($defaultOrderStatus, $defaultFields2),
             $translator->trans('BrandsCard_', [], Metabase::DOMAIN_NAME).'2',
             $translator->trans('Card of Count Statistic by Brand period', [], Metabase::DOMAIN_NAME).' 2',
-            $this->buildDatasetQuery($this->getSqlQuerySecondary(), $defaultOrderType, $fields, $defaultFields2),
+            $this->buildDatasetQuery($this->getSqlQuerySecondary($defaultFields2['tag']), $defaultOrderStatus, $fields, $defaultFields2),
             'line',
             $collectionId,
         );
 
         $series = $this->formatSeries($card2->id);
-        $series2 = $this->formatSeries($card2->id);
+        $series2 = $this->formatSeries($card4->id);
 
         $dashboardCard = $this->formatDashboardCard($card->id, $series, 0, 0, 24, 8, $card->id, $card2->id);
-        $dashboardCard2 = $this->formatDashboardCard($card->id, $series2, 0, 0, 24, 8, $card3->id, $card4->id);
+        $dashboardCard2 = $this->formatDashboardCard($card3->id, $series2, 0, 0, 24, 8, $card3->id, $card4->id);
 
-        $this->embedDashboard($dashboard->id, ['date_1' => 'enabled', 'date_2' => 'enabled', 'brand_reference' => 'enabled', 'orderType' => 'enabled'], [$dashboardCard]);
-        $this->embedDashboard($dashboard2->id, ['date_1' => 'enabled', 'date_2' => 'enabled', 'brand_reference' => 'enabled', 'orderType' => 'enabled'], [$dashboardCard2]);
+        $this->embedDashboard($dashboard->id, ['invoiceDate1' => 'enabled', 'invoiceDate2' => 'enabled', 'brand_title' => 'enabled', 'orderStatus' => 'enabled'], [$dashboardCard]);
+        $this->embedDashboard($dashboard2->id, ['invoiceDate1' => 'enabled', 'invoiceDate2' => 'enabled', 'brand_title' => 'enabled', 'orderStatus' => 'enabled'], [$dashboardCard2]);
 
         $this->publishDashboard($dashboard->id);
         $this->publishDashboard($dashboard2->id);
     }
 
-    private function getSqlQueryMain(): string
+    private function getSqlQueryMain(string $param): string
     {
         return 'SELECT SUM((`order_product`.QUANTITY * IF(`order_product`.WAS_IN_PROMO,`order_product`.PROMO_PRICE,`order_product`.PRICE))) AS TOTAL, 
             DATE_FORMAT(`order`.`invoice_date`,"%b") as DATE
             FROM `order` 
-            INNER JOIN `order_product` ON (`order`.`id`=`order_product`.`order_id`) 
+            INNER JOIN `order_product` ON (`order`.`id`=`order_product`.`order_id`)
+            LEFT JOIN `order_status` ON (`order_status`.`id` = `order`.`status_id`)
+            LEFT JOIN `order_status_i18n` ON (`order_status_i18n`.`id` = `order_status`.`id`)
             INNER JOIN `product` ON (`order_product`.`product_ref`=`product`.`ref`)
             INNER JOIN `brand_i18n` ON `brand_i18n`.`id`=`product`.`brand_id`
-            WHERE 1=0 [[or {{brand}}]] and {{date}} [[and {{orderType}}]]
+            WHERE 1=0 [[or {{brand}}]] and {{'.$param.'}} [[and {{orderStatus}}]]
             group by DATE_FORMAT(`order`.`invoice_date`, "%m"), DATE
             order by DATE_FORMAT(`order`.`invoice_date`, "%m")'
         ;
     }
 
-    private function getSqlQuerySecondary(): string
+    private function getSqlQuerySecondary(string $param): string
     {
         return 'SELECT SUM(order_product.quantity) AS TOTAL, 
                 DATE_FORMAT(`order`.`invoice_date`,"%b") as DATE
                 FROM `order` 
                 INNER JOIN `order_product` ON (`order`.`id`=`order_product`.`order_id`) 
+                LEFT JOIN `order_status` ON (`order_status`.`id` = `order`.`status_id`)
+                LEFT JOIN `order_status_i18n` ON (`order_status_i18n`.`id` = `order_status`.`id`)
                 INNER JOIN `product` ON (`order_product`.`product_ref`=`product`.`ref`)
                 INNER JOIN `brand_i18n` ON `brand_i18n`.`id`=`product`.`brand_id`
-                WHERE 1=0 [[or {{brand}}]] and {{date}} [[and {{orderType}}]]
+                WHERE 1=0 [[or {{brand}}]] and {{'.$param.'}} [[and {{orderStatus}}]]
                 group by DATE_FORMAT(`order`.`invoice_date`, "%m"), DATE
                 order by DATE_FORMAT(`order`.`invoice_date`, "%m")'
         ;
@@ -162,7 +179,7 @@ class StatisticBrandService extends AbstractMetabaseService
         ];
     }
 
-    public function buildParameters(array $defaultOrderType, array $defaultFields = []): array
+    public function buildParameters(array $defaultOrderStatus, array $defaultFields = []): array
     {
         return [
             [
@@ -180,32 +197,32 @@ class StatisticBrandService extends AbstractMetabaseService
                 'default' => null,
             ],
             [
-                'id' => $this->getUuidDate1(),
-                'type' => 'date/all-options',
+                'id' => $defaultFields['id'],
+                'type' => 'date/relative',
                 'target' => [
                     'dimension',
                     [
                         'template-tag',
-                        'date',
+                        'invoiceDate',
                     ],
                 ],
-                'name' => 'DATE',
-                'slug' => 'date',
+                'name' => $defaultFields['tag'],
+                'slug' => $defaultFields['tag'],
                 'default' => $defaultFields['date'],
             ],
             [
-                'id' => $this->getUuidOrderType(),
+                'id' => $this->getUuidOrderStatus(),
                 'type' => 'string/=',
                 'target' => [
                     'dimension',
                     [
                         'template-tag',
-                        'orderType',
+                        'orderStatus',
                     ],
                 ],
-                'name' => 'Ordertype',
-                'slug' => 'orderType',
-                'default' => $defaultOrderType,
+                'name' => 'orderStatus',
+                'slug' => 'orderStatus',
+                'default' => $defaultOrderStatus,
             ],
         ];
     }
@@ -213,11 +230,11 @@ class StatisticBrandService extends AbstractMetabaseService
     /**
      * @throws MetabaseException
      */
-    public function buildDatasetQuery(string $query, array $defaultOrderType, array $fields, array $defaultFields = []): array
+    public function buildDatasetQuery(string $query, array $defaultOrderStatus, array $fields, array $defaultFields = []): array
     {
         $fieldBrandTitle = $this->metabaseAPIService->searchField($fields, 'title', 'brand_i18n');
         $fieldDate = $this->metabaseAPIService->searchField($fields, 'invoice_date', 'order');
-        $fieldOrderType = $this->metabaseAPIService->searchField($fields, 'status_id', 'order');
+        $fieldOrderStatus = $this->metabaseAPIService->searchField($fields, 'title', 'order_status_i18n');
 
         return [
             'database' => (int) Metabase::getConfigValue(Metabase::METABASE_DB_ID_CONFIG_KEY),
@@ -236,32 +253,32 @@ class StatisticBrandService extends AbstractMetabaseService
                         'widget-type' => 'string/=',
                         'default' => null,
                     ],
-                    'date' => [
-                        'id' => $this->getUuidDate1(),
-                        'name' => 'date',
-                        'display-name' => 'DATE',
+                    $defaultFields['tag'] => [
+                        'id' => $defaultFields['id'],
+                        'name' => $defaultFields['tag'],
+                        'display-name' => 'invoiceDate',
                         'type' => 'dimension',
                         'dimension' => [
                             'field',
                             $fieldDate,
                             null,
                         ],
-                        'widget-type' => 'date/all-options',
-                        'required' => true,
+                        'widget-type' => 'date/relative',
                         'default' => $defaultFields['date'],
+                        'required' => true,
                     ],
-                    'orderType' => [
-                        'id' => $this->getUuidOrderType(),
-                        'name' => 'orderType',
-                        'display-name' => 'Ordertype',
+                    'orderStatus' => [
+                        'id' => $this->getUuidOrderStatus(),
+                        'name' => 'orderStatus',
+                        'display-name' => 'orderStatus',
                         'type' => 'dimension',
                         'dimension' => [
                             'field',
-                            $fieldOrderType,
+                            $fieldOrderStatus,
                             null,
                         ],
                         'widget-type' => 'string/=',
-                        'default' => $defaultOrderType,
+                        'default' => $defaultOrderStatus,
                     ],
                 ],
                 'query' => $query,
@@ -280,7 +297,7 @@ class StatisticBrandService extends AbstractMetabaseService
                     'dimension',
                     [
                         'template-tag',
-                        'date',
+                        'invoiceDate1',
                     ],
                 ],
             ],
@@ -291,7 +308,7 @@ class StatisticBrandService extends AbstractMetabaseService
                     'dimension',
                     [
                         'template-tag',
-                        'date',
+                        'invoiceDate2',
                     ],
                 ],
             ],
@@ -318,24 +335,24 @@ class StatisticBrandService extends AbstractMetabaseService
                 ],
             ],
             [
-                'parameter_id' => $this->getUuidParamOrderType(),
+                'parameter_id' => $this->getUuidParamOrderStatus(),
                 'card_id' => $cardsId[0],
                 'target' => [
                     'dimension',
                     [
                         'template-tag',
-                        'orderType',
+                        'orderStatus',
                     ],
                 ],
             ],
             [
-                'parameter_id' => $this->getUuidParamOrderType(),
+                'parameter_id' => $this->getUuidParamOrderStatus(),
                 'card_id' => $cardsId[1],
                 'target' => [
                     'dimension',
                     [
                         'template-tag',
-                        'orderType',
+                        'orderStatus',
                     ],
                 ],
             ],
@@ -344,37 +361,44 @@ class StatisticBrandService extends AbstractMetabaseService
 
     public function getDashboardParameters(array $defaultFields): array
     {
+        $translator = Translator::getInstance();
+
         return [
             [
-                'name' => 'Brand Title',
+                'name' => $translator?->trans('Brand Title', [], Metabase::DOMAIN_NAME),
                 'slug' => 'brand_title',
                 'id' => $this->uuidParamBrand,
                 'type' => 'string/=',
                 'sectionId' => 'string',
             ],
             [
-                'name' => 'Date 1',
-                'slug' => 'date_1',
+                'name' => $translator?->trans('Period', [], Metabase::DOMAIN_NAME).' 1',
+                'slug' => 'invoiceDate1',
                 'id' => $this->getUuidParamDate1(),
-                'type' => 'date/all-options',
+                'type' => 'date/relative',
                 'sectionId' => 'date',
                 'default' => 'past1years',
             ],
             [
-                'name' => 'Date 2',
-                'slug' => 'date_2',
+                'name' => $translator?->trans('Period', [], Metabase::DOMAIN_NAME).' 2',
+                'slug' => 'invoiceDate2',
                 'id' => $this->getUuidParamDate2(),
-                'type' => 'date/all-options',
+                'type' => 'date/relative',
                 'sectionId' => 'date',
                 'default' => 'thisyear',
             ],
             [
-                'name' => 'orderType',
-                'slug' => 'orderType',
-                'id' => $this->getUuidParamOrderType(),
+                'name' => $translator?->trans('orderStatus', [], Metabase::DOMAIN_NAME),
+                'slug' => 'orderStatus',
+                'id' => $this->getUuidParamOrderStatus(),
                 'type' => 'string/=',
                 'sectionId' => 'string',
-                'default' => $this->metabaseAPIService->getDefaultOrderType(),
+                'default' => $this->getDefaultOrderStatus(),
+                'values_query_type' => 'list',
+                'values_source_config' => [
+                    'values' => $this->getValuesSourceConfigValuesOrderStatus(),
+                ],
+                'values_source_type' => 'static-list',
             ],
         ];
     }

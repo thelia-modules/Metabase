@@ -11,7 +11,7 @@ use Symfony\Contracts\HttpClient\Exception\ServerExceptionInterface;
 use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
 use Thelia\Core\Translation\Translator;
 
-class StatisticBestSellerService extends AbstractMetabaseService
+class BestSellerStatisticMetabaseService extends AbstractMetabaseService
 {
     /**
      * @throws TransportExceptionInterface
@@ -47,7 +47,7 @@ class StatisticBestSellerService extends AbstractMetabaseService
             [
                 'start' => 'enabled',
                 'end' => 'enabled',
-                'orderType' => 'enabled',
+                'orderStatus' => 'enabled',
             ],
             [$dashboardCard]
         );
@@ -57,18 +57,23 @@ class StatisticBestSellerService extends AbstractMetabaseService
 
     private function getSqlQueryMain(): string
     {
-        return 'SELECT SUM(`order_product`.`quantity`) AS TOTAL_SOLD,
-                    SUM((`order_product`.QUANTITY * IF(`order_product`.WAS_IN_PROMO,`order_product`.PROMO_PRICE,`order_product`.PRICE))) AS TOTAL_HT,
-                    SUM((`order_product`.QUANTITY * IF(`order_product`.WAS_IN_PROMO,`order_product_tax`.PROMO_AMOUNT,`order_product_tax`.AMOUNT))) AS TAX,
-                    `order_product`.`title` AS TITLE,
-                    `order_product`.`product_ref` AS PRODUCT_REFERENCE, 
-                    `order_product`.`product_sale_elements_id` AS PSE
+        $translator = Translator::getInstance();
+
+        return 'SELECT SUM(`order_product`.`QUANTITY`) AS "'.$translator?->trans('TOTAL SOLD', [], Metabase::DOMAIN_NAME).'",
+                    SUM((`order_product`.QUANTITY * IF(`order_product`.WAS_IN_PROMO,`order_product`.PROMO_PRICE,`order_product`.PRICE))) AS "'.$translator?->trans('TOTAL HT', [], Metabase::DOMAIN_NAME).'",
+                    SUM((`order_product`.QUANTITY * IF(`order_product`.WAS_IN_PROMO,`order_product`.PROMO_PRICE,`order_product`.PRICE))) + 
+                    SUM((`order_product`.QUANTITY * IF(`order_product`.WAS_IN_PROMO,`order_product_tax`.PROMO_AMOUNT,`order_product_tax`.AMOUNT))) -
+                    SUM(`order`.`discount`) AS "'.$translator?->trans('TOTAL TTC', [], Metabase::DOMAIN_NAME).'",
+                    `order_product`.`title` AS "'.$translator?->trans('PRODUCT TITLE', [], Metabase::DOMAIN_NAME).'",
+                    `order_product`.`product_ref` AS "'.$translator?->trans('PRODUCT REFERENCE', [], Metabase::DOMAIN_NAME).'"
                     FROM `order`
                     INNER JOIN `order_product` ON `order`.`id`=`order_product`.`order_id`
                     INNER JOIN `order_product_tax` ON `order_product`.`id`=`order_product_tax`.`order_product_id`
-                    [[WHERE {{date}}]]
-                    GROUP BY title, PRODUCT_REFERENCE, PSE
-                    ORDER BY TOTAL_SOLD DESC'
+                    LEFT JOIN `order_status` ON (`order_status`.`id` = `order`.`status_id`)
+                    LEFT JOIN `order_status_i18n` ON (`order_status_i18n`.`id` = `order_status`.`id`)
+                    WHERE {{orderStatus}} [[AND {{date}}]]
+                    GROUP BY `order_product`.`title`, `order_product`.`product_ref`
+                    ORDER BY SUM(`order_product`.`quantity`) DESC'
         ;
     }
 
@@ -92,7 +97,7 @@ class StatisticBestSellerService extends AbstractMetabaseService
         ];
     }
 
-    public function buildParameters(array $defaultOrderType, array $defaultFields = []): array
+    public function buildParameters(array $defaultOrderStatus, array $defaultFields = []): array
     {
         return [
             [
@@ -109,15 +114,30 @@ class StatisticBestSellerService extends AbstractMetabaseService
                 'slug' => 'date',
                 'default' => 'past1years',
             ],
+            [
+                'id' => $this->getUuidOrderStatus(),
+                'type' => 'string/=',
+                'target' => [
+                    'dimension',
+                    [
+                        'template-tag',
+                        'orderStatus',
+                    ],
+                ],
+                'name' => 'OrderStatus',
+                'slug' => 'orderStatus',
+                'default' => $defaultOrderStatus,
+            ],
         ];
     }
 
     /**
      * @throws MetabaseException
      */
-    public function buildDatasetQuery(string $query, array $defaultOrderType, array $fields, array $defaultFields = []): array
+    public function buildDatasetQuery(string $query, array $defaultOrderStatus, array $fields, array $defaultFields = []): array
     {
         $fieldDate = $this->metabaseAPIService->searchField($fields, 'created_at', 'order');
+        $fieldOrderStatus = $this->metabaseAPIService->searchField($fields, 'title', 'order_status_i18n');
 
         return [
             'database' => (int) Metabase::getConfigValue(Metabase::METABASE_DB_ID_CONFIG_KEY),
@@ -136,6 +156,19 @@ class StatisticBestSellerService extends AbstractMetabaseService
                         'widget-type' => 'date/all-options',
                         'required' => true,
                         'default' => 'past1years',
+                    ],
+                    'orderStatus' => [
+                        'id' => $this->getUuidOrderStatus(),
+                        'name' => 'orderStatus',
+                        'display-name' => 'OrderStatus',
+                        'type' => 'dimension',
+                        'dimension' => [
+                            'field',
+                            $fieldOrderStatus,
+                            null,
+                        ],
+                        'widget-type' => 'string/=',
+                        'default' => $defaultOrderStatus,
                     ],
                 ],
                 'query' => $query,
@@ -158,11 +191,24 @@ class StatisticBestSellerService extends AbstractMetabaseService
                     ],
                 ],
             ],
+            [
+                'parameter_id' => $this->getUuidParamOrderStatus(),
+                'card_id' => $cardsId[0],
+                'target' => [
+                    'dimension',
+                    [
+                        'template-tag',
+                        'orderStatus',
+                    ],
+                ],
+            ],
         ];
     }
 
     public function getDashboardParameters(array $defaultFields): array
     {
+        $translator = Translator::getInstance();
+
         return [
             [
                 'name' => 'Date',
@@ -171,6 +217,19 @@ class StatisticBestSellerService extends AbstractMetabaseService
                 'type' => 'date/all-options',
                 'sectionId' => 'date',
                 'default' => 'thisyear',
+            ],
+            [
+                'name' => $translator?->trans('orderStatus', [], Metabase::DOMAIN_NAME),
+                'slug' => 'orderStatus',
+                'id' => $this->getUuidParamOrderStatus(),
+                'type' => 'string/=',
+                'sectionId' => 'string',
+                'default' => $this->getDefaultOrderStatus(),
+                'values_query_type' => 'list',
+                'values_source_config' => [
+                    'values' => $this->getValuesSourceConfigValuesOrderStatus(),
+                ],
+                'values_source_type' => 'static-list',
             ],
         ];
     }

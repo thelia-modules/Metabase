@@ -33,7 +33,7 @@ class ConfigurationController extends AdminController
             return $this->generateSuccessRedirect($form);
         } catch (\Exception $e) {
             $this->setupFormErrorContext(
-                Translator::getInstance()->trans('Metabase update config'),
+                Translator::getInstance()?->trans('Metabase update config'),
                 $e->getMessage(),
                 $form,
                 $e

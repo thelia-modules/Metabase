@@ -55,6 +55,7 @@ class MetabaseEmbed
             frameborder="0"
             width="'.$this->width.'"
             height="'.$this->height.'"
+            lang="fr"
             allowtransparency></iframe>';
     }
 }

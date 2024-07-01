@@ -22,7 +22,6 @@ use Symfony\Contracts\HttpClient\Exception\ServerExceptionInterface;
 use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
 use Thelia\Core\Event\Hook\HookRenderEvent;
 use Thelia\Core\Hook\BaseHook;
-use Thelia\Core\Translation\Translator;
 
 class MetabaseHook extends BaseHook
 {
@@ -40,37 +39,43 @@ class MetabaseHook extends BaseHook
      */
     public function metabaseHome(HookRenderEvent $event): void
     {
-        $translator = Translator::getInstance();
         $metabaseUrl = Metabase::getConfigValue(Metabase::METABASE_URL_CONFIG_KEY);
 
         $dashboards = [];
         $dashboardsName = [];
         $errorMessage = null;
 
-        $metabase = new MetabaseEmbed($metabaseUrl, false, '100%', '600');
+        $metabase = new MetabaseEmbed($metabaseUrl, false, '100%', '800');
 
         try {
-            $apiResult = $this->metabaseAPIService->getPublicDashboards();
+            $apiDashboards = $this->metabaseAPIService->getPublicDashboards();
+            $apiCollections = $this->metabaseAPIService->getCollectionsItems(
+                Metabase::getConfigValue(Metabase::METABASE_COLLECTION_ROOT_ID_CONFIG_KEY)
+            );
 
-            foreach ($apiResult as $iValue) {
-                $dashboards[$iValue['id']] = $metabase->dashboardIFrame($iValue['public_uuid']);
-                $dashboardsName[$iValue['id']] = $iValue['name'];
+            // F*** Metabase API that don't send collection order by id
+            usort($apiCollections['data'], static function ($a, $b) {
+                return $a['id'] - $b['id'];
+            });
+
+            $tableId = 0;
+            foreach ($apiDashboards as $key => $apiDashboard) {
+                $dashboards[] = $metabase->dashboardIFrame($apiDashboard['public_uuid']);
+                if (4 !== $key && 6 !== $key && 8 !== $key) {
+                    $dashboardsName[$key] = $apiCollections['data'][$tableId]['name'];
+                    ++$tableId;
+                }
             }
-
         } catch (MetabaseException $exception) {
             $errorMessage = $exception->getMessage();
         }
-
-        ksort($dashboards);
-        ksort($dashboardsName);
 
         $event->add(
             $this->render(
                 'metabase-module.html',
                 [
-                    'dashboards' => array_values($dashboards),
-                    'dashboardsName' => array_values($dashboardsName),
-                    'othersStatistics' => $translator->trans('All Statistics', [], Metabase::DOMAIN_NAME),
+                    'dashboards' => $dashboards,
+                    'dashboardsName' => $dashboardsName,
                     'errorMessage' => $errorMessage,
                 ]
             )

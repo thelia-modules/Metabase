@@ -2,18 +2,21 @@
 
 namespace Metabase\Controller;
 
+use Metabase\Event\MetabaseStatisticEvent;
+use Metabase\Event\MetabaseStatisticEvents;
 use Metabase\Exception\MetabaseException;
 use Metabase\Form\GenerateMetabase;
 use Metabase\Form\ImportMetabase;
 use Metabase\Form\SyncingMetabase;
 use Metabase\Metabase;
+use Metabase\Service\AnnualRevenueStatisticMetabaseService;
 use Metabase\Service\API\MetabaseAPIService;
-use Metabase\Service\MainStatisticMetabaseService;
-use Metabase\Service\SalesMetabaseService;
-use Metabase\Service\StatisticBestSellerService;
-use Metabase\Service\StatisticBrandService;
-use Metabase\Service\StatisticCategoryService;
-use Metabase\Service\StatisticProductService;
+use Metabase\Service\BestSellerStatisticMetabaseService;
+use Metabase\Service\BrandStatisticMetabaseService;
+use Metabase\Service\CategoryStatisticMetabaseService;
+use Metabase\Service\MonthlyRevenueStatisticMetabaseService;
+use Metabase\Service\ProductStatisticMetabaseService;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Contracts\HttpClient\Exception\ClientExceptionInterface;
 use Symfony\Contracts\HttpClient\Exception\RedirectionExceptionInterface;
@@ -110,7 +113,7 @@ class GenerateMetabaseController extends AdminController
             $state = $this->metabaseAPIService->checkMetabaseState();
 
             if ('complete' === $state->initial_sync_status) {
-                return $this->generateRedirect(URL::getInstance()->absoluteUrl('/admin/module/Metabase/generate'));
+                return $this->generateRedirect(URL::getInstance()?->absoluteUrl('/admin/module/Metabase/generate'));
             }
 
             return $this->generateSuccessRedirect($form);
@@ -139,12 +142,13 @@ class GenerateMetabaseController extends AdminController
      */
     #[Route('/generate', name: 'generate')]
     public function generateMetabase(
-        MainStatisticMetabaseService $mainStatisticMetabaseService,
-        SalesMetabaseService $salesMetabaseService,
-        StatisticProductService $statisticProductsService,
-        StatisticCategoryService $statisticCategoryService,
-        StatisticBrandService $statisticBrandService,
-        StatisticBestSellerService $bestSellerService
+        MonthlyRevenueStatisticMetabaseService $monthlyRevenueStatisticMetabaseService,
+        AnnualRevenueStatisticMetabaseService $annualRevenueStatisticMetabaseService,
+        BestSellerStatisticMetabaseService $bestSellerStatisticMetabaseService,
+        BrandStatisticMetabaseService $brandStatisticMetabaseService,
+        CategoryStatisticMetabaseService $categoryStatisticMetabaseService,
+        ProductStatisticMetabaseService $productStatisticMetabaseService,
+        EventDispatcherInterface $eventDispatcher
     ) {
         if (null !== $response = $this->checkAuth([AdminResources::MODULE], ['Metabase'], AccessManager::UPDATE)) {
             return $response;
@@ -152,24 +156,44 @@ class GenerateMetabaseController extends AdminController
 
         $translator = Translator::getInstance();
         $rootCollectionName = Metabase::getConfigValue(Metabase::METABASE_NAME_CONFIG_KEY);
-        $mainCollectionName = $translator->trans('MainCollection', [], Metabase::DOMAIN_NAME);
-        $statCollectionName = $translator->trans('StatCollection', [], Metabase::DOMAIN_NAME);
+
+        $monthlyRevenueCollectionName = $translator?->trans('MonthlyRevenueCollection', [], Metabase::DOMAIN_NAME);
+        $annualRevenueCollectionName = $translator?->trans('AnnualRevenueCollection', [], Metabase::DOMAIN_NAME);
+        $bestSellerCollectionName = $translator?->trans('BestSellerCollection', [], Metabase::DOMAIN_NAME);
+
+        $brandCollectionName = $translator?->trans('BrandCollection', [], Metabase::DOMAIN_NAME);
+        $categoryCollectionName = $translator?->trans('CategoryCollection', [], Metabase::DOMAIN_NAME);
+        $productCollectionName = $translator?->trans('ProductCollection', [], Metabase::DOMAIN_NAME);
 
         $rootCollection = $this->metabaseAPIService->createCollection($rootCollectionName);
-        $mainCollection = $this->metabaseAPIService->createCollection($mainCollectionName, $rootCollection->id);
-        $statisticCollection = $this->metabaseAPIService->createCollection($statCollectionName, $rootCollection->id);
+        Metabase::setConfigValue(Metabase::METABASE_COLLECTION_ROOT_ID_CONFIG_KEY, $rootCollection->id);
+
+        $monthlyRevenueCollection = $this->metabaseAPIService->createCollection($monthlyRevenueCollectionName, $rootCollection->id);
+        $annualRevenueCollection = $this->metabaseAPIService->createCollection($annualRevenueCollectionName, $rootCollection->id);
+        $bestSellerCollection = $this->metabaseAPIService->createCollection($bestSellerCollectionName, $rootCollection->id);
+
+        $brandCollection = $this->metabaseAPIService->createCollection($brandCollectionName, $rootCollection->id);
+        $categoryCollection = $this->metabaseAPIService->createCollection($categoryCollectionName, $rootCollection->id);
+        $productCollection = $this->metabaseAPIService->createCollection($productCollectionName, $rootCollection->id);
 
         $fields = $this->metabaseAPIService->getAllField();
 
-        $mainStatisticMetabaseService->generateStatisticMetabase($mainCollection->id, $fields);
-        $salesMetabaseService->generateStatisticMetabase($mainCollection->id, $fields);
-        $bestSellerService->generateStatisticMetabase($mainCollection->id, $fields);
+        try {
+            $monthlyRevenueStatisticMetabaseService->generateStatisticMetabase($monthlyRevenueCollection->id, $fields);
+            $annualRevenueStatisticMetabaseService->generateStatisticMetabase($annualRevenueCollection->id, $fields);
+            $bestSellerStatisticMetabaseService->generateStatisticMetabase($bestSellerCollection->id, $fields);
 
-        $statisticProductsService->generateStatisticMetabase($statisticCollection->id, $fields);
-        $statisticCategoryService->generateStatisticMetabase($statisticCollection->id, $fields);
-        $statisticBrandService->generateStatisticMetabase($statisticCollection->id, $fields);
+            $brandStatisticMetabaseService->generateStatisticMetabase($brandCollection->id, $fields);
+            $categoryStatisticMetabaseService->generateStatisticMetabase($categoryCollection->id, $fields);
+            $productStatisticMetabaseService->generateStatisticMetabase($productCollection->id, $fields);
 
-        return $this->generateRedirect(URL::getInstance()->absoluteUrl('/admin/module/Metabase', ['tab' => 'generate', 'success' => 1]));
+            $event = new MetabaseStatisticEvent($this->metabaseAPIService, $fields);
+            $eventDispatcher->dispatch($event, MetabaseStatisticEvents::ADD_METABASE_STATISTICS);
+        } catch (MetabaseException $e) {
+            return $this->generateRedirect(URL::getInstance()?->absoluteUrl('/admin/module/Metabase', ['tab' => 'generate', 'error_message' => $e->getMessage()]));
+        }
+
+        return $this->generateRedirect(URL::getInstance()?->absoluteUrl('/admin/module/Metabase', ['tab' => 'generate', 'success' => 1]));
     }
 
     /**
@@ -215,7 +239,7 @@ class GenerateMetabaseController extends AdminController
                 $verifiedData['scan_day'],
             );
 
-            return $this->generateRedirect(URL::getInstance()->absoluteUrl('/admin/module/Metabase', ['tab' => 'syncing', 'syncing' => 1]));
+            return $this->generateRedirect(URL::getInstance()?->absoluteUrl('/admin/module/Metabase', ['tab' => 'syncing', 'syncing' => 1]));
         } catch (FormValidationException $e) {
             $error_message = $this->createStandardFormValidationErrorMessage($e);
         } catch (\Exception $e) {
