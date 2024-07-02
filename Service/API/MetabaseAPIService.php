@@ -209,7 +209,7 @@ class MetabaseAPIService
      * @throws MetabaseException
      * @throws \JsonException
      */
-    public function embedDashboard(int $dashboardId, array $embeddingParams, array $dashcards, array $parameters)
+    public function embedDashboard(int $dashboardId, ?array $embeddingParams, array $dashcards, array $parameters)
     {
         $client = HttpClient::create();
         $metabaseResponse = $client->request(
@@ -305,7 +305,7 @@ class MetabaseAPIService
      * @throws TransportExceptionInterface
      * @throws MetabaseException
      */
-    public function createCollection(string $name, ?int $parentId = null)
+    public function createCollection(array $json)
     {
         $client = HttpClient::create();
         $metabaseResponse = $client->request(
@@ -316,11 +316,7 @@ class MetabaseAPIService
                     'X-Metabase-Session' => $this->getSessionToken(),
                     'Content-Type: application/json',
                 ],
-                'json' => [
-                    'name' => $name,
-                    'color' => '#FFA500',
-                    'parent_id' => $parentId,
-                ],
+                'json' => $json,
             ]
         );
 

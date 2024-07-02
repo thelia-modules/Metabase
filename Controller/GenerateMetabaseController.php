@@ -165,16 +165,16 @@ class GenerateMetabaseController extends AdminController
         $categoryCollectionName = $translator?->trans('CategoryCollection', [], Metabase::DOMAIN_NAME);
         $productCollectionName = $translator?->trans('ProductCollection', [], Metabase::DOMAIN_NAME);
 
-        $rootCollection = $this->metabaseAPIService->createCollection($rootCollectionName);
+        $rootCollection = $this->metabaseAPIService->createCollection(['name' => $rootCollectionName]);
         Metabase::setConfigValue(Metabase::METABASE_COLLECTION_ROOT_ID_CONFIG_KEY, $rootCollection->id);
 
-        $monthlyRevenueCollection = $this->metabaseAPIService->createCollection($monthlyRevenueCollectionName, $rootCollection->id);
-        $annualRevenueCollection = $this->metabaseAPIService->createCollection($annualRevenueCollectionName, $rootCollection->id);
-        $bestSellerCollection = $this->metabaseAPIService->createCollection($bestSellerCollectionName, $rootCollection->id);
+        $monthlyRevenueCollection = $monthlyRevenueStatisticMetabaseService->generateCollection($monthlyRevenueCollectionName, $rootCollection->id);
+        $annualRevenueCollection = $annualRevenueStatisticMetabaseService->generateCollection($annualRevenueCollectionName, $rootCollection->id);
+        $bestSellerCollection = $bestSellerStatisticMetabaseService->generateCollection($bestSellerCollectionName, $rootCollection->id);
 
-        $brandCollection = $this->metabaseAPIService->createCollection($brandCollectionName, $rootCollection->id);
-        $categoryCollection = $this->metabaseAPIService->createCollection($categoryCollectionName, $rootCollection->id);
-        $productCollection = $this->metabaseAPIService->createCollection($productCollectionName, $rootCollection->id);
+        $brandCollection = $brandStatisticMetabaseService->generateCollection($brandCollectionName, $rootCollection->id);
+        $categoryCollection = $categoryStatisticMetabaseService->generateCollection($categoryCollectionName, $rootCollection->id);
+        $productCollection = $productStatisticMetabaseService->generateCollection($productCollectionName, $rootCollection->id);
 
         $fields = $this->metabaseAPIService->getAllField();
 
@@ -187,7 +187,7 @@ class GenerateMetabaseController extends AdminController
             $categoryStatisticMetabaseService->generateStatisticMetabase($categoryCollection->id, $fields);
             $productStatisticMetabaseService->generateStatisticMetabase($productCollection->id, $fields);
 
-            $event = new MetabaseStatisticEvent($this->metabaseAPIService, $fields);
+            $event = new MetabaseStatisticEvent($fields, $rootCollection->id);
             $eventDispatcher->dispatch($event, MetabaseStatisticEvents::ADD_METABASE_STATISTICS);
         } catch (MetabaseException $e) {
             return $this->generateRedirect(URL::getInstance()?->absoluteUrl('/admin/module/Metabase', ['tab' => 'generate', 'error_message' => $e->getMessage()]));

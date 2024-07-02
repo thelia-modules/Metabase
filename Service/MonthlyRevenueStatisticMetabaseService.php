@@ -34,7 +34,11 @@ class MonthlyRevenueStatisticMetabaseService extends AbstractMetabaseService
 
         $defaultFields =
             [
+                'idStartDate' => $this->getUuidDate1(),
+                'tagStartDate' => 'invoiceDate1',
                 'startDate' => $startDate->format('Y-m-d'),
+                'idEndDate' => $this->getUuidDate2(),
+                'tagEndDate' => 'invoiceDate2',
                 'endDate' => $endDate->format('Y-m-d'),
             ]
         ;
@@ -50,7 +54,7 @@ class MonthlyRevenueStatisticMetabaseService extends AbstractMetabaseService
             $translator?->trans('monthly revenue card', [], Metabase::DOMAIN_NAME),
             'line',
             $collectionId,
-            $this->getSqlQueryMain(),
+            $this->getSqlQueryMain($defaultFields['tagStartDate'], $defaultFields['tagEndDate']),
             $fields,
             $defaultFields
         );
@@ -60,7 +64,7 @@ class MonthlyRevenueStatisticMetabaseService extends AbstractMetabaseService
             $translator?->trans('monthly revenue with number', [], Metabase::DOMAIN_NAME),
             'scalar',
             $collectionId,
-            $this->getSqlQuerySecondary(),
+            $this->getSqlQuerySecondary($defaultFields['tagStartDate'], $defaultFields['tagEndDate']),
             $fields,
             $defaultFields
         );
@@ -68,12 +72,20 @@ class MonthlyRevenueStatisticMetabaseService extends AbstractMetabaseService
         $dashboardCard = $this->formatDashboardCard($card->id, [], 0, 0, 24, 5, $card->id, $card2->id);
         $dashboardCard2 = $this->formatDashboardCard($card2->id, [], 6, 0, 24, 3, $card->id, $card2->id);
 
-        $this->embedDashboard($dashboard->id, ['date' => 'enabled'], [$dashboardCard, $dashboardCard2], $defaultFields);
+        $this->embedDashboard(
+            $dashboard->id,
+            [
+                'invoiceDate1' => 'enabled',
+                'invoiceDate2' => 'enabled',
+                'orderStatus' => 'enabled',
+            ],
+            [$dashboardCard, $dashboardCard2],
+            $defaultFields);
 
         $this->publishDashboard($dashboard->id);
     }
 
-    private function getSqlQueryMain(): string
+    private function getSqlQueryMain(string $invoiceDate1, string $invoiceDate2): string
     {
         return 'SELECT DATE_FORMAT(`order`.`invoice_date`,"%d %b %Y") as DATE,
                     SUM((`order_product`.QUANTITY * IF(`order_product`.WAS_IN_PROMO,`order_product`.PROMO_PRICE,`order_product`.PRICE))) + SUM((`order_product`.QUANTITY * IF(`order_product`.WAS_IN_PROMO,`order_product_tax`.PROMO_AMOUNT,`order_product_tax`.AMOUNT))) - SUM(`order`.discount) AS TOTAL 
@@ -82,14 +94,14 @@ class MonthlyRevenueStatisticMetabaseService extends AbstractMetabaseService
                     LEFT JOIN `order_product_tax` ON (`order_product`.`id`=`order_product_tax`.`order_product_id`)
                     LEFT JOIN `order_status` ON (`order_status`.`id` = `order`.`status_id`)
                     LEFT JOIN `order_status_i18n` ON (`order_status_i18n`.`id` = `order_status`.`id`)
-                    WHERE (`order`.`invoice_date`>={{start}} AND `order`.`invoice_date`<={{end}}) 
+                    WHERE (`order`.`invoice_date`>= {{'.$invoiceDate1.'}} AND `order`.`invoice_date`<= {{'.$invoiceDate2.'}})
                     AND ({{orderStatus}})
                     group by DATE_FORMAT(`order`.`invoice_date`, "%m %Y"), DATE
                     order by DATE_FORMAT(`order`.`invoice_date`, "%m %Y")'
         ;
     }
 
-    private function getSqlQuerySecondary(): string
+    private function getSqlQuerySecondary(string $invoiceDate1, string $invoiceDate2): string
     {
         return 'SELECT SUM((`order_product`.QUANTITY * IF(`order_product`.WAS_IN_PROMO,`order_product`.PROMO_PRICE,`order_product`.PRICE))) + SUM((`order_product`.QUANTITY * IF(`order_product`.WAS_IN_PROMO,`order_product_tax`.PROMO_AMOUNT,`order_product_tax`.AMOUNT))) - SUM(`order`.discount) AS TOTAL 
                     FROM `order`
@@ -97,7 +109,7 @@ class MonthlyRevenueStatisticMetabaseService extends AbstractMetabaseService
                     LEFT JOIN `order_product_tax` ON (`order_product`.`id`=`order_product_tax`.`order_product_id`)
                     LEFT JOIN `order_status` ON (`order_status`.`id` = `order`.`status_id`)
                     LEFT JOIN `order_status_i18n` ON (`order_status_i18n`.`id` = `order_status`.`id`)
-                    WHERE (`order`.`invoice_date`>={{start}} AND `order`.`invoice_date`<={{end}})
+                    WHERE (`order`.`invoice_date`>= {{'.$invoiceDate1.'}} AND `order`.`invoice_date`<= {{'.$invoiceDate2.'}})
                     AND ({{orderStatus}})'
         ;
     }
@@ -125,19 +137,19 @@ class MonthlyRevenueStatisticMetabaseService extends AbstractMetabaseService
     {
         return [
             [
-                'id' => $this->getUuidDate1(),
+                'id' => $defaultFields['idStartDate'],
                 'type' => 'date/single',
-                'target' => ['dimension', ['template-tag', 'start']],
-                'name' => 'Start',
-                'slug' => 'start',
+                'target' => ['dimension', ['template-tag', 'invoiceDate1']],
+                'name' => $defaultFields['tagStartDate'],
+                'slug' => $defaultFields['tagStartDate'],
                 'default' => $defaultFields['startDate'],
             ],
             [
-                'id' => $this->getUuidDate2(),
+                'id' => $defaultFields['idEndDate'],
                 'type' => 'date/single',
-                'target' => ['dimension', ['template-tag', 'end']],
-                'name' => 'End',
-                'slug' => 'end',
+                'target' => ['dimension', ['template-tag', 'invoiceDate2']],
+                'name' => $defaultFields['tagEndDate'],
+                'slug' => $defaultFields['tagEndDate'],
                 'default' => $defaultFields['endDate'],
             ],
             [
@@ -147,11 +159,11 @@ class MonthlyRevenueStatisticMetabaseService extends AbstractMetabaseService
                     'dimension',
                     [
                         'template-tag',
-                        'OrderStatus',
+                        'orderStatus',
                     ],
                 ],
                 'name' => 'OrderStatus',
-                'slug' => 'OrderStatus',
+                'slug' => 'orderStatus',
                 'default' => $defaultOrderStatus,
             ],
         ];
@@ -168,25 +180,26 @@ class MonthlyRevenueStatisticMetabaseService extends AbstractMetabaseService
             'database' => (int) Metabase::getConfigValue(Metabase::METABASE_DB_ID_CONFIG_KEY),
             'native' => [
                 'template-tags' => [
-                    'start' => [
-                        'id' => $this->getUuidDate1(),
-                        'name' => 'start',
-                        'display-name' => 'Start',
+                    $defaultFields['tagStartDate'] => [
+                        'id' => $defaultFields['idStartDate'],
+                        'name' => $defaultFields['tagStartDate'],
+                        'display-name' => 'invoiceDate1',
                         'type' => 'date',
+                        'widget-type' => 'date/single',
                         'default' => $defaultFields['startDate'],
                         'required' => true,
                     ],
-                    'end' => [
-                        'id' => $this->getUuidDate2(),
-                        'name' => 'end',
-                        'display-name' => 'End',
+                    $defaultFields['tagEndDate'] => [
+                        'id' => $defaultFields['idEndDate'],
+                        'name' => $defaultFields['tagEndDate'],
+                        'display-name' => 'invoiceDate2',
                         'type' => 'date',
                         'default' => $defaultFields['endDate'],
                         'required' => true,
                     ],
                     'orderStatus' => [
                         'id' => $this->getUuidOrderStatus(),
-                        'name' => 'OrderStatus',
+                        'name' => 'orderStatus',
                         'display-name' => 'OrderStatus',
                         'type' => 'dimension',
                         'dimension' => [
@@ -211,10 +224,10 @@ class MonthlyRevenueStatisticMetabaseService extends AbstractMetabaseService
                 'parameter_id' => $this->getUuidParamDate1(),
                 'card_id' => $cardsId[0],
                 'target' => [
-                    'variable',
+                    'dimension',
                     [
                         'template-tag',
-                        'start',
+                        'invoiceDate1',
                     ],
                 ],
             ],
@@ -222,10 +235,10 @@ class MonthlyRevenueStatisticMetabaseService extends AbstractMetabaseService
                 'parameter_id' => $this->getUuidParamDate1(),
                 'card_id' => $cardsId[1],
                 'target' => [
-                    'variable',
+                    'dimension',
                     [
                         'template-tag',
-                        'start',
+                        'invoiceDate1',
                     ],
                 ],
             ],
@@ -233,10 +246,10 @@ class MonthlyRevenueStatisticMetabaseService extends AbstractMetabaseService
                 'parameter_id' => $this->getUuidParamDate2(),
                 'card_id' => $cardsId[0],
                 'target' => [
-                    'variable',
+                    'dimension',
                     [
                         'template-tag',
-                        'end',
+                        'invoiceDate2',
                     ],
                 ],
             ],
@@ -244,10 +257,10 @@ class MonthlyRevenueStatisticMetabaseService extends AbstractMetabaseService
                 'parameter_id' => $this->getUuidParamDate2(),
                 'card_id' => $cardsId[1],
                 'target' => [
-                    'variable',
+                    'dimension',
                     [
                         'template-tag',
-                        'end',
+                        'invoiceDate2',
                     ],
                 ],
             ],
@@ -283,7 +296,7 @@ class MonthlyRevenueStatisticMetabaseService extends AbstractMetabaseService
         return [
             [
                 'name' => $translator?->trans('Date Start', [], Metabase::DOMAIN_NAME),
-                'slug' => 'start',
+                'slug' => 'invoiceDate1',
                 'id' => $this->getUuidParamDate1(),
                 'type' => 'date/single',
                 'sectionId' => 'date',
@@ -291,7 +304,7 @@ class MonthlyRevenueStatisticMetabaseService extends AbstractMetabaseService
             ],
             [
                 'name' => $translator?->trans('Date End', [], Metabase::DOMAIN_NAME),
-                'slug' => 'end',
+                'slug' => 'invoiceDate2',
                 'id' => $this->getUuidParamDate2(),
                 'type' => 'date/single',
                 'sectionId' => 'date',

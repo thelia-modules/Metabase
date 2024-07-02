@@ -45,8 +45,7 @@ class BestSellerStatisticMetabaseService extends AbstractMetabaseService
         $this->embedDashboard(
             $dashboard->id,
             [
-                'start' => 'enabled',
-                'end' => 'enabled',
+                'date' => 'enabled',
                 'orderStatus' => 'enabled',
             ],
             [$dashboardCard]
@@ -112,7 +111,7 @@ class BestSellerStatisticMetabaseService extends AbstractMetabaseService
                 ],
                 'name' => 'Date',
                 'slug' => 'date',
-                'default' => 'past1years',
+                'default' => 'thisyear',
             ],
             [
                 'id' => $this->getUuidOrderStatus(),
@@ -155,7 +154,7 @@ class BestSellerStatisticMetabaseService extends AbstractMetabaseService
                         ],
                         'widget-type' => 'date/all-options',
                         'required' => true,
-                        'default' => 'past1years',
+                        'default' => 'thisyear',
                     ],
                     'orderStatus' => [
                         'id' => $this->getUuidOrderStatus(),

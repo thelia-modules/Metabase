@@ -40,12 +40,13 @@ class MetabaseHook extends BaseHook
     public function metabaseHome(HookRenderEvent $event): void
     {
         $metabaseUrl = Metabase::getConfigValue(Metabase::METABASE_URL_CONFIG_KEY);
+        $metabaseKey = Metabase::getConfigValue(Metabase::METABASE_EMBEDDING_KEY_CONFIG_KEY);
 
         $dashboards = [];
         $dashboardsName = [];
         $errorMessage = null;
 
-        $metabase = new MetabaseEmbed($metabaseUrl, false, '100%', '800');
+        $metabase = new \Metabase\Embed($metabaseUrl, $metabaseKey, false, '100%', '600');
 
         try {
             $apiDashboards = $this->metabaseAPIService->getPublicDashboards();
@@ -60,7 +61,7 @@ class MetabaseHook extends BaseHook
 
             $tableId = 0;
             foreach ($apiDashboards as $key => $apiDashboard) {
-                $dashboards[] = $metabase->dashboardIFrame($apiDashboard['public_uuid']);
+                $dashboards[] = $metabase->dashboardIFrame($apiDashboard['id']);
                 if (4 !== $key && 6 !== $key && 8 !== $key) {
                     $dashboardsName[$key] = $apiCollections['data'][$tableId]['name'];
                     ++$tableId;

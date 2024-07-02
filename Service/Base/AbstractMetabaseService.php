@@ -39,6 +39,22 @@ abstract class AbstractMetabaseService implements MetabaseInterface
      * @throws ClientExceptionInterface
      * @throws \JsonException
      */
+    public function generateCollection(string $collectionName, ?int $rootCollectionID = null)
+    {
+        return $this->metabaseAPIService->createCollection([
+            'name' => $collectionName,
+            'parent_id' => $rootCollectionID,
+        ]);
+    }
+
+    /**
+     * @throws TransportExceptionInterface
+     * @throws ServerExceptionInterface
+     * @throws MetabaseException
+     * @throws RedirectionExceptionInterface
+     * @throws ClientExceptionInterface
+     * @throws \JsonException
+     */
     public function generateDashboardMetabase(
         string $dashboardName,
         string $descriptionDashboard,
@@ -145,7 +161,7 @@ abstract class AbstractMetabaseService implements MetabaseInterface
      * @throws ClientExceptionInterface
      * @throws \JsonException
      */
-    public function embedDashboard(int $dashboardId, array $parameters, array $dashcards, array $defaultFields = [])
+    public function embedDashboard(int $dashboardId, ?array $parameters = null, array $dashcards = [], array $defaultFields = [])
     {
         return $this->metabaseAPIService->embedDashboard(
             $dashboardId,
