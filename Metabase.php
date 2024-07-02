@@ -29,8 +29,12 @@ class Metabase extends BaseModule
     public const METABASE_TOKEN_SESSION_CONFIG_KEY = 'metabase_token_session';
     public const METABASE_TOKEN_EXPIRATION_DATE_CONFIG_KEY = 'metabase_token_expiration_date';
 
-    // Metabase Order Type
+    // Metabase Form
     public const METABASE_ORDER_TYPE_CONFIG_KEY = 'metabase_order_type';
+    public const METABASE_DISABLE_BRAND_CONFIG_KEY = 'metabase_disable_brand';
+    public const METABASE_DISABLE_CATEGORY_CONFIG_KEY = 'metabase_disable_category';
+    public const METABASE_DISABLE_PRODUCT_CONFIG_KEY = 'metabase_disable_product';
+
     // Collection Root Metabase
     public const METABASE_COLLECTION_ROOT_ID_CONFIG_KEY = 'metabase_collection_root_id';
 

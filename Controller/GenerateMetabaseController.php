@@ -109,6 +109,9 @@ class GenerateMetabaseController extends AdminController
         try {
             $data = $this->validateForm($form)->getData();
             Metabase::setConfigValue(Metabase::METABASE_ORDER_TYPE_CONFIG_KEY, $data['order_type']);
+            Metabase::setConfigValue(Metabase::METABASE_DISABLE_BRAND_CONFIG_KEY, $data['disable_brand']);
+            Metabase::setConfigValue(Metabase::METABASE_DISABLE_CATEGORY_CONFIG_KEY, $data['disable_category']);
+            Metabase::setConfigValue(Metabase::METABASE_DISABLE_PRODUCT_CONFIG_KEY, $data['disable_product']);
 
             $state = $this->metabaseAPIService->checkMetabaseState();
 
@@ -168,24 +171,32 @@ class GenerateMetabaseController extends AdminController
         $rootCollection = $this->metabaseAPIService->createCollection(['name' => $rootCollectionName]);
         Metabase::setConfigValue(Metabase::METABASE_COLLECTION_ROOT_ID_CONFIG_KEY, $rootCollection->id);
 
-        $monthlyRevenueCollection = $monthlyRevenueStatisticMetabaseService->generateCollection($monthlyRevenueCollectionName, $rootCollection->id);
-        $annualRevenueCollection = $annualRevenueStatisticMetabaseService->generateCollection($annualRevenueCollectionName, $rootCollection->id);
-        $bestSellerCollection = $bestSellerStatisticMetabaseService->generateCollection($bestSellerCollectionName, $rootCollection->id);
-
-        $brandCollection = $brandStatisticMetabaseService->generateCollection($brandCollectionName, $rootCollection->id);
-        $categoryCollection = $categoryStatisticMetabaseService->generateCollection($categoryCollectionName, $rootCollection->id);
-        $productCollection = $productStatisticMetabaseService->generateCollection($productCollectionName, $rootCollection->id);
-
         $fields = $this->metabaseAPIService->getAllField();
 
         try {
+            $monthlyRevenueCollection = $monthlyRevenueStatisticMetabaseService->generateCollection($monthlyRevenueCollectionName, $rootCollection->id);
             $monthlyRevenueStatisticMetabaseService->generateStatisticMetabase($monthlyRevenueCollection->id, $fields);
+
+            $annualRevenueCollection = $annualRevenueStatisticMetabaseService->generateCollection($annualRevenueCollectionName, $rootCollection->id);
             $annualRevenueStatisticMetabaseService->generateStatisticMetabase($annualRevenueCollection->id, $fields);
+
+            $bestSellerCollection = $bestSellerStatisticMetabaseService->generateCollection($bestSellerCollectionName, $rootCollection->id);
             $bestSellerStatisticMetabaseService->generateStatisticMetabase($bestSellerCollection->id, $fields);
 
-            $brandStatisticMetabaseService->generateStatisticMetabase($brandCollection->id, $fields);
-            $categoryStatisticMetabaseService->generateStatisticMetabase($categoryCollection->id, $fields);
-            $productStatisticMetabaseService->generateStatisticMetabase($productCollection->id, $fields);
+            if (!Metabase::getConfigValue(Metabase::METABASE_DISABLE_BRAND_CONFIG_KEY)) {
+                $brandCollection = $brandStatisticMetabaseService->generateCollection($brandCollectionName, $rootCollection->id);
+                $brandStatisticMetabaseService->generateStatisticMetabase($brandCollection->id, $fields);
+            }
+
+            if (!Metabase::getConfigValue(Metabase::METABASE_DISABLE_CATEGORY_CONFIG_KEY)) {
+                $categoryCollection = $categoryStatisticMetabaseService->generateCollection($categoryCollectionName, $rootCollection->id);
+                $categoryStatisticMetabaseService->generateStatisticMetabase($categoryCollection->id, $fields);
+            }
+
+            if (!Metabase::getConfigValue(Metabase::METABASE_DISABLE_CATEGORY_CONFIG_KEY)) {
+                $productCollection = $productStatisticMetabaseService->generateCollection($productCollectionName, $rootCollection->id);
+                $productStatisticMetabaseService->generateStatisticMetabase($productCollection->id, $fields);
+            }
 
             $event = new MetabaseStatisticEvent($fields, $rootCollection->id);
             $eventDispatcher->dispatch($event, MetabaseStatisticEvents::ADD_METABASE_STATISTICS);

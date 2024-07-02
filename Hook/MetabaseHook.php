@@ -15,7 +15,6 @@ namespace Metabase\Hook;
 use Metabase\Exception\MetabaseException;
 use Metabase\Metabase;
 use Metabase\Service\API\MetabaseAPIService;
-use Metabase\Service\Embed\MetabaseEmbed;
 use Symfony\Contracts\HttpClient\Exception\ClientExceptionInterface;
 use Symfony\Contracts\HttpClient\Exception\RedirectionExceptionInterface;
 use Symfony\Contracts\HttpClient\Exception\ServerExceptionInterface;
@@ -45,6 +44,7 @@ class MetabaseHook extends BaseHook
         $dashboards = [];
         $dashboardsName = [];
         $errorMessage = null;
+        $countDisable = $this->countDisableDatatable();
 
         $metabase = new \Metabase\Embed($metabaseUrl, $metabaseKey, false, '100%', '600');
 
@@ -62,7 +62,7 @@ class MetabaseHook extends BaseHook
             $tableId = 0;
             foreach ($apiDashboards as $key => $apiDashboard) {
                 $dashboards[] = $metabase->dashboardIFrame($apiDashboard['id']);
-                if (4 !== $key && 6 !== $key && 8 !== $key) {
+                if ($this->getOperation($key, $countDisable)) {
                     $dashboardsName[$key] = $apiCollections['data'][$tableId]['name'];
                     ++$tableId;
                 }
@@ -77,6 +77,7 @@ class MetabaseHook extends BaseHook
                 [
                     'dashboards' => $dashboards,
                     'dashboardsName' => $dashboardsName,
+                    'countDisable' => $countDisable,
                     'errorMessage' => $errorMessage,
                 ]
             )
@@ -93,5 +94,40 @@ class MetabaseHook extends BaseHook
         $event->add($this->render(
             'metabase-module-js.html'
         ));
+    }
+
+    private function countDisableDatatable(): bool
+    {
+        $countDisable = 0;
+        if (!Metabase::getConfigValue(Metabase::METABASE_DISABLE_BRAND_CONFIG_KEY)) {
+            ++$countDisable;
+        }
+
+        if (!Metabase::getConfigValue(Metabase::METABASE_DISABLE_CATEGORY_CONFIG_KEY)) {
+            ++$countDisable;
+        }
+
+        if (!Metabase::getConfigValue(Metabase::METABASE_DISABLE_CATEGORY_CONFIG_KEY)) {
+            ++$countDisable;
+        }
+
+        return $countDisable;
+    }
+
+    private function getOperation($key, $countDisable): bool
+    {
+        if (3 === $countDisable) {
+            return true;
+        }
+
+        if (2 === $countDisable) {
+            return 4 !== $key;
+        }
+
+        if (1 === $countDisable) {
+            return 4 !== $key && 6 !== $key;
+        }
+
+        return 4 !== $key && 6 !== $key && 8 !== $key;
     }
 }

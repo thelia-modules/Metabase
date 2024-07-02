@@ -10,13 +10,26 @@
         $tab.html(template);
     }
 
+    function getOperation($href, $count) {
+        if (3 === $count) {
+            return true;
+        }
+
+        if (2 === $count) {
+            return '#table-3' === $href;
+        }
+
+        if (1 === $count) {
+            return '#table-3' === $href || '#table-5' === $href;
+        }
+
+        return '#table-3' === $href || '#table-5' === $href || '#table-7' === $href;
+    }
+
     $module.find('#tabbed-menu li a').on('shown.bs.tab', function (e) {
         let $href = e.target.attributes.href.value;
 
-        if ($href === '#table-0' || $href === '#table-1' || $href === '#table-2') {
-            displayTemplate(e.target.attributes.href.value);
-            $btnGroup.hide();
-        } else {
+        if (getOperation($href, {$countDisable})) {
             $btnGroup.show();
 
             let parts = $href.split('-');
@@ -24,6 +37,9 @@
 
             document.getElementById("btn_revenue").href=$href;
             document.getElementById("btn_count").href='#table-' + number;
+        } else {
+            displayTemplate(e.target.attributes.href.value);
+            $btnGroup.hide();
         }
     });
 

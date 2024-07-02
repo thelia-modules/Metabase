@@ -147,6 +147,9 @@
                                             <div class="row" style="margin-top: 20px;">
                                                 <div class="col-md-6">
                                                     {render_form_field form=$form field="order_type"}
+                                                    {render_form_field form=$form field="disable_brand"}
+                                                    {render_form_field form=$form field="disable_category"}
+                                                    {render_form_field form=$form field="disable_product"}
                                                 </div>
                                                 <div class="col-md-6">
                                                     <button type="submit" class="btn btn-success">{intl l="Check database status and generate" d="metabase.bo.default"}</button>
