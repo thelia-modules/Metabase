@@ -4,23 +4,38 @@ namespace Metabase\Form;
 
 use Metabase\Metabase;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
+use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Thelia\Core\Translation\Translator;
 use Thelia\Form\BaseForm;
+use Thelia\Model\LangQuery;
+use Thelia\Model\OrderStatusQuery;
 
 class GenerateMetabase extends BaseForm
 {
     protected function buildForm(): void
     {
         $translator = Translator::getInstance();
+
+        $locale = LangQuery::create()->findOneByByDefault(1)?->getLocale();
+        $orderStatus = OrderStatusQuery::create()->find();
+
+        $choices = [];
+        foreach ($orderStatus as $status) {
+            $choices[$status->setLocale($locale)->getTitle()] = $status->getId();
+        }
+
         $this->formBuilder
             ->add(
                 'order_type',
-                TextType::class,
+                ChoiceType::class,
                 [
-                    'data' => Metabase::getConfigValue(Metabase::METABASE_ORDER_TYPE_CONFIG_KEY),
+                    'data' => explode(',', Metabase::getConfigValue(Metabase::METABASE_ORDER_TYPE_CONFIG_KEY)),
                     'label' => $translator->trans('order_type', [], Metabase::DOMAIN_NAME),
                     'label_attr' => ['for' => Metabase::METABASE_ORDER_TYPE_CONFIG_KEY],
+                    'choices'  => $choices,
+                    'multiple' => true,
+                    'expanded' => true
                 ]
             )
             ->add(

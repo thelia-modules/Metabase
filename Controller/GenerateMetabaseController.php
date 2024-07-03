@@ -108,7 +108,8 @@ class GenerateMetabaseController extends AdminController
 
         try {
             $data = $this->validateForm($form)->getData();
-            Metabase::setConfigValue(Metabase::METABASE_ORDER_TYPE_CONFIG_KEY, $data['order_type']);
+
+            Metabase::setConfigValue(Metabase::METABASE_ORDER_TYPE_CONFIG_KEY, implode(',', $data['order_type']));
             Metabase::setConfigValue(Metabase::METABASE_DISABLE_BRAND_CONFIG_KEY, $data['disable_brand']);
             Metabase::setConfigValue(Metabase::METABASE_DISABLE_CATEGORY_CONFIG_KEY, $data['disable_category']);
             Metabase::setConfigValue(Metabase::METABASE_DISABLE_PRODUCT_CONFIG_KEY, $data['disable_product']);
