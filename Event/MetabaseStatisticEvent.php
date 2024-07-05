@@ -8,11 +8,13 @@ class MetabaseStatisticEvent extends Event
 {
     private array $fields;
     private int $collectionRootId;
+    private string $locale;
 
-    public function __construct(array $fields, int $collectionRootId)
+    public function __construct(int $collectionRootId, array $fields, string $locale)
     {
-        $this->fields = $fields;
         $this->collectionRootId = $collectionRootId;
+        $this->fields = $fields;
+        $this->locale = $locale;
     }
 
     public function getFields(): array
@@ -35,6 +37,18 @@ class MetabaseStatisticEvent extends Event
     public function setCollectionRootId(int $collectionRootId): MetabaseStatisticEvent
     {
         $this->collectionRootId = $collectionRootId;
+
+        return $this;
+    }
+
+    public function getLocale(): string
+    {
+        return $this->locale;
+    }
+
+    public function setLocale(string $locale): MetabaseStatisticEvent
+    {
+        $this->locale = $locale;
 
         return $this;
     }

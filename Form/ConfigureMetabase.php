@@ -4,6 +4,7 @@ namespace Metabase\Form;
 
 use Metabase\Metabase;
 use Symfony\Component\Form\Extension\Core\Type\EmailType;
+use Symfony\Component\Form\Extension\Core\Type\PasswordType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\Extension\Core\Type\UrlType;
 use Symfony\Component\Validator\Constraints\NotBlank;
@@ -39,7 +40,7 @@ class ConfigureMetabase extends BaseForm
                     'label' => $translator->trans('Metabase token (integration token)', [], Metabase::DOMAIN_NAME),
                     'label_attr' => [
                         'for' => Metabase::METABASE_EMBEDDING_KEY_CONFIG_KEY,
-                        'hep' => $translator->trans('Activate Embedding here : https://{your_metabase}/admin/settings/embedding-in-other-applications', [], Metabase::DOMAIN_NAME),
+                        'help' => $translator->trans('Activate Embedding here : https://{your_metabase}/admin/settings/embedding-in-other-applications', [], Metabase::DOMAIN_NAME),
                     ],
                 ]
             )
@@ -55,7 +56,7 @@ class ConfigureMetabase extends BaseForm
             )
             ->add(
                 Metabase::METABASE_PASSWORD_CONFIG_KEY,
-                TextType::class,
+                PasswordType::class,
                 [
                     'constraints' => [new NotBlank()],
                     'data' => Metabase::getConfigValue(Metabase::METABASE_PASSWORD_CONFIG_KEY),

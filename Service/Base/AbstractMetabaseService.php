@@ -9,7 +9,6 @@ use Symfony\Contracts\HttpClient\Exception\ClientExceptionInterface;
 use Symfony\Contracts\HttpClient\Exception\RedirectionExceptionInterface;
 use Symfony\Contracts\HttpClient\Exception\ServerExceptionInterface;
 use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
-use Thelia\Model\LangQuery;
 use Thelia\Model\OrderStatusQuery;
 
 abstract class AbstractMetabaseService implements MetabaseInterface
@@ -78,9 +77,10 @@ abstract class AbstractMetabaseService implements MetabaseInterface
         int $collectionId,
         string $query,
         array $fields,
+        string $locale,
         array $defaultFields = []
     ) {
-        $defaultOrderStatus = $this->getDefaultOrderStatus();
+        $defaultOrderStatus = $this->getDefaultOrderStatus($locale);
 
         return $this->metabaseAPIService->createCard(
             $this->buildVisualizationSettings(),
@@ -161,13 +161,13 @@ abstract class AbstractMetabaseService implements MetabaseInterface
      * @throws ClientExceptionInterface
      * @throws \JsonException
      */
-    public function embedDashboard(int $dashboardId, ?array $parameters = null, array $dashcards = [], array $defaultFields = [])
+    public function embedDashboard(int $dashboardId, string $locale, ?array $parameters = null, array $dashcards = [], array $defaultFields = [])
     {
         return $this->metabaseAPIService->embedDashboard(
             $dashboardId,
             $parameters,
             $dashcards,
-            $this->getDashboardParameters($defaultFields)
+            $this->getDashboardParameters($defaultFields, $locale)
         );
     }
 
@@ -184,12 +184,10 @@ abstract class AbstractMetabaseService implements MetabaseInterface
         return $this->metabaseAPIService->publishDashboard($dashboardId);
     }
 
-    public function getDefaultOrderStatus(): array
+    public function getDefaultOrderStatus(string $locale): array
     {
         $defaultValues = [];
         $default = explode(',', Metabase::getConfigValue(Metabase::METABASE_ORDER_TYPE_CONFIG_KEY));
-
-        $locale = LangQuery::create()->findOneByByDefault(1)?->getLocale();
 
         foreach ($default as $s) {
             $orderStatus = OrderStatusQuery::create()
@@ -204,11 +202,9 @@ abstract class AbstractMetabaseService implements MetabaseInterface
         return $defaultValues;
     }
 
-    public function getValuesSourceConfigValuesOrderStatus(): array
+    public function getValuesSourceConfigValuesOrderStatus(string $locale): array
     {
         $statuses = [];
-
-        $locale = LangQuery::create()->findOneByByDefault(1)?->getLocale();
 
         $orderStatus = OrderStatusQuery::create()
             ->useOrderStatusI18nQuery()

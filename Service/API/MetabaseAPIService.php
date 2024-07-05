@@ -112,12 +112,12 @@ class MetabaseAPIService
      * @throws ServerExceptionInterface
      * @throws MetabaseException
      */
-    public function getCollectionsItems(int $id)
+    public function getCollectionsItems(int $id, string $models)
     {
         $client = HttpClient::create();
         $metabaseResponse = $client->request(
             'GET',
-            Metabase::getConfigValue(Metabase::METABASE_URL_CONFIG_KEY).'/api/collection/'.$id.'/items',
+            Metabase::getConfigValue(Metabase::METABASE_URL_CONFIG_KEY).'/api/collection/'.$id.'/items?models='.$models,
             [
                 'headers' => [
                     'X-Metabase-Session' => $this->getSessionToken(),
@@ -267,7 +267,7 @@ class MetabaseAPIService
      * @throws TransportExceptionInterface
      * @throws MetabaseException
      */
-    public function importDatabase(string $metabaseName, string $dbName, string $engine, string $host, string $port, string $user, string $password)
+    public function connectDatabase(string $metabaseName, string $dbName, string $engine, string $host, string $port, string $user, string $password)
     {
         $client = HttpClient::create();
         $metabaseResponse = $client->request(
@@ -298,6 +298,32 @@ class MetabaseAPIService
     }
 
     /**
+     * @throws RedirectionExceptionInterface
+     * @throws ClientExceptionInterface
+     * @throws \JsonException
+     * @throws TransportExceptionInterface
+     * @throws ServerExceptionInterface
+     * @throws MetabaseException
+     */
+    public function deleteDatabase(string $id): bool
+    {
+        $client = HttpClient::create();
+
+        $metabaseResponse = $client->request(
+            'DELETE',
+            Metabase::getConfigValue(Metabase::METABASE_URL_CONFIG_KEY).'/api/database/'.$id,
+            [
+                'headers' => [
+                    'X-Metabase-Session' => $this->getSessionToken(),
+                    'Content-Type: application/json',
+                ],
+            ]
+        );
+
+        return 204 === $metabaseResponse->getStatusCode();
+    }
+
+    /**
      * @throws ClientExceptionInterface
      * @throws ServerExceptionInterface
      * @throws RedirectionExceptionInterface
@@ -317,6 +343,34 @@ class MetabaseAPIService
                     'Content-Type: application/json',
                 ],
                 'json' => $json,
+            ]
+        );
+
+        return json_decode($metabaseResponse->getContent(), false, 512, JSON_THROW_ON_ERROR);
+    }
+
+    /**
+     * @throws RedirectionExceptionInterface
+     * @throws ClientExceptionInterface
+     * @throws \JsonException
+     * @throws TransportExceptionInterface
+     * @throws ServerExceptionInterface
+     * @throws MetabaseException
+     */
+    public function deleteCollection(int $id)
+    {
+        $client = HttpClient::create();
+        $metabaseResponse = $client->request(
+            'PUT',
+            Metabase::getConfigValue(Metabase::METABASE_URL_CONFIG_KEY).'/api/collection/'.$id,
+            [
+                'headers' => [
+                    'X-Metabase-Session' => $this->getSessionToken(),
+                    'Content-Type: application/json',
+                ],
+                'json' => [
+                    'archived' => true,
+                ],
             ]
         );
 

@@ -11,6 +11,8 @@ use Symfony\Contracts\HttpClient\Exception\RedirectionExceptionInterface;
 use Symfony\Contracts\HttpClient\Exception\ServerExceptionInterface;
 use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
 use Thelia\Core\Translation\Translator;
+use Thelia\Model\CategoryQuery;
+use Thelia\Model\LangQuery;
 
 class CategoryStatisticMetabaseService extends AbstractMetabaseService
 {
@@ -26,6 +28,9 @@ class CategoryStatisticMetabaseService extends AbstractMetabaseService
     }
 
     /**
+     * @param int $collectionId
+     * @param array $fields
+     * @param string $locale
      * @throws RedirectionExceptionInterface
      * @throws ClientExceptionInterface
      * @throws \JsonException
@@ -33,7 +38,7 @@ class CategoryStatisticMetabaseService extends AbstractMetabaseService
      * @throws ServerExceptionInterface
      * @throws MetabaseException
      */
-    public function generateStatisticMetabase(int $collectionId, array $fields): void
+    public function generateStatisticMetabase(int $collectionId, array $fields, string $locale): void
     {
         $translator = Translator::getInstance();
 
@@ -54,44 +59,46 @@ class CategoryStatisticMetabaseService extends AbstractMetabaseService
         ;
 
         $dashboard = $this->generateDashboardMetabase(
-            $translator->trans('Dashboard Sales Category', [], Metabase::DOMAIN_NAME),
-            $translator->trans('Sales Statistic by Category dashboard', [], Metabase::DOMAIN_NAME),
+            $translator->trans('Dashboard Sales Category', [], Metabase::DOMAIN_NAME, $locale),
+            $translator->trans('Sales Statistic by Category dashboard', [], Metabase::DOMAIN_NAME, $locale),
             $collectionId
         );
 
         $dashboard2 = $this->generateDashboardMetabase(
-            $translator->trans('Dashboard Count Category', [], Metabase::DOMAIN_NAME),
-            $translator->trans('Count Statistic by Category dashboard', [], Metabase::DOMAIN_NAME),
+            $translator->trans('Dashboard Count Category', [], Metabase::DOMAIN_NAME, $locale),
+            $translator->trans('Count Statistic by Category dashboard', [], Metabase::DOMAIN_NAME, $locale),
             $collectionId
         );
 
         $card = $this->generateCardMetabase(
-            $translator->trans('CategoriesSalesCard_', [], Metabase::DOMAIN_NAME).'1',
-            $translator->trans('Card of Sales Statistic by Category period', [], Metabase::DOMAIN_NAME).' 1',
+            $translator->trans('CategoriesSalesCard_', [], Metabase::DOMAIN_NAME, $locale).'1',
+            $translator->trans('Card of Sales Statistic by Category period', [], Metabase::DOMAIN_NAME, $locale).' 1',
             'line',
             $collectionId,
             $this->getSqlQueryMain($defaultFields1['tag']),
             $fields,
+            $locale,
             $defaultFields1
         );
 
         $card2 = $this->generateCardMetabase(
-            $translator->trans('CategoriesSalesCard_', [], Metabase::DOMAIN_NAME).'2',
-            $translator->trans('Card of Sales Statistic by Category period', [], Metabase::DOMAIN_NAME).' 2',
+            $translator->trans('CategoriesSalesCard_', [], Metabase::DOMAIN_NAME, $locale).'2',
+            $translator->trans('Card of Sales Statistic by Category period', [], Metabase::DOMAIN_NAME, $locale).' 2',
             'line',
             $collectionId,
             $this->getSqlQueryMain($defaultFields2['tag']),
             $fields,
+            $locale,
             $defaultFields2
         );
 
-        $defaultOrderStatus = $this->getDefaultOrderStatus();
+        $defaultOrderStatus = $this->getDefaultOrderStatus($locale);
 
         $card3 = $this->generateCustomCardMetabase(
             $this->buildCustomVisualizationSettings(),
             $this->buildParameters($defaultOrderStatus, $defaultFields1),
-            $translator->trans('CategoriesCard_', [], Metabase::DOMAIN_NAME).'1',
-            $translator->trans('Card of Count Statistic by Category period', [], Metabase::DOMAIN_NAME).' 1',
+            $translator->trans('CategoriesCard_', [], Metabase::DOMAIN_NAME, $locale).'1',
+            $translator->trans('Card of Count Statistic by Category period', [], Metabase::DOMAIN_NAME, $locale).' 1',
             $this->buildDatasetQuery($this->getSqlQuerySecondary($defaultFields1['tag']), $defaultOrderStatus, $fields, $defaultFields1),
             'line',
             $collectionId,
@@ -100,8 +107,8 @@ class CategoryStatisticMetabaseService extends AbstractMetabaseService
         $card4 = $this->generateCustomCardMetabase(
             $this->buildCustomVisualizationSettings(),
             $this->buildParameters($defaultOrderStatus, $defaultFields2),
-            $translator->trans('CategoriesCard_', [], Metabase::DOMAIN_NAME).'2',
-            $translator->trans('Card of Count Statistic by Category period', [], Metabase::DOMAIN_NAME).' 2',
+            $translator->trans('CategoriesCard_', [], Metabase::DOMAIN_NAME, $locale).'2',
+            $translator->trans('Card of Count Statistic by Category period', [], Metabase::DOMAIN_NAME, $locale).' 2',
             $this->buildDatasetQuery($this->getSqlQuerySecondary($defaultFields2['tag']), $defaultOrderStatus, $fields, $defaultFields2),
             'line',
             $collectionId,
@@ -113,11 +120,8 @@ class CategoryStatisticMetabaseService extends AbstractMetabaseService
         $dashboardCard = $this->formatDashboardCard($card->id, $series, 0, 0, 24, 8, $card->id, $card2->id);
         $dashboardCard2 = $this->formatDashboardCard($card3->id, $series2, 0, 0, 24, 8, $card3->id, $card4->id);
 
-        $this->embedDashboard($dashboard->id, ['invoiceDate1' => 'enabled', 'invoiceDate2' => 'enabled', 'category_title' => 'enabled', 'orderStatus' => 'enabled'], [$dashboardCard]);
-        $this->embedDashboard($dashboard2->id, ['invoiceDate1' => 'enabled', 'invoiceDate2' => 'enabled', 'category_title' => 'enabled', 'orderStatus' => 'enabled'], [$dashboardCard2]);
-
-        $this->publishDashboard($dashboard->id);
-        $this->publishDashboard($dashboard2->id);
+        $this->embedDashboard($dashboard->id, $locale, ['invoiceDate1' => 'enabled', 'invoiceDate2' => 'enabled', 'category_title' => 'enabled', 'orderStatus' => 'enabled'], [$dashboardCard]);
+        $this->embedDashboard($dashboard2->id, $locale, ['invoiceDate1' => 'enabled', 'invoiceDate2' => 'enabled', 'category_title' => 'enabled', 'orderStatus' => 'enabled'], [$dashboardCard2]);
     }
 
     private function getSqlQueryMain(string $param): string
@@ -361,20 +365,25 @@ class CategoryStatisticMetabaseService extends AbstractMetabaseService
         ];
     }
 
-    public function getDashboardParameters(array $defaultFields): array
+    public function getDashboardParameters(array $defaultFields, string $locale): array
     {
         $translator = Translator::getInstance();
 
         return [
             [
-                'name' => $translator?->trans('Category Title', [], Metabase::DOMAIN_NAME),
+                'name' => $translator?->trans('Category Title', [], Metabase::DOMAIN_NAME, $locale),
                 'slug' => 'category_title',
                 'id' => $this->uuidParamCategory,
                 'type' => 'string/=',
                 'sectionId' => 'string',
+                'values_query_type' => 'list',
+                'values_source_config' => [
+                    'values' => $this->getValuesSourceConfigValuesCategoryTitle($locale),
+                ],
+                'values_source_type' => 'static-list',
             ],
             [
-                'name' => $translator?->trans('Period', [], Metabase::DOMAIN_NAME).' 1',
+                'name' => $translator?->trans('Period', [], Metabase::DOMAIN_NAME, $locale).' 1',
                 'slug' => 'invoiceDate1',
                 'id' => $this->getUuidParamDate1(),
                 'type' => 'date/relative',
@@ -382,7 +391,7 @@ class CategoryStatisticMetabaseService extends AbstractMetabaseService
                 'default' => 'past1years',
             ],
             [
-                'name' => $translator?->trans('Period', [], Metabase::DOMAIN_NAME).' 2',
+                'name' => $translator?->trans('Period', [], Metabase::DOMAIN_NAME, $locale).' 2',
                 'slug' => 'invoiceDate2',
                 'id' => $this->getUuidParamDate2(),
                 'type' => 'date/relative',
@@ -390,18 +399,35 @@ class CategoryStatisticMetabaseService extends AbstractMetabaseService
                 'default' => 'thisyear',
             ],
             [
-                'name' => $translator?->trans('orderStatus', [], Metabase::DOMAIN_NAME),
+                'name' => $translator?->trans('orderStatus', [], Metabase::DOMAIN_NAME, $locale),
                 'slug' => 'orderStatus',
                 'id' => $this->getUuidParamOrderStatus(),
                 'type' => 'string/=',
                 'sectionId' => 'string',
-                'default' => $this->getDefaultOrderStatus(),
+                'default' => $this->getDefaultOrderStatus($locale),
                 'values_query_type' => 'list',
                 'values_source_config' => [
-                    'values' => $this->getValuesSourceConfigValuesOrderStatus(),
+                    'values' => $this->getValuesSourceConfigValuesOrderStatus($locale),
                 ],
                 'values_source_type' => 'static-list',
             ],
         ];
+    }
+
+    private function getValuesSourceConfigValuesCategoryTitle(string $locale): array
+    {
+        $categoryTitle = [];
+
+        $categories = CategoryQuery::create()
+            ->useCategoryI18nQuery()
+            ->filterByLocale($locale)
+            ->endUse()
+            ->find();
+
+        foreach ($categories as $category) {
+            $categoryTitle[] = $category->setLocale($locale)->getTitle();
+        }
+
+        return $categoryTitle;
     }
 }

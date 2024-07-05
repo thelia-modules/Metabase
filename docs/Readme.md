@@ -242,7 +242,7 @@ Note: you will have to implement the following methods to create your own Statis
                 'parameter_id' => $this->getUuidParamDate1(),
                 'card_id' => $cardsId[0],
                 'target' => [
-                    'dimension',
+                    'variable',
                     [
                         'template-tag',
                         'invoiceDate1',

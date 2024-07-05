@@ -21,6 +21,7 @@ use Symfony\Contracts\HttpClient\Exception\ServerExceptionInterface;
 use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
 use Thelia\Core\Event\Hook\HookRenderEvent;
 use Thelia\Core\Hook\BaseHook;
+use Thelia\Model\LangQuery;
 
 class MetabaseHook extends BaseHook
 {
@@ -41,6 +42,12 @@ class MetabaseHook extends BaseHook
         $metabaseUrl = Metabase::getConfigValue(Metabase::METABASE_URL_CONFIG_KEY);
         $metabaseKey = Metabase::getConfigValue(Metabase::METABASE_EMBEDDING_KEY_CONFIG_KEY);
 
+        if (null === $locale = $event->getTemplateVars()['locale']) {
+            $locale = LangQuery::create()->findOneByByDefault(1)?->getLocale();
+        }
+
+        $apiDashboards = [];
+
         $dashboards = [];
         $dashboardsName = [];
         $errorMessage = null;
@@ -49,23 +56,31 @@ class MetabaseHook extends BaseHook
         $metabase = new \Metabase\Embed($metabaseUrl, $metabaseKey, false, '100%', '600');
 
         try {
-            $apiDashboards = $this->metabaseAPIService->getPublicDashboards();
             $apiCollections = $this->metabaseAPIService->getCollectionsItems(
-                Metabase::getConfigValue(Metabase::METABASE_COLLECTION_ROOT_ID_CONFIG_KEY)
-            );
+                Metabase::getConfigValue(Metabase::METABASE_COLLECTION_ROOT_ID_CONFIG_KEY.'_'.$locale),
+                'collection'
+            )['data'];
 
             // F*** Metabase API that don't send collection order by id
-            usort($apiCollections['data'], static function ($a, $b) {
+            usort($apiCollections, static function ($a, $b) {
                 return $a['id'] - $b['id'];
             });
 
+            foreach ($apiCollections as $key => $apiCollection) {
+                $apiDashboards[$key] = $this->metabaseAPIService->getCollectionsItems($apiCollection['id'], 'dashboard')['data'];
+            }
+
             $tableId = 0;
             foreach ($apiDashboards as $key => $apiDashboard) {
-                $dashboards[] = $metabase->dashboardIFrame($apiDashboard['id']);
-                if ($this->getOperation($key, $countDisable)) {
-                    $dashboardsName[$key] = $apiCollections['data'][$tableId]['name'];
-                    ++$tableId;
+                $dashboardsName[$tableId] = $apiCollections[$key]['name'];
+
+                foreach ($apiDashboard as $key2 => $dashboard) {
+                    $dashboards[] = $metabase->dashboardIFrame($dashboard['id']);
+                    if ($key2 > 0) {
+                        ++$tableId;
+                    }
                 }
+                ++$tableId;
             }
         } catch (MetabaseException $exception) {
             $errorMessage = $exception->getMessage();
@@ -112,22 +127,5 @@ class MetabaseHook extends BaseHook
         }
 
         return $countDisable;
-    }
-
-    private function getOperation($key, $countDisable): bool
-    {
-        if (3 === $countDisable) {
-            return true;
-        }
-
-        if (2 === $countDisable) {
-            return 4 !== $key;
-        }
-
-        if (1 === $countDisable) {
-            return 4 !== $key && 6 !== $key;
-        }
-
-        return 4 !== $key && 6 !== $key && 8 !== $key;
     }
 }

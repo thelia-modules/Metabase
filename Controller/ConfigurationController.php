@@ -30,6 +30,10 @@ class ConfigurationController extends AdminController
             Metabase::setConfigValue(Metabase::METABASE_USERNAME_CONFIG_KEY, $vform->get(Metabase::METABASE_USERNAME_CONFIG_KEY)->getData());
             Metabase::setConfigValue(Metabase::METABASE_PASSWORD_CONFIG_KEY, $vform->get(Metabase::METABASE_PASSWORD_CONFIG_KEY)->getData());
 
+            // reset token when changing configuration
+            Metabase::setConfigValue(Metabase::METABASE_TOKEN_EXPIRATION_DATE_CONFIG_KEY, null);
+            Metabase::setConfigValue(Metabase::METABASE_TOKEN_SESSION_CONFIG_KEY, null);
+
             return $this->generateSuccessRedirect($form);
         } catch (\Exception $e) {
             $this->setupFormErrorContext(

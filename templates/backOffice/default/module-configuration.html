@@ -16,7 +16,7 @@
                 <div class="col-md-12">
                     <ul id="tabbed-menu" class="nav nav-tabs">
                         <li class="{if $tab eq "config"}active{/if}"><a data-toggle="tab" href="#config">{intl l="Configuration" d='metabase.bo.default'}</a> </li>
-                        <li class="{if $tab eq "import"}active{/if}"><a data-toggle="tab" href="#import">{intl l="Import Database" d='metabase.bo.default'}</a> </li>
+                        <li class="{if $tab eq "connect"}active{/if}"><a data-toggle="tab" href="#connect">{intl l="Connect Database" d='metabase.bo.default'}</a> </li>
                         <li class="{if $tab eq "generate"}active{/if}"><a data-toggle="tab" href="#generate">{intl l="Generate Dashboard" d='metabase.bo.default'}</a> </li>
                         <li class="{if $tab eq "syncing"}active{/if}"><a data-toggle="tab" href="#syncing">{intl l="Syncing Parameters" d='metabase.bo.default'}</a> </li>
                     </ul>
@@ -29,10 +29,11 @@
                             <div class="title">
                                 {intl l="Metabase configuration" d='metabase.bo.default'}
                             </div>
+
                             {form name="metabase_form_configure_metabase"}
                             {if $form_error}<div class="alert alert-danger">{$form_error_message}</div>{/if}
                                 <form action="{url path="/admin/module/Metabase/configure"}" method="post">
-                                    {render_form_field field="success_url" value={url path='/admin/module/Metabase?tab=import'}}
+                                    {render_form_field field="success_url" value={url path='/admin/module/Metabase?tab=connect'}}
                                     {render_form_field field="error_url" value={url path='/admin/module/Metabase'}}
                                     {form_hidden_fields form=$form}
 
@@ -50,8 +51,18 @@
                                         <div class="panel-heading">
                                             <div class="panel-title">{intl l="Metabase configuration" d='metabase.bo.default'}</div>
                                         </div>
+                                        <div class="alert-info" style="margin: 20px; padding: 20px">
+                                            <p>
+                                                {intl l="Please enter your metabase instance url, your account details and the embedding API token." d='metabase.bo.default'}
+
+                                            </p>
+                                            <p>
+                                                {intl l="If you haven't activated an API token, Go to" d='metabase.bo.default'}
+                                                https://YOUR_METABASE/admin/settings/embedding-in-other-applications
+                                            </p>
+                                        </div>
                                         <div class="panel-body">
-                                            <div class="row" style="margin-top: 20px;">
+                                            <div class="row">
                                                 <div class="col-md-6">
                                                     {render_form_field form=$form field="metabase_url"}
                                                     {render_form_field form=$form field="metabase_embedding_key"}
@@ -64,16 +75,16 @@
                                 </form>
                             {/form}
                         </div>
-                        <div id="import" class="tab-pane {if $tab eq "import"}active{/if} form-container">
+                        <div id="connect" class="tab-pane {if $tab eq "connect"}active{/if} form-container">
                             <br>
                             <div class="title">
-                                {intl l="Import your Database into Metabase" d='metabase.bo.default'}
+                                {intl l="Connect your Database into Metabase" d='metabase.bo.default'}
                             </div>
 
-                            {form name="metabase_form_import_metabase"}
-                                <form action="{url path="/admin/module/Metabase/import_database"}" method="post">
+                            {form name="metabase_form_connect_metabase"}
+                                <form action="{url path="/admin/module/Metabase/connect_database"}" method="post">
                                     {render_form_field field="success_url" value={url path='/admin/module/Metabase?tab=generate&wait=1'}}
-                                    {render_form_field field="error_url" value={url path='/admin/module/Metabase?tab=import'}}
+                                    {render_form_field field="error_url" value={url path='/admin/module/Metabase?tab=connect'}}
 
                                     {form_hidden_fields form=$form}
 
@@ -89,8 +100,18 @@
                                         <div class="panel-heading">
                                             <div class="panel-title">{intl d='metabase.bo.default' l="Database Informations"}</div>
                                         </div>
+
+                                        <div class="alert-info" style="margin: 20px; padding: 20px">
+                                            <p>
+                                                {intl l="Please enter your database informations to connect your Database to your Metabase" d='metabase.bo.default'}
+                                            </p>
+                                            <p>
+                                                {intl l="Notes : By default, Metabase make hourly synchronisation with the fields values and daily Scan." d='metabase.bo.default'}
+                                            </p>
+                                        </div>
+
                                         <div class="panel-body">
-                                            <div class="row" style="margin-top: 20px;">
+                                            <div class="row">
                                                 <div class="col-md-6">
                                                     {render_form_field form=$form field="metabaseName"}
                                                     {render_form_field form=$form field="dbName"}
@@ -101,7 +122,7 @@
                                                     {render_form_field form=$form field="password"}
                                                 </div>
                                                 <div class="col-md-6">
-                                                    <button type="submit" class="btn btn-success" >{intl l="Import Database" d="metabase.bo.default"}</button>
+                                                    <button type="submit" class="btn btn-success" >{intl l="Connect Database" d="metabase.bo.default"}</button>
                                                 </div>
                                             </div>
                                         </div>
@@ -143,8 +164,21 @@
                                         <div class="panel-heading">
                                             <div class="panel-title">{intl d='metabase.bo.default' l="Generate Metabase Dashboard"}</div>
                                         </div>
+
+                                        <div class="alert-info" style="margin: 20px; padding: 20px">
+                                            <p>
+                                                {intl l="Choice the type of order you want to show in your dashboards" d='metabase.bo.default'}
+                                            </p>
+                                            <p>
+                                                {intl l="Your dashboard will be generated for all the language activated in your website" d='metabase.bo.default'}
+                                            </p>
+                                            <p>
+                                                {intl l="Notes : you can disable some dashboard if you don't want to see them" d='metabase.bo.default'}
+                                            </p>
+                                        </div>
+
                                         <div class="panel-body">
-                                            <div class="row" style="margin-top: 20px;">
+                                            <div class="row">
                                                 <div class="col-md-6">
                                                     {render_form_field form=$form field="order_type"}
                                                     {render_form_field form=$form field="disable_brand"}
@@ -152,7 +186,7 @@
                                                     {render_form_field form=$form field="disable_product"}
                                                 </div>
                                                 <div class="col-md-6">
-                                                    <button type="submit" class="btn btn-success">{intl l="Check database status and generate" d="metabase.bo.default"}</button>
+                                                    <button type="submit" class="btn btn-success">{intl l="Generate Dashboards" d="metabase.bo.default"}</button>
                                                 </div>
                                             </div>
                                         </div>
@@ -182,8 +216,18 @@
                                         <div class="panel-heading">
                                             <div class="panel-title">{intl l="Syncing parameter Metabase" d='metabase.bo.default'}</div>
                                         </div>
+
+                                        <div class="alert-info" style="margin: 20px; padding: 20px">
+                                            <p>
+                                                {intl l="This part is optional if you don't want to change your synchronisation parameters" d='metabase.bo.default'}
+                                            </p>
+                                            <p>
+                                                {intl l="Notes : By default, Metabase make hourly synchronisation with the fields values and daily Scan." d='metabase.bo.default'}
+                                            </p>
+                                        </div>
+
                                         <div class="panel-body">
-                                            <div class="row" style="margin-top: 20px;">
+                                            <div class="row">
                                                 <div class="col-md-9">
                                                     {render_form_field form=$form field="syncingOption"}
                                                 </div>

@@ -11,6 +11,7 @@ use Symfony\Contracts\HttpClient\Exception\RedirectionExceptionInterface;
 use Symfony\Contracts\HttpClient\Exception\ServerExceptionInterface;
 use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
 use Thelia\Core\Translation\Translator;
+use Thelia\Model\BrandQuery;
 
 class BrandStatisticMetabaseService extends AbstractMetabaseService
 {
@@ -33,7 +34,7 @@ class BrandStatisticMetabaseService extends AbstractMetabaseService
      * @throws ClientExceptionInterface
      * @throws TransportExceptionInterface
      */
-    public function generateStatisticMetabase(int $collectionId, array $fields): void
+    public function generateStatisticMetabase(int $collectionId, array $fields, string $locale): void
     {
         $translator = Translator::getInstance();
 
@@ -54,44 +55,46 @@ class BrandStatisticMetabaseService extends AbstractMetabaseService
         ;
 
         $dashboard = $this->generateDashboardMetabase(
-            $translator->trans('Dashboard Sales Brand', [], Metabase::DOMAIN_NAME),
-            $translator->trans('Sales Statistic by Brand dashboard', [], Metabase::DOMAIN_NAME),
+            $translator->trans('Dashboard Sales Brand', [], Metabase::DOMAIN_NAME, $locale),
+            $translator->trans('Sales Statistic by Brand dashboard', [], Metabase::DOMAIN_NAME, $locale),
             $collectionId
         );
 
         $dashboard2 = $this->generateDashboardMetabase(
-            $translator->trans('Dashboard Count Brand', [], Metabase::DOMAIN_NAME),
-            $translator->trans('Count Statistic by Brand dashboard', [], Metabase::DOMAIN_NAME),
+            $translator->trans('Dashboard Count Brand', [], Metabase::DOMAIN_NAME, $locale),
+            $translator->trans('Count Statistic by Brand dashboard', [], Metabase::DOMAIN_NAME, $locale),
             $collectionId
         );
 
         $card = $this->generateCardMetabase(
-            $translator->trans('BrandsSalesCard_', [], Metabase::DOMAIN_NAME).'1',
-            $translator->trans('Card of Sales Statistic by Brand period', [], Metabase::DOMAIN_NAME).' 1',
+            $translator->trans('BrandsSalesCard_', [], Metabase::DOMAIN_NAME, $locale).'1',
+            $translator->trans('Card of Sales Statistic by Brand period', [], Metabase::DOMAIN_NAME, $locale).' 1',
             'line',
             $collectionId,
             $this->getSqlQueryMain($defaultFields1['tag']),
             $fields,
+            $locale,
             $defaultFields1
         );
 
         $card2 = $this->generateCardMetabase(
-            $translator->trans('BrandsSalesCard_', [], Metabase::DOMAIN_NAME).'2',
-            $translator->trans('Card of Sales Statistic by Brand period', [], Metabase::DOMAIN_NAME).' 2',
+            $translator->trans('BrandsSalesCard_', [], Metabase::DOMAIN_NAME, $locale).'2',
+            $translator->trans('Card of Sales Statistic by Brand period', [], Metabase::DOMAIN_NAME, $locale).' 2',
             'line',
             $collectionId,
             $this->getSqlQueryMain($defaultFields2['tag']),
             $fields,
+            $locale,
             $defaultFields2
         );
 
-        $defaultOrderStatus = $this->getDefaultOrderStatus();
+        $defaultOrderStatus = $this->getDefaultOrderStatus($locale);
 
         $card3 = $this->generateCustomCardMetabase(
             $this->buildCustomVisualizationSettings(),
             $this->buildParameters($defaultOrderStatus, $defaultFields1),
-            $translator->trans('BrandsCard_', [], Metabase::DOMAIN_NAME).'1',
-            $translator->trans('Card of Count Statistic by Brand period', [], Metabase::DOMAIN_NAME).' 1',
+            $translator->trans('BrandsCard_', [], Metabase::DOMAIN_NAME, $locale).'1',
+            $translator->trans('Card of Count Statistic by Brand period', [], Metabase::DOMAIN_NAME, $locale).' 1',
             $this->buildDatasetQuery($this->getSqlQuerySecondary($defaultFields1['tag']), $defaultOrderStatus, $fields, $defaultFields1),
             'line',
             $collectionId,
@@ -100,8 +103,8 @@ class BrandStatisticMetabaseService extends AbstractMetabaseService
         $card4 = $this->generateCustomCardMetabase(
             $this->buildCustomVisualizationSettings(),
             $this->buildParameters($defaultOrderStatus, $defaultFields2),
-            $translator->trans('BrandsCard_', [], Metabase::DOMAIN_NAME).'2',
-            $translator->trans('Card of Count Statistic by Brand period', [], Metabase::DOMAIN_NAME).' 2',
+            $translator->trans('BrandsCard_', [], Metabase::DOMAIN_NAME, $locale).'2',
+            $translator->trans('Card of Count Statistic by Brand period', [], Metabase::DOMAIN_NAME, $locale).' 2',
             $this->buildDatasetQuery($this->getSqlQuerySecondary($defaultFields2['tag']), $defaultOrderStatus, $fields, $defaultFields2),
             'line',
             $collectionId,
@@ -113,11 +116,8 @@ class BrandStatisticMetabaseService extends AbstractMetabaseService
         $dashboardCard = $this->formatDashboardCard($card->id, $series, 0, 0, 24, 8, $card->id, $card2->id);
         $dashboardCard2 = $this->formatDashboardCard($card3->id, $series2, 0, 0, 24, 8, $card3->id, $card4->id);
 
-        $this->embedDashboard($dashboard->id, ['invoiceDate1' => 'enabled', 'invoiceDate2' => 'enabled', 'brand_title' => 'enabled', 'orderStatus' => 'enabled'], [$dashboardCard]);
-        $this->embedDashboard($dashboard2->id, ['invoiceDate1' => 'enabled', 'invoiceDate2' => 'enabled', 'brand_title' => 'enabled', 'orderStatus' => 'enabled'], [$dashboardCard2]);
-
-        $this->publishDashboard($dashboard->id);
-        $this->publishDashboard($dashboard2->id);
+        $this->embedDashboard($dashboard->id, $locale, ['invoiceDate1' => 'enabled', 'invoiceDate2' => 'enabled', 'brand_title' => 'enabled', 'orderStatus' => 'enabled'], [$dashboardCard]);
+        $this->embedDashboard($dashboard2->id, $locale, ['invoiceDate1' => 'enabled', 'invoiceDate2' => 'enabled', 'brand_title' => 'enabled', 'orderStatus' => 'enabled'], [$dashboardCard2]);
     }
 
     private function getSqlQueryMain(string $param): string
@@ -359,20 +359,25 @@ class BrandStatisticMetabaseService extends AbstractMetabaseService
         ];
     }
 
-    public function getDashboardParameters(array $defaultFields): array
+    public function getDashboardParameters(array $defaultFields, string $locale): array
     {
         $translator = Translator::getInstance();
 
         return [
             [
-                'name' => $translator?->trans('Brand Title', [], Metabase::DOMAIN_NAME),
+                'name' => $translator?->trans('Brand Title', [], Metabase::DOMAIN_NAME, $locale),
                 'slug' => 'brand_title',
                 'id' => $this->uuidParamBrand,
                 'type' => 'string/=',
                 'sectionId' => 'string',
+                'values_query_type' => 'list',
+                'values_source_config' => [
+                    'values' => $this->getValuesSourceConfigValuesBrandTitle($locale),
+                ],
+                'values_source_type' => 'static-list',
             ],
             [
-                'name' => $translator?->trans('Period', [], Metabase::DOMAIN_NAME).' 1',
+                'name' => $translator?->trans('Period', [], Metabase::DOMAIN_NAME, $locale).' 1',
                 'slug' => 'invoiceDate1',
                 'id' => $this->getUuidParamDate1(),
                 'type' => 'date/relative',
@@ -380,7 +385,7 @@ class BrandStatisticMetabaseService extends AbstractMetabaseService
                 'default' => 'past1years',
             ],
             [
-                'name' => $translator?->trans('Period', [], Metabase::DOMAIN_NAME).' 2',
+                'name' => $translator?->trans('Period', [], Metabase::DOMAIN_NAME, $locale).' 2',
                 'slug' => 'invoiceDate2',
                 'id' => $this->getUuidParamDate2(),
                 'type' => 'date/relative',
@@ -388,18 +393,35 @@ class BrandStatisticMetabaseService extends AbstractMetabaseService
                 'default' => 'thisyear',
             ],
             [
-                'name' => $translator?->trans('orderStatus', [], Metabase::DOMAIN_NAME),
+                'name' => $translator?->trans('orderStatus', [], Metabase::DOMAIN_NAME, $locale),
                 'slug' => 'orderStatus',
                 'id' => $this->getUuidParamOrderStatus(),
                 'type' => 'string/=',
                 'sectionId' => 'string',
-                'default' => $this->getDefaultOrderStatus(),
+                'default' => $this->getDefaultOrderStatus($locale),
                 'values_query_type' => 'list',
                 'values_source_config' => [
-                    'values' => $this->getValuesSourceConfigValuesOrderStatus(),
+                    'values' => $this->getValuesSourceConfigValuesOrderStatus($locale),
                 ],
                 'values_source_type' => 'static-list',
             ],
         ];
+    }
+
+    private function getValuesSourceConfigValuesBrandTitle(string $locale): array
+    {
+        $brandTitles = [];
+
+        $brands = BrandQuery::create()
+            ->useBrandI18nQuery()
+            ->filterByLocale($locale)
+            ->endUse()
+            ->find();
+
+        foreach ($brands as $brand) {
+            $brandTitles[] = $brand->setLocale($locale)->getTitle();
+        }
+
+        return $brandTitles;
     }
 }

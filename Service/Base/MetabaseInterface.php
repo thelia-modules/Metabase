@@ -4,7 +4,7 @@ namespace Metabase\Service\Base;
 
 interface MetabaseInterface
 {
-    public function generateStatisticMetabase(int $collectionId, array $fields): void;
+    public function generateStatisticMetabase(int $collectionId, array $fields, string $locale): void;
 
     public function buildVisualizationSettings(): array;
 
@@ -14,5 +14,5 @@ interface MetabaseInterface
 
     public function getCardParameterMapping(int ...$cardsId): array;
 
-    public function getDashboardParameters(array $defaultFields): array;
+    public function getDashboardParameters(array $defaultFields, string $locale): array;
 }

@@ -9,7 +9,7 @@ use Symfony\Component\Validator\Constraints\NotBlank;
 use Thelia\Core\Translation\Translator;
 use Thelia\Form\BaseForm;
 
-class ImportMetabase extends BaseForm
+class ConnectMetabase extends BaseForm
 {
     protected function buildForm(): void
     {

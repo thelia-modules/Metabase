@@ -24,7 +24,7 @@ class AnnualRevenueStatisticMetabaseService extends AbstractMetabaseService
      * @throws ServerExceptionInterface
      * @throws TransportExceptionInterface
      */
-    public function generateStatisticMetabase(int $collectionId, array $fields): void
+    public function generateStatisticMetabase(int $collectionId, array $fields, string $locale): void
     {
         $translator = Translator::getInstance();
 
@@ -45,48 +45,52 @@ class AnnualRevenueStatisticMetabaseService extends AbstractMetabaseService
         ;
 
         $dashboard = $this->generateDashboardMetabase(
-            $translator?->trans('AnnualRevenueDashboard', [], Metabase::DOMAIN_NAME),
-            $translator?->trans('annual revenue dashboard', [], Metabase::DOMAIN_NAME),
+            $translator?->trans('AnnualRevenueDashboard', [], Metabase::DOMAIN_NAME, $locale),
+            $translator?->trans('annual revenue dashboard', [], Metabase::DOMAIN_NAME, $locale),
             $collectionId
         );
 
         $card = $this->generateCardMetabase(
-            $translator?->trans('AnnualRevenueCard_', [], Metabase::DOMAIN_NAME).'1',
-            $translator?->trans('annual revenue card', [], Metabase::DOMAIN_NAME).' 1',
+            $translator?->trans('AnnualRevenueCard_', [], Metabase::DOMAIN_NAME, $locale).'1',
+            $translator?->trans('annual revenue card', [], Metabase::DOMAIN_NAME, $locale).' 1',
             'line',
             $collectionId,
             $this->getSqlQueryMain($defaultFields1['tag']),
             $fields,
+            $locale,
             $defaultFields1
         );
 
         $card2 = $this->generateCardMetabase(
-            $translator?->trans('AnnualRevenueCard_', [], Metabase::DOMAIN_NAME).'2',
-            $translator?->trans('annual revenue card', [], Metabase::DOMAIN_NAME).' 2',
+            $translator?->trans('AnnualRevenueCard_', [], Metabase::DOMAIN_NAME, $locale).'2',
+            $translator?->trans('annual revenue card', [], Metabase::DOMAIN_NAME, $locale).' 2',
             'line',
             $collectionId,
             $this->getSqlQueryMain($defaultFields2['tag']),
             $fields,
+            $locale,
             $defaultFields2
         );
 
         $card3 = $this->generateCardMetabase(
-            $translator?->trans('AnnualRevenueCardNumber_', [], Metabase::DOMAIN_NAME).'1',
-            $translator?->trans('annual revenue card number', [], Metabase::DOMAIN_NAME).' 1',
+            $translator?->trans('AnnualRevenueCardNumber_', [], Metabase::DOMAIN_NAME, $locale).'1',
+            $translator?->trans('annual revenue card number', [], Metabase::DOMAIN_NAME, $locale).' 1',
             'scalar',
             $collectionId,
             $this->getSqlQuerySecondary($defaultFields1['tag']),
             $fields,
+            $locale,
             $defaultFields1
         );
 
         $card4 = $this->generateCardMetabase(
-            $translator?->trans('AnnualRevenueCardNumber_', [], Metabase::DOMAIN_NAME).'2',
-            $translator?->trans('annual revenue card number', [], Metabase::DOMAIN_NAME).' 2',
+            $translator?->trans('AnnualRevenueCardNumber_', [], Metabase::DOMAIN_NAME, $locale).'2',
+            $translator?->trans('annual revenue card number', [], Metabase::DOMAIN_NAME, $locale).' 2',
             'scalar',
             $collectionId,
             $this->getSqlQuerySecondary($defaultFields2['tag']),
             $fields,
+            $locale,
             $defaultFields2
         );
 
@@ -98,6 +102,7 @@ class AnnualRevenueStatisticMetabaseService extends AbstractMetabaseService
 
         $this->embedDashboard(
             $dashboard->id,
+            $locale,
             [
                 'invoiceDate1' => 'enabled',
                 'invoiceDate2' => 'enabled',
@@ -105,8 +110,6 @@ class AnnualRevenueStatisticMetabaseService extends AbstractMetabaseService
             ],
             [$dashboardCard, $dashboardCard3, $dashboardCard4]
         );
-
-        $this->publishDashboard($dashboard->id);
     }
 
     private function getSqlQueryMain(string $param): string
@@ -345,13 +348,13 @@ class AnnualRevenueStatisticMetabaseService extends AbstractMetabaseService
         ];
     }
 
-    public function getDashboardParameters(array $defaultFields): array
+    public function getDashboardParameters(array $defaultFields, string $locale): array
     {
         $translator = Translator::getInstance();
 
         return [
             [
-                'name' => $translator?->trans('Period', [], Metabase::DOMAIN_NAME).' 1',
+                'name' => $translator?->trans('Period', [], Metabase::DOMAIN_NAME, $locale).' 1',
                 'slug' => 'invoiceDate1',
                 'id' => $this->getUuidParamDate1(),
                 'type' => 'date/relative',
@@ -359,7 +362,7 @@ class AnnualRevenueStatisticMetabaseService extends AbstractMetabaseService
                 'default' => 'past1years',
             ],
             [
-                'name' => $translator?->trans('Period', [], Metabase::DOMAIN_NAME).' 2',
+                'name' => $translator?->trans('Period', [], Metabase::DOMAIN_NAME, $locale).' 2',
                 'slug' => 'invoiceDate2',
                 'id' => $this->getUuidParamDate2(),
                 'type' => 'date/relative',
@@ -367,15 +370,15 @@ class AnnualRevenueStatisticMetabaseService extends AbstractMetabaseService
                 'default' => 'thisyear',
             ],
             [
-                'name' => $translator?->trans('orderStatus', [], Metabase::DOMAIN_NAME),
+                'name' => $translator?->trans('orderStatus', [], Metabase::DOMAIN_NAME, $locale),
                 'slug' => 'orderStatus',
                 'id' => $this->getUuidParamOrderStatus(),
                 'type' => 'string/=',
                 'sectionId' => 'string',
-                'default' => $this->getDefaultOrderStatus(),
+                'default' => $this->getDefaultOrderStatus($locale),
                 'values_query_type' => 'list',
                 'values_source_config' => [
-                    'values' => $this->getValuesSourceConfigValuesOrderStatus(),
+                    'values' => $this->getValuesSourceConfigValuesOrderStatus($locale),
                 ],
                 'values_source_type' => 'static-list',
             ],

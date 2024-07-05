@@ -24,7 +24,7 @@ class MonthlyRevenueStatisticMetabaseService extends AbstractMetabaseService
      * @throws ServerExceptionInterface
      * @throws TransportExceptionInterface
      */
-    public function generateStatisticMetabase(int $collectionId, array $fields): void
+    public function generateStatisticMetabase(int $collectionId, array $fields, string $locale): void
     {
         $translator = Translator::getInstance();
 
@@ -44,28 +44,30 @@ class MonthlyRevenueStatisticMetabaseService extends AbstractMetabaseService
         ;
 
         $dashboard = $this->generateDashboardMetabase(
-            $translator?->trans('MonthlyRevenueDashboard', [], Metabase::DOMAIN_NAME),
-            $translator?->trans('monthly revenue dashboard', [], Metabase::DOMAIN_NAME),
+            $translator?->trans('MonthlyRevenueDashboard', [], Metabase::DOMAIN_NAME, $locale),
+            $translator?->trans('monthly revenue dashboard', [], Metabase::DOMAIN_NAME, $locale),
             $collectionId
         );
 
         $card = $this->generateCardMetabase(
-            $translator?->trans('MonthlyRevenueCard', [], Metabase::DOMAIN_NAME),
-            $translator?->trans('monthly revenue card', [], Metabase::DOMAIN_NAME),
+            $translator?->trans('MonthlyRevenueCard', [], Metabase::DOMAIN_NAME, $locale),
+            $translator?->trans('monthly revenue card', [], Metabase::DOMAIN_NAME, $locale),
             'line',
             $collectionId,
             $this->getSqlQueryMain($defaultFields['tagStartDate'], $defaultFields['tagEndDate']),
             $fields,
+            $locale,
             $defaultFields
         );
 
         $card2 = $this->generateCardMetabase(
-            $translator?->trans('MonthlyRevenueCardNumber', [], Metabase::DOMAIN_NAME),
-            $translator?->trans('monthly revenue with number', [], Metabase::DOMAIN_NAME),
+            $translator?->trans('MonthlyRevenueCardNumber', [], Metabase::DOMAIN_NAME, $locale),
+            $translator?->trans('monthly revenue with number', [], Metabase::DOMAIN_NAME, $locale),
             'scalar',
             $collectionId,
             $this->getSqlQuerySecondary($defaultFields['tagStartDate'], $defaultFields['tagEndDate']),
             $fields,
+            $locale,
             $defaultFields
         );
 
@@ -74,15 +76,18 @@ class MonthlyRevenueStatisticMetabaseService extends AbstractMetabaseService
 
         $this->embedDashboard(
             $dashboard->id,
+            $locale,
             [
                 'invoiceDate1' => 'enabled',
                 'invoiceDate2' => 'enabled',
                 'orderStatus' => 'enabled',
             ],
-            [$dashboardCard, $dashboardCard2],
-            $defaultFields);
-
-        $this->publishDashboard($dashboard->id);
+            [
+                $dashboardCard,
+                $dashboardCard2,
+            ],
+            $defaultFields
+        );
     }
 
     private function getSqlQueryMain(string $invoiceDate1, string $invoiceDate2): string
@@ -187,15 +192,14 @@ class MonthlyRevenueStatisticMetabaseService extends AbstractMetabaseService
                         'type' => 'date',
                         'widget-type' => 'date/single',
                         'default' => $defaultFields['startDate'],
-                        'required' => true,
                     ],
                     $defaultFields['tagEndDate'] => [
                         'id' => $defaultFields['idEndDate'],
                         'name' => $defaultFields['tagEndDate'],
                         'display-name' => 'invoiceDate2',
                         'type' => 'date',
+                        'widget-type' => 'date/single',
                         'default' => $defaultFields['endDate'],
-                        'required' => true,
                     ],
                     'orderStatus' => [
                         'id' => $this->getUuidOrderStatus(),
@@ -224,7 +228,7 @@ class MonthlyRevenueStatisticMetabaseService extends AbstractMetabaseService
                 'parameter_id' => $this->getUuidParamDate1(),
                 'card_id' => $cardsId[0],
                 'target' => [
-                    'dimension',
+                    'variable',
                     [
                         'template-tag',
                         'invoiceDate1',
@@ -235,7 +239,7 @@ class MonthlyRevenueStatisticMetabaseService extends AbstractMetabaseService
                 'parameter_id' => $this->getUuidParamDate1(),
                 'card_id' => $cardsId[1],
                 'target' => [
-                    'dimension',
+                    'variable',
                     [
                         'template-tag',
                         'invoiceDate1',
@@ -246,7 +250,7 @@ class MonthlyRevenueStatisticMetabaseService extends AbstractMetabaseService
                 'parameter_id' => $this->getUuidParamDate2(),
                 'card_id' => $cardsId[0],
                 'target' => [
-                    'dimension',
+                    'variable',
                     [
                         'template-tag',
                         'invoiceDate2',
@@ -257,7 +261,7 @@ class MonthlyRevenueStatisticMetabaseService extends AbstractMetabaseService
                 'parameter_id' => $this->getUuidParamDate2(),
                 'card_id' => $cardsId[1],
                 'target' => [
-                    'dimension',
+                    'variable',
                     [
                         'template-tag',
                         'invoiceDate2',
@@ -289,13 +293,13 @@ class MonthlyRevenueStatisticMetabaseService extends AbstractMetabaseService
         ];
     }
 
-    public function getDashboardParameters(array $defaultFields): array
+    public function getDashboardParameters(array $defaultFields, string $locale): array
     {
         $translator = Translator::getInstance();
 
         return [
             [
-                'name' => $translator?->trans('Date Start', [], Metabase::DOMAIN_NAME),
+                'name' => $translator?->trans('Date Start', [], Metabase::DOMAIN_NAME, $locale),
                 'slug' => 'invoiceDate1',
                 'id' => $this->getUuidParamDate1(),
                 'type' => 'date/single',
@@ -303,7 +307,7 @@ class MonthlyRevenueStatisticMetabaseService extends AbstractMetabaseService
                 'default' => $defaultFields['startDate'],
             ],
             [
-                'name' => $translator?->trans('Date End', [], Metabase::DOMAIN_NAME),
+                'name' => $translator?->trans('Date End', [], Metabase::DOMAIN_NAME, $locale),
                 'slug' => 'invoiceDate2',
                 'id' => $this->getUuidParamDate2(),
                 'type' => 'date/single',
@@ -311,15 +315,15 @@ class MonthlyRevenueStatisticMetabaseService extends AbstractMetabaseService
                 'default' => $defaultFields['endDate'],
             ],
             [
-                'name' => $translator?->trans('orderStatus', [], Metabase::DOMAIN_NAME),
+                'name' => $translator?->trans('orderStatus', [], Metabase::DOMAIN_NAME, $locale),
                 'slug' => 'orderStatus',
                 'id' => $this->getUuidParamOrderStatus(),
                 'type' => 'string/=',
                 'sectionId' => 'string',
-                'default' => $this->getDefaultOrderStatus(),
+                'default' => $this->getDefaultOrderStatus($locale),
                 'values_query_type' => 'list',
                 'values_source_config' => [
-                    'values' => $this->getValuesSourceConfigValuesOrderStatus(),
+                    'values' => $this->getValuesSourceConfigValuesOrderStatus($locale),
                 ],
                 'values_source_type' => 'static-list',
             ],
