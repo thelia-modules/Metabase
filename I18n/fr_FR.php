@@ -51,6 +51,7 @@ return array(
     'Hour of the Scan' => 'Heure de l\'analyse',
     'Hourly' => 'Toutes les heures',
     'Last' => 'Dernier jour du mois',
+    'Metabase is not configured' => 'Metabase n\'est pas configuré',
     'Metabase name' => 'Nom de la Metabase',
     'Metabase password' => 'Mot de passe',
     'Metabase token (integration token)' => 'Token d\'intégration Metabase',

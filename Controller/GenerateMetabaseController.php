@@ -113,7 +113,9 @@ class GenerateMetabaseController extends AdminController
             $locale = $lang->getLocale();
 
             // delete old Collection
-            $this->metabaseAPIService->deleteCollection(Metabase::getConfigValue(Metabase::METABASE_COLLECTION_ROOT_ID_CONFIG_KEY.'_'.$locale));
+            if (null !== Metabase::getConfigValue(Metabase::METABASE_COLLECTION_ROOT_ID_CONFIG_KEY.'_'.$locale)) {
+                $this->metabaseAPIService->deleteCollection(Metabase::getConfigValue(Metabase::METABASE_COLLECTION_ROOT_ID_CONFIG_KEY.'_'.$locale));
+            }
 
             $rootCollectionName = Metabase::getConfigValue(Metabase::METABASE_NAME_CONFIG_KEY).'_'.$locale;
 

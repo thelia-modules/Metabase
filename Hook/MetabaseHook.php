@@ -21,6 +21,7 @@ use Symfony\Contracts\HttpClient\Exception\ServerExceptionInterface;
 use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
 use Thelia\Core\Event\Hook\HookRenderEvent;
 use Thelia\Core\Hook\BaseHook;
+use Thelia\Core\Translation\Translator;
 use Thelia\Model\LangQuery;
 
 class MetabaseHook extends BaseHook
@@ -56,8 +57,12 @@ class MetabaseHook extends BaseHook
         $metabase = new \Metabase\Embed($metabaseUrl, $metabaseKey, false, '100%', '600');
 
         try {
+            if (null === $collectionRootId = Metabase::getConfigValue(Metabase::METABASE_COLLECTION_ROOT_ID_CONFIG_KEY.'_'.$locale)) {
+                throw new MetabaseException(Translator::getInstance()->trans('Metabase is not configured', [], Metabase::DOMAIN_NAME));
+            }
+
             $apiCollections = $this->metabaseAPIService->getCollectionsItems(
-                Metabase::getConfigValue(Metabase::METABASE_COLLECTION_ROOT_ID_CONFIG_KEY.'_'.$locale),
+                $collectionRootId,
                 'collection'
             )['data'];
 

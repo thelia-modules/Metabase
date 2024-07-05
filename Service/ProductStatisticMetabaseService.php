@@ -421,11 +421,6 @@ class ProductStatisticMetabaseService extends AbstractMetabaseService
                 'id' => $this->uuidParamProductRef,
                 'type' => 'string/=',
                 'sectionId' => 'string',
-                'values_query_type' => 'list',
-                'values_source_config' => [
-                    'values' => $this->getValuesSourceConfigValuesProductTitle($locale),
-                ],
-                'values_source_type' => 'static-list',
             ],
             [
                 'name' => $translator?->trans('Product Title', [], Metabase::DOMAIN_NAME, $locale),
@@ -433,6 +428,11 @@ class ProductStatisticMetabaseService extends AbstractMetabaseService
                 'id' => $this->uuidParamProductTitle,
                 'type' => 'string/=',
                 'sectionId' => 'string',
+                'values_query_type' => 'search',
+                'values_source_config' => [
+                    'values' => $this->getValuesSourceConfigValuesProductTitle($locale),
+                ],
+                'values_source_type' => 'static-list',
             ],
             [
                 'name' => $translator?->trans('Period', [], Metabase::DOMAIN_NAME, $locale).' 1',

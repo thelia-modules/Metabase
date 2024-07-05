@@ -11,6 +11,7 @@ use Symfony\Contracts\HttpClient\Exception\RedirectionExceptionInterface;
 use Symfony\Contracts\HttpClient\Exception\ServerExceptionInterface;
 use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
 use Thelia\Core\Translation\Translator;
+use Thelia\Model\Category;
 use Thelia\Model\CategoryQuery;
 use Thelia\Model\LangQuery;
 
@@ -416,18 +417,38 @@ class CategoryStatisticMetabaseService extends AbstractMetabaseService
 
     private function getValuesSourceConfigValuesCategoryTitle(string $locale): array
     {
-        $categoryTitle = [];
-
         $categories = CategoryQuery::create()
             ->useCategoryI18nQuery()
             ->filterByLocale($locale)
             ->endUse()
+            ->orderByParent()
             ->find();
 
-        foreach ($categories as $category) {
-            $categoryTitle[] = $category->setLocale($locale)->getTitle();
+        return $this->buildCategoryPaths($categories, $locale);
+    }
+
+    public function buildCategoryPaths($categories, string $locale): array
+    {
+        $result = [];
+        $stack = [['index' => 0, 'path' => $categories[0]->setLocale($locale)->getTitle()]];
+
+        while (!empty($stack)) {
+            $current = array_pop($stack);
+            $currentIndex = $current['index'];
+            $currentPath = $current['path'];
+
+            // Ajouter le chemin actuel au résultat
+            $result[] = $currentPath;
+
+            // Parcourir les enfants
+            foreach ($categories as $index => $category) {
+                if ($index > $currentIndex) {
+                    $categoryPath = $currentPath . ' > ' . $category->setLocale($locale)->getTitle();
+                    $stack[] = ['index' => $index, 'path' => $categoryPath];
+                }
+            }
         }
 
-        return $categoryTitle;
+        return $result;
     }
 }

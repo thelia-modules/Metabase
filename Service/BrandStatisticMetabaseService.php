@@ -370,7 +370,7 @@ class BrandStatisticMetabaseService extends AbstractMetabaseService
                 'id' => $this->uuidParamBrand,
                 'type' => 'string/=',
                 'sectionId' => 'string',
-                'values_query_type' => 'list',
+                'values_query_type' => 'search',
                 'values_source_config' => [
                     'values' => $this->getValuesSourceConfigValuesBrandTitle($locale),
                 ],
