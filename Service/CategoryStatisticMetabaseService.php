@@ -6,6 +6,8 @@ use Metabase\Exception\MetabaseException;
 use Metabase\Metabase;
 use Metabase\Service\API\MetabaseAPIService;
 use Metabase\Service\Base\AbstractMetabaseService;
+use PDO;
+use Propel\Runtime\Propel;
 use Symfony\Contracts\HttpClient\Exception\ClientExceptionInterface;
 use Symfony\Contracts\HttpClient\Exception\RedirectionExceptionInterface;
 use Symfony\Contracts\HttpClient\Exception\ServerExceptionInterface;
@@ -14,6 +16,7 @@ use Thelia\Core\Translation\Translator;
 use Thelia\Model\Category;
 use Thelia\Model\CategoryQuery;
 use Thelia\Model\LangQuery;
+use Thelia\Model\Map\CategoryTableMap;
 
 class CategoryStatisticMetabaseService extends AbstractMetabaseService
 {
@@ -417,38 +420,31 @@ class CategoryStatisticMetabaseService extends AbstractMetabaseService
 
     private function getValuesSourceConfigValuesCategoryTitle(string $locale): array
     {
-        $categories = CategoryQuery::create()
-            ->useCategoryI18nQuery()
-            ->filterByLocale($locale)
-            ->endUse()
-            ->orderByParent()
-            ->find();
+        $connection = Propel::getWriteConnection(CategoryTableMap::DATABASE_NAME);
 
-        return $this->buildCategoryPaths($categories, $locale);
-    }
+        $sql = "WITH RECURSIVE CategoryPaths AS (
+                    SELECT c.id, c.parent, ci.title AS path
+                    FROM category c
+                    JOIN category_i18n ci ON c.id = ci.id
+                    WHERE c.parent = 0 AND ci.locale = :locale
+                    UNION ALL
+    
+                    SELECT c.id, c.parent, CONCAT(cp.path, ' > ', ci.title) AS path
+                    FROM category c
+                    JOIN  CategoryPaths cp ON c.parent = cp.id
+                    JOIN  category_i18n ci ON c.id = ci.id
+                    WHERE ci.locale = :locale
+                )
+    
+                SELECT cp.path
+                FROM CategoryPaths cp
+                ORDER BY cp.path;
+            ";
 
-    public function buildCategoryPaths($categories, string $locale): array
-    {
-        $result = [];
-        $stack = [['index' => 0, 'path' => $categories[0]->setLocale($locale)->getTitle()]];
+        $statement = $connection->prepare($sql);
+        $statement->bindValue(':locale', $locale);
+        $statement->execute();
 
-        while (!empty($stack)) {
-            $current = array_pop($stack);
-            $currentIndex = $current['index'];
-            $currentPath = $current['path'];
-
-            // Ajouter le chemin actuel au résultat
-            $result[] = $currentPath;
-
-            // Parcourir les enfants
-            foreach ($categories as $index => $category) {
-                if ($index > $currentIndex) {
-                    $categoryPath = $currentPath . ' > ' . $category->setLocale($locale)->getTitle();
-                    $stack[] = ['index' => $index, 'path' => $categoryPath];
-                }
-            }
-        }
-
-        return $result;
+        return $statement->fetchAll(PDO::FETCH_COLUMN, 0);
     }
 }
