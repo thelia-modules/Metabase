@@ -1,55 +1,262 @@
+{if isset($smarty.get.tab)}
+    {$tab=$smarty.get.tab}
+{else}
+    {$tab='config'}
+{/if}
 <style>
     input[type=number]
     {
         min-width:100px;
     }
 </style>
-
 <div class="row">
     <div class="col-md-12">
         <div class="general-block-decorator">
             <div class="row">
                 <div class="col-md-12">
+                    <ul id="tabbed-menu" class="nav nav-tabs">
+                        <li class="{if $tab eq "config"}active{/if}"><a data-toggle="tab" href="#config">{intl l="Configuration" d='metabase.bo.default'}</a> </li>
+                        <li class="{if $tab eq "connect"}active{/if}"><a data-toggle="tab" href="#connect">{intl l="Connect Database" d='metabase.bo.default'}</a> </li>
+                        <li class="{if $tab eq "generate"}active{/if}"><a data-toggle="tab" href="#generate">{intl l="Generate Dashboard" d='metabase.bo.default'}</a> </li>
+                        <li class="{if $tab eq "syncing"}active{/if}"><a data-toggle="tab" href="#syncing">{intl l="Syncing Parameters" d='metabase.bo.default'}</a> </li>
+                    </ul>
 
-                    <div class="title">
-                        {intl l="Metabase service configuration" d='metabase'}
-                    </div>
-                    {form name="configure_metabase_form"}
-                    {if $form_error}<div class="alert alert-danger">{$form_error_message}</div>{/if}
-                        <form action="{url path="/admin/module/metabase/configure"}" method="post">
-                            {form_hidden_fields form=$form}
+                    <div class="tab-content">
 
-                            {include file = "includes/inner-form-toolbar.html"
-                            hide_flags = true
-                            page_url   = "{url path='/admin/module/metabase'}"
-                            close_url  = "{url path='/admin/modules'}"
-                            }
+                        <div id="config" class="tab-pane {if $tab eq "config"}active{/if} form-container">
+                            <br>
 
-                            {if $form_error}
-                                <div class="alert alert-danger">{$form_error_message}</div>
-                            {/if}
+                            <div class="title">
+                                {intl l="Metabase configuration" d='metabase.bo.default'}
+                            </div>
 
-                            {if $smarty.get.success}
-                                <div class="alert alert-success">{intl l={Metabase\Metabase::SUCCESS_MESSAGE} d='metabase'}</div>
-                            {/if}
+                            {form name="metabase_form_configure_metabase"}
+                            {if $form_error}<div class="alert alert-danger">{$form_error_message}</div>{/if}
+                                <form action="{url path="/admin/module/Metabase/configure"}" method="post">
+                                    {render_form_field field="success_url" value={url path='/admin/module/Metabase?tab=connect'}}
+                                    {render_form_field field="error_url" value={url path='/admin/module/Metabase'}}
+                                    {form_hidden_fields form=$form}
 
-                            <div class="panel panel-default">
-                                <div class="panel-heading">
-                                    <div class="panel-title">{intl d='metabase' l="Service configuration"}</div>
-                                </div>
-                                <div class="panel-body">
-                                    <div class="row" style="margin-top: 20px;">
-                                        <div class="col-md-6">
-                                            {render_form_field field="metabase_url" value=$metabase_url}
-                                            {render_form_field field="metabase_token" value=$metabase_token}
-                                            {render_form_field field="metabase_username" value=$metabase_token}
-                                            {render_form_field field="metabase_password" value=$metabase_token}
+                                    {include file = "includes/inner-form-toolbar.html"
+                                    hide_flags = true
+                                    page_url   = "{url path='/admin/module/Metabase'}"
+                                    close_url  = "{url path='/admin/modules'}"
+                                    }
+
+                                    {if $form_error}
+                                        <div class="alert alert-danger">{$form_error_message}</div>
+                                    {/if}
+
+                                    <div class="panel panel-default">
+                                        <div class="panel-heading">
+                                            <div class="panel-title">{intl l="Metabase configuration" d='metabase.bo.default'}</div>
+                                        </div>
+                                        <div class="alert-info" style="margin: 20px; padding: 20px">
+                                            <p>
+                                                {intl l="Please enter your metabase instance url, your account details and the embedding API token." d='metabase.bo.default'}
+
+                                            </p>
+                                            <p>
+                                                {intl l="If you haven't activated an API token, Go to" d='metabase.bo.default'}
+                                                https://YOUR_METABASE/admin/settings/embedding-in-other-applications
+                                            </p>
+                                        </div>
+                                        <div class="panel-body">
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    {render_form_field form=$form field="metabase_url"}
+                                                    {render_form_field form=$form field="metabase_embedding_key"}
+                                                    {render_form_field form=$form field="metabase_username"}
+                                                    {render_form_field form=$form field="metabase_password"}
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
+                                </form>
+                            {/form}
+                        </div>
+                        <div id="connect" class="tab-pane {if $tab eq "connect"}active{/if} form-container">
+                            <br>
+                            <div class="title">
+                                {intl l="Connect your Database into Metabase" d='metabase.bo.default'}
                             </div>
-                        </form>
-                    {/form}
+
+                            {form name="metabase_form_connect_metabase"}
+                                <form action="{url path="/admin/module/Metabase/connect_database"}" method="post">
+                                    {render_form_field field="success_url" value={url path='/admin/module/Metabase?tab=generate&wait=1'}}
+                                    {render_form_field field="error_url" value={url path='/admin/module/Metabase?tab=connect'}}
+
+                                    {form_hidden_fields form=$form}
+
+                                    {if $form_error}
+                                        <div class="alert alert-danger">{$form_error_message}</div>
+                                    {/if}
+
+                                    {if $smarty.get.wait|default:null}
+                                        <div class="alert alert-warning">{intl l='Metabase is syncing your database table. It will take few more minutes' d='metabase.bo.default'}</div>
+                                    {/if}
+
+                                    <div class="panel panel-default">
+                                        <div class="panel-heading">
+                                            <div class="panel-title">{intl d='metabase.bo.default' l="Database Informations"}</div>
+                                        </div>
+
+                                        <div class="alert-info" style="margin: 20px; padding: 20px">
+                                            <p>
+                                                {intl l="Please enter your database informations to connect your Database to your Metabase" d='metabase.bo.default'}
+                                            </p>
+                                            <p>
+                                                {intl l="Notes : By default, Metabase make hourly synchronisation with the fields values and daily Scan." d='metabase.bo.default'}
+                                            </p>
+                                        </div>
+
+                                        <div class="panel-body">
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    {render_form_field form=$form field="metabaseName"}
+                                                    {render_form_field form=$form field="dbName"}
+                                                    {render_form_field form=$form field="engine"}
+                                                    {render_form_field form=$form field="host"}
+                                                    {render_form_field form=$form field="port"}
+                                                    {render_form_field form=$form field="user"}
+                                                    {render_form_field form=$form field="password"}
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <button type="submit" class="btn btn-success" >{intl l="Connect Database" d="metabase.bo.default"}</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </form>
+                            {/form}
+                        </div>
+
+                        <div id="generate" class="tab-pane {if $tab eq "generate"}active{/if} form-container">
+                            <br>
+                            <div class="title">
+                                {intl l="Generate Metabase Dashboard" d='metabase.bo.default'}
+                            </div>
+
+                            {form name="metabase_form_generate_metabase"}
+                                <form action="{url path="/admin/module/Metabase/check"}" method="post">
+                                    {render_form_field field="success_url" value={url path='/admin/module/Metabase?tab=generate&wait=1'}}
+                                    {render_form_field field="error_url" value={url path='/admin/module/Metabase'}}
+
+                                    {form_hidden_fields form=$form}
+
+                                    {if $form_error}
+                                        <div class="alert alert-danger">{$form_error_message}</div>
+                                    {/if}
+
+                                    {if $smarty.get.error_message|default:null}
+                                        <div class="alert alert-danger">{$smarty.get.error_message}</div>
+                                    {/if}
+
+                                    {if $smarty.get.wait|default:null}
+                                        <div class="alert alert-warning">{intl l='Metabase is syncing your database table. It will take few more minutes' d='metabase.bo.default'}</div>
+                                    {/if}
+
+                                    {if $smarty.get.success|default:null}
+                                        <div class="alert alert-success">{intl l='Metabase successfully generate yours dashboards. Go check home backoffice to see your Statistics' d='metabase.bo.default'}</div>
+                                    {/if}
+
+                                    <div class="panel panel-default">
+                                        <div class="panel-heading">
+                                            <div class="panel-title">{intl d='metabase.bo.default' l="Generate Metabase Dashboard"}</div>
+                                        </div>
+
+                                        <div class="alert-info" style="margin: 20px; padding: 20px">
+                                            <p>
+                                                {intl l="Choice the type of order you want to show in your dashboards" d='metabase.bo.default'}
+                                            </p>
+                                            <p>
+                                                {intl l="Your dashboard will be generated for all the language activated in your website" d='metabase.bo.default'}
+                                            </p>
+                                            <p>
+                                                {intl l="Notes : you can disable some dashboard if you don't want to see them" d='metabase.bo.default'}
+                                            </p>
+                                        </div>
+
+                                        <div class="panel-body">
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    {render_form_field form=$form field="order_type"}
+                                                    {render_form_field form=$form field="disable_brand"}
+                                                    {render_form_field form=$form field="disable_category"}
+                                                    {render_form_field form=$form field="disable_product"}
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <button type="submit" class="btn btn-success">{intl l="Generate Dashboards" d="metabase.bo.default"}</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </form>
+                            {/form}
+                        </div>
+
+                        <div id="syncing" class="tab-pane {if $tab eq "syncing"}active{/if} form-container">
+                            <br>
+                            <div class="title">
+                                {intl l="Metabase Syncing Parameters" d='metabase.bo.default'}
+                            </div>
+
+                            {form name="metabase_form_syncing_metabase"}
+                                <form action="{url path="/admin/module/Metabase/syncing"}" method="post">
+                                    {render_form_field field="success_url" value={url path='/admin/module/Metabase'}}
+                                    {render_form_field field="error_url" value={url path='/admin/module/Metabase'}}
+
+                                    {form_hidden_fields form=$form}
+
+                                    {if $form_error}
+                                        <div class="alert alert-danger">{$form_error_message}</div>
+                                    {/if}
+
+                                    <div class="panel panel-default">
+                                        <div class="panel-heading">
+                                            <div class="panel-title">{intl l="Syncing parameter Metabase" d='metabase.bo.default'}</div>
+                                        </div>
+
+                                        <div class="alert-info" style="margin: 20px; padding: 20px">
+                                            <p>
+                                                {intl l="This part is optional if you don't want to change your synchronisation parameters" d='metabase.bo.default'}
+                                            </p>
+                                            <p>
+                                                {intl l="Notes : By default, Metabase make hourly synchronisation with the fields values and daily Scan." d='metabase.bo.default'}
+                                            </p>
+                                        </div>
+
+                                        <div class="panel-body">
+                                            <div class="row">
+                                                <div class="col-md-9">
+                                                    {render_form_field form=$form field="syncingOption"}
+                                                </div>
+                                                <div class="col-md-4">
+                                                    {intl l="Database syncing" d='metabase.bo.default'}
+                                                    {render_form_field form=$form field="syncingSchedule"}
+                                                    {render_form_field form=$form field="syncingTime"}
+                                                </div>
+                                                <div class="col-md-4">
+                                                    {intl l="Scanning for Filter Values" d='metabase.bo.default'}
+                                                    {intl l="(Select is_full_sync Option)" d='metabase.bo.default'}
+
+                                                    {render_form_field form=$form field="scanningSchedule"}
+                                                    {render_form_field form=$form field="scanningFrame"}
+                                                    {render_form_field form=$form field="scanningDay"}
+                                                    {render_form_field form=$form field="scanningTime"}
+                                                </div>
+                                                <div class="col-md-4">
+                                                    {intl l="fingerprint tables" d='metabase.bo.default'}
+                                                    {render_form_field form=$form field="refingerprint"}
+                                                </div>
+                                                <button type="submit" class="btn btn-success" >{intl l="Update Syncing Parameters" d="metabase.bo.default"}</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </form>
+                            {/form}
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

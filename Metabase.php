@@ -8,19 +8,45 @@ use Thelia\Module\BaseModule;
 class Metabase extends BaseModule
 {
     /** @var string */
-    const DOMAIN_NAME = 'metabase';
+    public const DOMAIN_NAME = 'metabase';
 
-    // Messages
-    const SUCCESS_MESSAGE = 'The settings have been successfully updated';
-    const ERROR_CONFIG_MESSAGE = 'First, you have to set the module up';
-    const ERROR_TOKEN_MESSAGE = 'Error during session token collecting';
+    // Configuration metabase
+    public const METABASE_URL_CONFIG_KEY = 'metabase_url';
+    public const METABASE_EMBEDDING_KEY_CONFIG_KEY = 'metabase_embedding_key';
+    public const METABASE_USERNAME_CONFIG_KEY = 'metabase_username';
+    public const METABASE_PASSWORD_CONFIG_KEY = 'metabase_password';
 
-    // Configuration parameters
-    const CONFIG_KEY_URL = 'metabase_url';
-    const CONFIG_SESSION_TOKEN = 'session_token';
-    const CONFIG_KEY_TOKEN = 'metabase_token';
-    const CONFIG_USERNAME = 'metabase_username';
-    const CONFIG_PASS = 'metabase_password';
+    // Configuration database
+    public const METABASE_NAME_CONFIG_KEY = 'metabase_name';
+    public const METABASE_DB_NAME_CONFIG_KEY = 'metabase_bd_name';
+    public const METABASE_ENGINE_CONFIG_KEY = 'metabase_engine';
+    public const METABASE_HOST_CONFIG_KEY = 'metabase_host';
+    public const METABASE_PORT_CONFIG_KEY = 'metabase_port';
+    public const METABASE_DB_USERNAME_CONFIG_KEY = 'metabase_db-username';
+    public const METABASE_DB_ID_CONFIG_KEY = 'metabase_db_id';
+
+    // Metabase Token
+    public const METABASE_TOKEN_SESSION_CONFIG_KEY = 'metabase_token_session';
+    public const METABASE_TOKEN_EXPIRATION_DATE_CONFIG_KEY = 'metabase_token_expiration_date';
+
+    // Metabase Form
+    public const METABASE_ORDER_TYPE_CONFIG_KEY = 'metabase_order_type';
+    public const METABASE_DISABLE_BRAND_CONFIG_KEY = 'metabase_disable_brand';
+    public const METABASE_DISABLE_CATEGORY_CONFIG_KEY = 'metabase_disable_category';
+    public const METABASE_DISABLE_PRODUCT_CONFIG_KEY = 'metabase_disable_product';
+
+    // Collection Root Metabase
+    public const METABASE_COLLECTION_ROOT_ID_CONFIG_KEY = 'metabase_collection_root_id';
+
+    // Metabase config syncing
+    public const METABASE_SYNCING_OPTION = 'metabase_syncing_option';
+    public const METABASE_SYNCING_SCHEDULE = 'metabase_syncing_schedule';
+    public const METABASE_SYNCING_TIME = 'metabase_syncing_time';
+    public const METABASE_SCANNING_SCHEDULE = 'metabase_scanning_schedule';
+    public const METABASE_SCANNING_TIME = 'metabase_scanning_time';
+    public const METABASE_SCANNING_FRAME = 'metabase_scanning_frame';
+    public const METABASE_SCANNING_DAY = 'metabase_scanning_day';
+    public const METABASE_REFINGERPRINT = 'metabase_refingerprint';
 
     /**
      * Autowiring.
@@ -29,7 +55,7 @@ class Metabase extends BaseModule
     {
         $servicesConfigurator->load(self::getModuleCode().'\\', __DIR__)
             ->exclude([THELIA_MODULE_DIR.ucfirst(self::getModuleCode()).'/I18n/*'])
-            ->autowire(true)
-            ->autoconfigure(true);
+            ->autowire()
+            ->autoconfigure();
     }
 }

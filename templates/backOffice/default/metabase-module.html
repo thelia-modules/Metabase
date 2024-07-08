@@ -3,32 +3,38 @@
 {else}
     {$tab="table-0"}
 {/if}
-<style>
-    input[type=number]
-    {
-        min-width:100px;
-    }
-</style>
 <div class="row">
-    <div class="col-md-12">
-        <div class="general-block-decorator" id="metabase-module">
+    <div class="col-md-12" id="metabase-module">
+        <ul id="tabbed-menu" class="nav nav-tabs">
+            {foreach $dashboardsName as $key => $dashboardName}
+                <li class="{if $tab eq "table-{$key}"}active{/if}"><a data-toggle="tab" href="#table-{$key}">{$dashboardName}</a></li>
+            {/foreach}
+        </ul>
+        <div class="general-block-decorator">
             <div class="row">
                 <div class="col-md-12">
                     {if $errorMessage}
                         <div class="alert alert-danger">{$errorMessage}</div>
                     {/if}
-                    <ul id="tabbed-menu" class="nav nav-tabs">
-                        {foreach $dashboards as $dashboard}
-                        <li class="{if $tab eq "table-{$dashboard@key}"}active{/if}"><a data-toggle="tab" href="#table-{$dashboard@key}">{intl l="Dashboard {$dashboard@key+1}"}</a></li>
-                        {/foreach}
-                    </ul>
 
-                    <div class="tab-content">
-                        {foreach $dashboards as $dashboard}
-                            <div id="table-{$dashboard@key}" class="tab-pane {if $tab eq "table-{$dashboard@key}"}active{/if} form-container">
-                                <template id="table-{$dashboard@key}-template" >{$dashboard nofilter}</template>
-                            </div>
-                        {/foreach}
+                    <div class="text-center clearfix">
+                        <div class="btn-group" style="display: none; padding-bottom: 20px">
+                            <a id="btn_revenue" data-toggle="tab" class="btn btn-primary" href="#">
+                                <span class="glyphicon glyphicon-euro"></span>
+                                {intl l="Revenue" d='metabase.bo.default'}
+                            </a>
+                            <a id="btn_count" data-toggle="tab" class="btn btn-success" href="#">
+                                <span class="glyphicon glyphicon-credit-card"></span>
+                                {intl l="Count" d='metabase.bo.default'}
+                            </a>
+                        </div>
+                        <div class="tab-content">
+                            {foreach $dashboards as $key => $dashboard}
+                                <div id="table-{$key}" class="tab-pane {if $tab eq "table-{$key}"}active{/if} form-container">
+                                    <template id="{$tab}-template" >{$dashboard nofilter}</template>
+                                </div>
+                            {/foreach}
+                        </div>
                     </div>
                 </div>
             </div>

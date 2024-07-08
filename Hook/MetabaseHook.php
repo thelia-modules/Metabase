@@ -14,38 +14,78 @@ namespace Metabase\Hook;
 
 use Metabase\Exception\MetabaseException;
 use Metabase\Metabase;
-use Metabase\Service\MetabaseService;
+use Metabase\Service\API\MetabaseAPIService;
+use Symfony\Contracts\HttpClient\Exception\ClientExceptionInterface;
+use Symfony\Contracts\HttpClient\Exception\RedirectionExceptionInterface;
+use Symfony\Contracts\HttpClient\Exception\ServerExceptionInterface;
+use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
 use Thelia\Core\Event\Hook\HookRenderEvent;
 use Thelia\Core\Hook\BaseHook;
-use Thelia\Model\ModuleConfig;
-use Thelia\Model\ModuleConfigQuery;
+use Thelia\Core\Translation\Translator;
+use Thelia\Model\LangQuery;
 
 class MetabaseHook extends BaseHook
 {
-    private $metabaseService;
-
-    public function __construct(MetabaseService $metabaseService)
+    public function __construct(protected MetabaseAPIService $metabaseAPIService)
     {
-        $this->metabaseService = $metabaseService;
+        parent::__construct();
     }
 
-    public function metabaseHome(HookRenderEvent $event)
+    /**
+     * @throws TransportExceptionInterface
+     * @throws ServerExceptionInterface
+     * @throws RedirectionExceptionInterface
+     * @throws ClientExceptionInterface
+     * @throws \JsonException
+     */
+    public function metabaseHome(HookRenderEvent $event): void
     {
-        // The url of the metabase installation
-        $metabaseUrl = Metabase::getConfigValue(Metabase::CONFIG_KEY_URL);
-        // The secret embed key from the admin settings screen
-        $metabaseKey = Metabase::getConfigValue(Metabase::CONFIG_KEY_TOKEN);
+        $metabaseUrl = Metabase::getConfigValue(Metabase::METABASE_URL_CONFIG_KEY);
+        $metabaseKey = Metabase::getConfigValue(Metabase::METABASE_EMBEDDING_KEY_CONFIG_KEY);
+
+        if (null === $locale = $event->getTemplateVars()['locale']) {
+            $locale = LangQuery::create()->findOneByByDefault(1)?->getLocale();
+        }
+
+        $apiDashboards = [];
 
         $dashboards = [];
+        $dashboardsName = [];
         $errorMessage = null;
+        $countDisable = $this->countDisableDatatable();
 
-        $metabase = new \Metabase\Embed($metabaseUrl, $metabaseKey);
+        $metabase = new \Metabase\Embed($metabaseUrl, $metabaseKey, false, '100%', '600');
 
         try {
-            $apiResult = json_decode($this->metabaseService->getDashboards(), true);
+            if (null === $collectionRootId = Metabase::getConfigValue(Metabase::METABASE_COLLECTION_ROOT_ID_CONFIG_KEY.'_'.$locale)) {
+                throw new MetabaseException(Translator::getInstance()->trans('Metabase is not configured', [], Metabase::DOMAIN_NAME));
+            }
 
-            for ($i = 0; $i < $apiResult[$i]; ++$i) {
-                $dashboards[] = $metabase->dashboardIFrame($apiResult[$i]['id']);
+            $apiCollections = $this->metabaseAPIService->getCollectionsItems(
+                $collectionRootId,
+                'collection'
+            )['data'];
+
+            // F*** Metabase API that don't send collection order by id
+            usort($apiCollections, static function ($a, $b) {
+                return $a['id'] - $b['id'];
+            });
+
+            foreach ($apiCollections as $key => $apiCollection) {
+                $apiDashboards[$key] = $this->metabaseAPIService->getCollectionsItems($apiCollection['id'], 'dashboard')['data'];
+            }
+
+            $tableId = 0;
+            foreach ($apiDashboards as $key => $apiDashboard) {
+                $dashboardsName[$tableId] = $apiCollections[$key]['name'];
+
+                foreach ($apiDashboard as $key2 => $dashboard) {
+                    $dashboards[] = $metabase->dashboardIFrame($dashboard['id']);
+                    if ($key2 > 0) {
+                        ++$tableId;
+                    }
+                }
+                ++$tableId;
             }
         } catch (MetabaseException $exception) {
             $errorMessage = $exception->getMessage();
@@ -56,27 +96,41 @@ class MetabaseHook extends BaseHook
                 'metabase-module.html',
                 [
                     'dashboards' => $dashboards,
+                    'dashboardsName' => $dashboardsName,
+                    'countDisable' => $countDisable,
                     'errorMessage' => $errorMessage,
                 ]
             )
         );
     }
 
-    public function metabaseConfig(HookRenderEvent $event)
+    public function metabaseConfig(HookRenderEvent $event): void
     {
-        if (null !== $params = ModuleConfigQuery::create()->findByModuleId(Metabase::getModuleId())) {
-            /** @var ModuleConfig $param */
-            foreach ($params as $param) {
-                $vars[$param->getName()] = $param->getValue();
-            }
-        }
         $event->add($this->render('module-configuration.html'));
     }
 
-    public function metabaseHomeJs(HookRenderEvent $event)
+    public function metabaseHomeJs(HookRenderEvent $event): void
     {
         $event->add($this->render(
             'metabase-module-js.html'
         ));
+    }
+
+    private function countDisableDatatable(): bool
+    {
+        $countDisable = 0;
+        if (!Metabase::getConfigValue(Metabase::METABASE_DISABLE_BRAND_CONFIG_KEY)) {
+            ++$countDisable;
+        }
+
+        if (!Metabase::getConfigValue(Metabase::METABASE_DISABLE_CATEGORY_CONFIG_KEY)) {
+            ++$countDisable;
+        }
+
+        if (!Metabase::getConfigValue(Metabase::METABASE_DISABLE_CATEGORY_CONFIG_KEY)) {
+            ++$countDisable;
+        }
+
+        return $countDisable;
     }
 }
