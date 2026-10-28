@@ -10,5 +10,6 @@
   },
   "extra": {
     "installer-name": "Metabase"
-  }
+  },
+  "abandoned": true
 }
