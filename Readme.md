@@ -1,5 +1,8 @@
 # Metabase
 
+> This module is no longer maintained and will not be ported to Thelia 3. Its 2.x versions remain available on Packagist.
+> Metabase can connect to the shop database directly, without a module.
+
 This module was made to integrate [Metabase](https://github.com/metabase/metabase)
 Dashboard to your Thelia admin backOffice
 
